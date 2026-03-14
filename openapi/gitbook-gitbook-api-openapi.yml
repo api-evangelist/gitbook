@@ -1,0 +1,2293 @@
+openapi: 3.1.0
+info:
+  title: GitBook API
+  description: >-
+    The GitBook REST API enables you to programmatically manage your GitBook
+    content, organizations, spaces, collections, and integrations. It supports
+    creating, updating, and deleting organizations, spaces, collections, and
+    published docs sites; managing users, teams, and access permissions;
+    importing and exporting content; creating, listing, reviewing, merging,
+    and updating change requests; managing comments; configuring custom
+    hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+  - url: https://api.gitbook.com/v1
+    description: GitBook API v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Users
+    description: Manage user accounts and profiles.
+  - name: Organizations
+    description: >-
+      Create and configure organizations to group users, spaces, and
+      collections.
+  - name: Organization Members
+    description: Manage members and their roles within an organization.
+  - name: Organization Teams
+    description: Manage teams within an organization.
+  - name: Spaces
+    description: >-
+      Manage spaces which are containers for documentation or knowledge base
+      content.
+  - name: Space Users
+    description: Manage user permissions within a space.
+  - name: Space Content
+    description: Manage pages and content within a space.
+  - name: Collections
+    description: Organize and manage grouped sets of spaces.
+  - name: Change Requests
+    description: >-
+      Create, list, review, merge, and update change requests for
+      collaborative editing.
+  - name: Change Request Content
+    description: Manage content within a change request.
+  - name: Change Request Reviewers
+    description: Manage reviewers for change requests.
+  - name: Docs Sites
+    description: Manage published documentation sites.
+  - name: Site Spaces
+    description: Manage spaces within a docs site.
+  - name: Integrations
+    description: Install and manage third-party integrations.
+  - name: OpenAPI Specs
+    description: Upload and manage OpenAPI specifications.
+  - name: URLs
+    description: Resolve and manage content URLs.
+  - name: Search
+    description: Search content across an organization.
+  - name: Imports
+    description: Import content into spaces.
+  - name: Custom Hostnames
+    description: Configure custom hostnames for docs sites.
+  - name: SSO
+    description: Manage single sign-on configurations.
+paths:
+  /user:
+    get:
+      operationId: getCurrentUser
+      summary: Get the authenticated user
+      description: Returns the currently authenticated user.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: The authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      summary: Get a user by ID
+      description: Returns a user by their unique identifier.
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The requested user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs:
+    get:
+      operationId: listOrganizations
+      summary: List organizations
+      description: >-
+        Returns the list of organizations for the currently authenticated
+        user.
+      tags:
+        - Organizations
+      responses:
+        '200':
+          description: A list of organizations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /orgs/{organizationId}:
+    get:
+      operationId: getOrganization
+      summary: Get an organization
+      description: Returns an organization by its ID.
+      tags:
+        - Organizations
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: The requested organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateOrganization
+      summary: Update an organization
+      description: Updates an organization's settings.
+      tags:
+        - Organizations
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The display name of the organization.
+      responses:
+        '200':
+          description: The updated organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/members:
+    get:
+      operationId: listOrganizationMembers
+      summary: List organization members
+      description: Returns the list of members in an organization.
+      tags:
+        - Organization Members
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of organization members.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizationMember'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/members/{userId}:
+    get:
+      operationId: getOrganizationMember
+      summary: Get an organization member
+      description: Returns details about a specific organization member.
+      tags:
+        - Organization Members
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The organization member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateOrganizationMember
+      summary: Update an organization member
+      description: Updates the role of an organization member.
+      tags:
+        - Organization Members
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: '#/components/schemas/MemberRole'
+      responses:
+        '200':
+          description: The updated organization member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeOrganizationMember
+      summary: Remove an organization member
+      description: Removes a member from an organization.
+      tags:
+        - Organization Members
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: Member removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/teams:
+    get:
+      operationId: listOrganizationTeams
+      summary: List organization teams
+      description: Returns the list of teams in an organization.
+      tags:
+        - Organization Teams
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of teams.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/teams/{teamId}:
+    get:
+      operationId: getOrganizationTeam
+      summary: Get a team
+      description: Returns a team by its ID.
+      tags:
+        - Organization Teams
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/teamId'
+      responses:
+        '200':
+          description: The requested team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/spaces:
+    get:
+      operationId: listSpacesInOrganization
+      summary: List spaces in an organization
+      description: Returns the list of spaces in an organization.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of spaces.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createSpaceInOrganization
+      summary: Create a space in an organization
+      description: Creates a new space in an organization.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the space.
+                emoji:
+                  type: string
+                  description: An emoji icon for the space.
+                parent:
+                  type: string
+                  description: The ID of the parent collection.
+      responses:
+        '201':
+          description: The newly created space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}:
+    get:
+      operationId: getSpace
+      summary: Get a space
+      description: Returns a space by its ID.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The requested space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateSpace
+      summary: Update a space
+      description: Updates a space's settings.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the space.
+                emoji:
+                  type: string
+                  description: An emoji icon for the space.
+                visibility:
+                  type: string
+                  enum:
+                    - public
+                    - unlisted
+                    - share-link
+                    - in-collection
+                    - private
+                  description: The visibility of the space.
+      responses:
+        '200':
+          description: The updated space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteSpace
+      summary: Delete a space
+      description: Deletes a space.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      responses:
+        '204':
+          description: Space deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/duplicate:
+    post:
+      operationId: duplicateSpace
+      summary: Duplicate a space
+      description: Creates a duplicate of the specified space.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      responses:
+        '201':
+          description: The duplicated space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/move:
+    post:
+      operationId: moveSpace
+      summary: Move a space
+      description: Moves a space to a different parent collection or organization.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parent:
+                  type: string
+                  description: >-
+                    The ID of the target parent collection or organization.
+      responses:
+        '200':
+          description: The moved space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/transfer:
+    post:
+      operationId: transferSpace
+      summary: Transfer a space
+      description: Transfers a space to another organization.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - organization
+              properties:
+                organization:
+                  type: string
+                  description: The ID of the target organization.
+      responses:
+        '200':
+          description: The transferred space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/restore:
+    post:
+      operationId: restoreSpace
+      summary: Restore a deleted space
+      description: Restores a previously deleted space.
+      tags:
+        - Spaces
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The restored space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/permissions/users:
+    get:
+      operationId: listSpaceUsers
+      summary: List space user permissions
+      description: Returns the list of users with permissions on a space.
+      tags:
+        - Space Users
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of space users.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SpaceUser'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/permissions/users/{userId}:
+    patch:
+      operationId: updateSpaceUser
+      summary: Update space user permissions
+      description: Updates a user's permission role on a space.
+      tags:
+        - Space Users
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  $ref: '#/components/schemas/SpaceRole'
+      responses:
+        '200':
+          description: The updated space user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeSpaceUser
+      summary: Remove a space user
+      description: Removes a user's permissions from a space.
+      tags:
+        - Space Users
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: User removed from space successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/content:
+    get:
+      operationId: getSpaceContent
+      summary: Get space content
+      description: Returns the content tree of a space including all pages.
+      tags:
+        - Space Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The content tree of the space.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/content/page/{pageId}:
+    get:
+      operationId: getPageInSpace
+      summary: Get a page in a space
+      description: Returns a specific page within a space.
+      tags:
+        - Space Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/pageId'
+      responses:
+        '200':
+          description: The requested page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updatePageInSpace
+      summary: Update a page in a space
+      description: Updates the content or metadata of a page within a space.
+      tags:
+        - Space Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/pageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the page.
+                description:
+                  type: string
+                  description: The description of the page.
+                document:
+                  type: object
+                  description: The document content of the page.
+      responses:
+        '200':
+          description: The updated page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/content/files:
+    get:
+      operationId: listFilesInSpace
+      summary: List files in a space
+      description: Returns the list of files uploaded to a space.
+      tags:
+        - Space Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of files.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/File'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/collections:
+    get:
+      operationId: listCollectionsInOrganization
+      summary: List collections
+      description: Returns the list of collections in an organization.
+      tags:
+        - Collections
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of collections.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Collection'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createCollection
+      summary: Create a collection
+      description: Creates a new collection in an organization.
+      tags:
+        - Collections
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the collection.
+      responses:
+        '201':
+          description: The newly created collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /collections/{collectionId}:
+    get:
+      operationId: getCollection
+      summary: Get a collection
+      description: Returns a collection by its ID.
+      tags:
+        - Collections
+      parameters:
+        - $ref: '#/components/parameters/collectionId'
+      responses:
+        '200':
+          description: The requested collection.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteCollection
+      summary: Delete a collection
+      description: Deletes a collection.
+      tags:
+        - Collections
+      parameters:
+        - $ref: '#/components/parameters/collectionId'
+      responses:
+        '204':
+          description: Collection deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests:
+    get:
+      operationId: listChangeRequests
+      summary: List change requests
+      description: Returns the list of change requests for a space.
+      tags:
+        - Change Requests
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+        - name: status
+          in: query
+          description: Filter by change request status.
+          schema:
+            type: string
+            enum:
+              - open
+              - merged
+              - closed
+      responses:
+        '200':
+          description: A list of change requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChangeRequest'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createChangeRequest
+      summary: Create a change request
+      description: Creates a new change request for a space.
+      tags:
+        - Change Requests
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subject
+              properties:
+                subject:
+                  type: string
+                  description: The title/subject of the change request.
+                description:
+                  type: string
+                  description: A description of the change request.
+      responses:
+        '201':
+          description: The newly created change request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}:
+    get:
+      operationId: getChangeRequest
+      summary: Get a change request
+      description: Returns a change request by its ID.
+      tags:
+        - Change Requests
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: The requested change request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateChangeRequest
+      summary: Update a change request
+      description: Updates a change request's subject or description.
+      tags:
+        - Change Requests
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: The title/subject of the change request.
+                description:
+                  type: string
+                  description: A description of the change request.
+      responses:
+        '200':
+          description: The updated change request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/merge:
+    post:
+      operationId: mergeChangeRequest
+      summary: Merge a change request
+      description: Merges a change request into the main content of the space.
+      tags:
+        - Change Requests
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: The merged change request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/content:
+    get:
+      operationId: getChangeRequestContent
+      summary: Get change request content
+      description: >-
+        Returns the content tree of a change request including all pages
+        and files.
+      tags:
+        - Change Request Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: The content of the change request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/content/page/{pageId}:
+    get:
+      operationId: getPageInChangeRequest
+      summary: Get a page in a change request
+      description: Returns a specific page within a change request.
+      tags:
+        - Change Request Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+        - $ref: '#/components/parameters/pageId'
+      responses:
+        '200':
+          description: The requested page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updatePageInChangeRequest
+      summary: Update a page in a change request
+      description: Updates a page within a change request.
+      tags:
+        - Change Request Content
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+        - $ref: '#/components/parameters/pageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the page.
+                description:
+                  type: string
+                  description: The description of the page.
+                document:
+                  type: object
+                  description: The document content of the page.
+      responses:
+        '200':
+          description: The updated page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/reviewers:
+    get:
+      operationId: listChangeRequestReviewers
+      summary: List change request reviewers
+      description: Returns the list of requested reviewers for a change request.
+      tags:
+        - Change Request Reviewers
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: A list of reviewers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reviewer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: requestChangeRequestReview
+      summary: Request a review
+      description: Requests a review from a user for a change request.
+      tags:
+        - Change Request Reviewers
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+        - $ref: '#/components/parameters/changeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+                  description: The ID of the user to request a review from.
+      responses:
+        '201':
+          description: Review requested successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites:
+    get:
+      operationId: listDocsSites
+      summary: List docs sites
+      description: Returns the list of docs sites in an organization.
+      tags:
+        - Docs Sites
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of docs sites.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocsSite'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createDocsSite
+      summary: Create a docs site
+      description: Creates a new docs site in an organization.
+      tags:
+        - Docs Sites
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the docs site.
+      responses:
+        '201':
+          description: The newly created docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}:
+    get:
+      operationId: getDocsSite
+      summary: Get a docs site
+      description: Returns a docs site by its ID.
+      tags:
+        - Docs Sites
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: The requested docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateDocsSite
+      summary: Update a docs site
+      description: Updates a docs site's settings.
+      tags:
+        - Docs Sites
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the docs site.
+      responses:
+        '200':
+          description: The updated docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteDocsSite
+      summary: Delete a docs site
+      description: Deletes a docs site.
+      tags:
+        - Docs Sites
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: Docs site deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces:
+    get:
+      operationId: listSiteSpaces
+      summary: List site spaces
+      description: Returns the list of spaces linked to a docs site.
+      tags:
+        - Site Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: A list of site spaces.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: addSiteSpace
+      summary: Add a space to a docs site
+      description: Links a space to a docs site.
+      tags:
+        - Site Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - spaceId
+              properties:
+                spaceId:
+                  type: string
+                  description: The ID of the space to add.
+                sectionId:
+                  type: string
+                  description: Optional section ID for the space.
+      responses:
+        '201':
+          description: The space was added to the site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}:
+    patch:
+      operationId: updateSiteSpace
+      summary: Update a site space
+      description: Updates the configuration of a space within a docs site.
+      tags:
+        - Site Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+        - $ref: '#/components/parameters/siteSpaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                path:
+                  type: string
+                  description: The URL path for this space on the site.
+      responses:
+        '200':
+          description: The updated site space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeSiteSpace
+      summary: Remove a space from a docs site
+      description: Unlinks a space from a docs site.
+      tags:
+        - Site Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+        - $ref: '#/components/parameters/siteSpaceId'
+      responses:
+        '204':
+          description: Space removed from the site.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}/move:
+    post:
+      operationId: moveSiteSpace
+      summary: Move a site space
+      description: Moves a site space to a different position or section.
+      tags:
+        - Site Spaces
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+        - $ref: '#/components/parameters/siteSpaceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sectionId:
+                  type: string
+                  description: The target section ID.
+                position:
+                  type: integer
+                  description: The target position index.
+      responses:
+        '200':
+          description: The moved site space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/ask:
+    post:
+      operationId: askSiteAI
+      summary: Ask a question to a site
+      description: >-
+        Queries a GitBook docs site using AI to find answers from the
+        published content.
+      tags:
+        - Search
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: The question to ask.
+      responses:
+        '200':
+          description: The AI-generated answer.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    description: The generated answer.
+                  sources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        page:
+                          type: string
+                          description: The page title.
+                        url:
+                          type: string
+                          description: The URL of the source page.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/search:
+    get:
+      operationId: searchOrganizationContent
+      summary: Search content in an organization
+      description: Searches for content across all spaces in an organization.
+      tags:
+        - Search
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - name: query
+          in: query
+          required: true
+          description: The search query.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        url:
+                          type: string
+                        space:
+                          type: string
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/openapi:
+    get:
+      operationId: listOpenAPISpecs
+      summary: List OpenAPI specifications
+      description: Returns the list of OpenAPI specs in an organization.
+      tags:
+        - OpenAPI Specs
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: A list of OpenAPI specifications.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: uploadOpenAPISpec
+      summary: Upload an OpenAPI specification
+      description: Uploads a new OpenAPI specification to an organization.
+      tags:
+        - OpenAPI Specs
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to an OpenAPI specification file.
+                slug:
+                  type: string
+                  description: A unique slug for the specification.
+      responses:
+        '201':
+          description: The uploaded OpenAPI specification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/openapi/{specSlug}:
+    get:
+      operationId: getOpenAPISpec
+      summary: Get an OpenAPI specification
+      description: Returns a specific OpenAPI specification by its slug.
+      tags:
+        - OpenAPI Specs
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - name: specSlug
+          in: path
+          required: true
+          description: The slug of the OpenAPI specification.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested OpenAPI specification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/integrations:
+    get:
+      operationId: listIntegrations
+      summary: List integrations
+      description: Returns the list of integrations installed in an organization.
+      tags:
+        - Integrations
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of integrations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Integration'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/integrations/{integrationId}:
+    get:
+      operationId: getIntegration
+      summary: Get an integration
+      description: Returns details about an installed integration.
+      tags:
+        - Integrations
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/integrationId'
+      responses:
+        '200':
+          description: The requested integration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/import/content:
+    post:
+      operationId: importContentToSpace
+      summary: Import content to a space
+      description: >-
+        Imports content from an external source into a space. Supports
+        various formats.
+      tags:
+        - Imports
+      parameters:
+        - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: >-
+                    The URL of the content to import (e.g., a GitHub
+                    repository or external documentation site).
+      responses:
+        '202':
+          description: Import started.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The import job ID.
+                  status:
+                    type: string
+                    description: The status of the import.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /urls/content:
+    get:
+      operationId: resolveContentURL
+      summary: Resolve a content URL
+      description: >-
+        Resolves a URL to find the corresponding GitBook content (space or
+        page).
+      tags:
+        - URLs
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: The URL to resolve.
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: The resolved content reference.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  spaceId:
+                    type: string
+                  pageId:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /urls/embed:
+    get:
+      operationId: resolveEmbedURL
+      summary: Resolve an embed URL
+      description: >-
+        Resolves an external URL to get embed information for rendering
+        within GitBook.
+      tags:
+        - URLs
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: The URL to resolve for embedding.
+          schema:
+            type: string
+            format: uri
+      responses:
+        '200':
+          description: Embed information for the URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: The type of embed.
+                  title:
+                    type: string
+                  html:
+                    type: string
+                    description: HTML content for embedding.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/custom-hostname:
+    get:
+      operationId: getCustomHostname
+      summary: Get custom hostname
+      description: Returns the custom hostname configured for a docs site.
+      tags:
+        - Custom Hostnames
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: The custom hostname configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hostname:
+                    type: string
+                    description: The custom hostname.
+                  status:
+                    type: string
+                    description: The verification status.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: setCustomHostname
+      summary: Set custom hostname
+      description: Configures a custom hostname for a docs site.
+      tags:
+        - Custom Hostnames
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hostname
+              properties:
+                hostname:
+                  type: string
+                  description: The custom hostname to set.
+      responses:
+        '200':
+          description: The custom hostname was configured.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hostname:
+                    type: string
+                  status:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeCustomHostname
+      summary: Remove custom hostname
+      description: Removes the custom hostname from a docs site.
+      tags:
+        - Custom Hostnames
+      parameters:
+        - $ref: '#/components/parameters/organizationId'
+        - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: Custom hostname removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: >-
+        API access token. Generate one from the Developer settings of your
+        GitBook user account.
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
+    pageId:
+      name: pageId
+      in: path
+      required: true
+      description: The unique identifier of the page.
+      schema:
+        type: string
+    collectionId:
+      name: collectionId
+      in: path
+      required: true
+      description: The unique identifier of the collection.
+      schema:
+        type: string
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    siteSpaceId:
+      name: siteSpaceId
+      in: path
+      required: true
+      description: The unique identifier of the site space link.
+      schema:
+        type: string
+    teamId:
+      name: teamId
+      in: path
+      required: true
+      description: The unique identifier of the team.
+      schema:
+        type: string
+    integrationId:
+      name: integrationId
+      in: path
+      required: true
+      description: The unique identifier of the integration.
+      schema:
+        type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the organization.
+        title:
+          type: string
+          description: The display name of the organization.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    OrganizationMember:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        createdAt:
+          type: string
+          format: date-time
+    MemberRole:
+      type: string
+      enum:
+        - admin
+        - create
+        - review
+        - edit
+        - comment
+        - read
+      description: The role of a member within an organization.
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the team.
+        title:
+          type: string
+          description: The display name of the team.
+        members:
+          type: integer
+          description: The number of members in the team.
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the space.
+        title:
+          type: string
+          description: The title of the space.
+        emoji:
+          type: string
+          description: The emoji icon for the space.
+        visibility:
+          type: string
+          enum:
+            - public
+            - unlisted
+            - share-link
+            - in-collection
+            - private
+          description: The visibility setting of the space.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the space was deleted, if applicable.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    SpaceUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/SpaceRole'
+    SpaceRole:
+      type: string
+      enum:
+        - admin
+        - create
+        - review
+        - edit
+        - comment
+        - read
+      description: The permission role of a user on a space.
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the page.
+        title:
+          type: string
+          description: The title of the page.
+        description:
+          type: string
+          description: The description of the page.
+        kind:
+          type: string
+          enum:
+            - sheet
+            - group
+            - link
+          description: The type of page.
+        path:
+          type: string
+          description: The URL-friendly path of the page.
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Page'
+          description: Child pages nested under this page.
+        document:
+          type: object
+          description: The document content of the page.
+    File:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the file.
+        name:
+          type: string
+          description: The file name.
+        contentType:
+          type: string
+          description: The MIME type of the file.
+        downloadURL:
+          type: string
+          format: uri
+          description: URL to download the file.
+    Collection:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the collection.
+        title:
+          type: string
+          description: The title of the collection.
+        description:
+          type: string
+          description: The description of the collection.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the change request.
+        number:
+          type: integer
+          description: The sequential number of the change request.
+        subject:
+          type: string
+          description: The title/subject of the change request.
+        description:
+          type: string
+          description: A description of the change request.
+        status:
+          type: string
+          enum:
+            - open
+            - merged
+            - closed
+          description: The current status of the change request.
+        createdBy:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        mergedAt:
+          type: string
+          format: date-time
+    Reviewer:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum:
+            - pending
+            - approved
+            - changes-requested
+          description: The review status.
+    DocsSite:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the docs site.
+        title:
+          type: string
+          description: The title of the docs site.
+        hostname:
+          type: string
+          description: The hostname of the docs site.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    SiteSpace:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the site space link.
+        space:
+          $ref: '#/components/schemas/Space'
+        path:
+          type: string
+          description: The URL path for this space on the site.
+        sectionId:
+          type: string
+          description: The section this space belongs to.
+    OpenAPISpec:
+      type: object
+      properties:
+        slug:
+          type: string
+          description: The unique slug of the OpenAPI specification.
+        url:
+          type: string
+          format: uri
+          description: The URL of the specification file.
+        title:
+          type: string
+          description: The title of the specification.
+        version:
+          type: string
+          description: The version of the specification.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Integration:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the integration.
+        name:
+          type: string
+          description: The name of the integration.
+        description:
+          type: string
+          description: A description of the integration.
+        installedAt:
+          type: string
+          format: date-time
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: The request was invalid or malformed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
