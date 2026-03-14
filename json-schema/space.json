@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/space.json",
+  "title": "GitBook Space",
+  "description": "A space in GitBook is a container for documentation or knowledge base content, with configurable visibility and access settings.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the space."
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the space."
+    },
+    "emoji": {
+      "type": "string",
+      "description": "The emoji icon for the space."
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "unlisted",
+        "share-link",
+        "in-collection",
+        "private"
+      ],
+      "description": "The visibility setting of the space."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the space was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the space was last updated."
+    },
+    "deletedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the space was deleted, if applicable."
+    },
+    "urls": {
+      "type": "object",
+      "description": "URLs associated with the space.",
+      "properties": {
+        "app": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the space in the GitBook app."
+        },
+        "published": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the space's published site."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/organization.json",
+  "title": "GitBook Organization",
+  "description": "An organization in GitBook that groups users, spaces, and collections under a shared account with roles and permissions.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the organization."
+    },
+    "title": {
+      "type": "string",
+      "description": "The display name of the organization."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the organization was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the organization was last updated."
+    },
+    "urls": {
+      "type": "object",
+      "description": "URLs associated with the organization.",
+      "properties": {
+        "app": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the organization in the GitBook app."
+        },
+        "published": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the organization's published site."
+        }
+      }
+    }
+  }
+}

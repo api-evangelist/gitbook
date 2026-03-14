@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/page.json",
+  "title": "GitBook Page",
+  "description": "A page within a GitBook space that contains documentation content. Pages can be nested hierarchically and support different types including sheets, groups, and links.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the page."
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the page."
+    },
+    "description": {
+      "type": "string",
+      "description": "The description of the page."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "sheet",
+        "group",
+        "link"
+      ],
+      "description": "The type of page."
+    },
+    "path": {
+      "type": "string",
+      "description": "The URL-friendly path of the page."
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "$ref": "page.json"
+      },
+      "description": "Child pages nested under this page."
+    },
+    "document": {
+      "type": "object",
+      "description": "The document content of the page."
+    }
+  }
+}

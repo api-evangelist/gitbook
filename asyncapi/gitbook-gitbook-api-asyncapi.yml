@@ -1,0 +1,541 @@
+asyncapi: 2.6.0
+info:
+  title: GitBook Webhook Events
+  version: 1.0.0
+  description: >-
+    AsyncAPI specification for GitBook webhook events. GitBook emits webhook
+    notifications when key events occur within organizations, spaces, pages,
+    change requests, docs sites, collections, and user accounts. These events
+    enable real-time monitoring of documentation lifecycle changes and
+    collaborative editing workflows.
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+  production:
+    url: https://api.gitbook.com/v1
+    protocol: https
+    description: GitBook API webhook delivery endpoint
+channels:
+  space.created:
+    description: Triggered when a new space is created within an organization.
+    subscribe:
+      operationId: onSpaceCreated
+      summary: Space Created
+      message:
+        $ref: '#/components/messages/SpaceEvent'
+  space.updated:
+    description: Triggered when a space is updated, including title or visibility changes.
+    subscribe:
+      operationId: onSpaceUpdated
+      summary: Space Updated
+      message:
+        $ref: '#/components/messages/SpaceEvent'
+  space.deleted:
+    description: Triggered when a space is deleted from an organization.
+    subscribe:
+      operationId: onSpaceDeleted
+      summary: Space Deleted
+      message:
+        $ref: '#/components/messages/SpaceEvent'
+  page.created:
+    description: Triggered when a new page is created within a space.
+    subscribe:
+      operationId: onPageCreated
+      summary: Page Created
+      message:
+        $ref: '#/components/messages/PageEvent'
+  page.updated:
+    description: Triggered when the content or metadata of a page is updated.
+    subscribe:
+      operationId: onPageUpdated
+      summary: Page Updated
+      message:
+        $ref: '#/components/messages/PageEvent'
+  page.deleted:
+    description: Triggered when a page is deleted from a space.
+    subscribe:
+      operationId: onPageDeleted
+      summary: Page Deleted
+      message:
+        $ref: '#/components/messages/PageEvent'
+  changeRequest.created:
+    description: Triggered when a new change request is opened for a space.
+    subscribe:
+      operationId: onChangeRequestCreated
+      summary: Change Request Created
+      message:
+        $ref: '#/components/messages/ChangeRequestEvent'
+  changeRequest.merged:
+    description: Triggered when a change request is merged into the main content.
+    subscribe:
+      operationId: onChangeRequestMerged
+      summary: Change Request Merged
+      message:
+        $ref: '#/components/messages/ChangeRequestEvent'
+  changeRequest.closed:
+    description: Triggered when a change request is closed without merging.
+    subscribe:
+      operationId: onChangeRequestClosed
+      summary: Change Request Closed
+      message:
+        $ref: '#/components/messages/ChangeRequestEvent'
+  organization.updated:
+    description: Triggered when an organization's settings or metadata are updated.
+    subscribe:
+      operationId: onOrganizationUpdated
+      summary: Organization Updated
+      message:
+        $ref: '#/components/messages/OrganizationEvent'
+  organization.memberAdded:
+    description: Triggered when a new member is added to an organization.
+    subscribe:
+      operationId: onOrganizationMemberAdded
+      summary: Organization Member Added
+      message:
+        $ref: '#/components/messages/OrganizationMemberEvent'
+  organization.memberRemoved:
+    description: Triggered when a member is removed from an organization.
+    subscribe:
+      operationId: onOrganizationMemberRemoved
+      summary: Organization Member Removed
+      message:
+        $ref: '#/components/messages/OrganizationMemberEvent'
+  collection.created:
+    description: Triggered when a new collection is created within an organization.
+    subscribe:
+      operationId: onCollectionCreated
+      summary: Collection Created
+      message:
+        $ref: '#/components/messages/CollectionEvent'
+  collection.updated:
+    description: Triggered when a collection is updated.
+    subscribe:
+      operationId: onCollectionUpdated
+      summary: Collection Updated
+      message:
+        $ref: '#/components/messages/CollectionEvent'
+  collection.deleted:
+    description: Triggered when a collection is deleted.
+    subscribe:
+      operationId: onCollectionDeleted
+      summary: Collection Deleted
+      message:
+        $ref: '#/components/messages/CollectionEvent'
+  docsSite.created:
+    description: Triggered when a new docs site is created.
+    subscribe:
+      operationId: onDocsSiteCreated
+      summary: Docs Site Created
+      message:
+        $ref: '#/components/messages/DocsSiteEvent'
+  docsSite.updated:
+    description: Triggered when a docs site is updated, including hostname or title changes.
+    subscribe:
+      operationId: onDocsSiteUpdated
+      summary: Docs Site Updated
+      message:
+        $ref: '#/components/messages/DocsSiteEvent'
+  docsSite.deleted:
+    description: Triggered when a docs site is deleted.
+    subscribe:
+      operationId: onDocsSiteDeleted
+      summary: Docs Site Deleted
+      message:
+        $ref: '#/components/messages/DocsSiteEvent'
+  user.updated:
+    description: Triggered when a user's profile information is updated.
+    subscribe:
+      operationId: onUserUpdated
+      summary: User Updated
+      message:
+        $ref: '#/components/messages/UserEvent'
+components:
+  messages:
+    SpaceEvent:
+      name: SpaceEvent
+      title: Space Event
+      summary: An event related to a GitBook space.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - space.created
+              - space.updated
+              - space.deleted
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization the space belongs to.
+          space:
+            $ref: '#/components/schemas/Space'
+    PageEvent:
+      name: PageEvent
+      title: Page Event
+      summary: An event related to a page within a GitBook space.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - page.created
+              - page.updated
+              - page.deleted
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization the space belongs to.
+          spaceId:
+            type: string
+            description: The space the page belongs to.
+          page:
+            $ref: '#/components/schemas/Page'
+    ChangeRequestEvent:
+      name: ChangeRequestEvent
+      title: Change Request Event
+      summary: An event related to a change request in a GitBook space.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - changeRequest.created
+              - changeRequest.merged
+              - changeRequest.closed
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization the space belongs to.
+          spaceId:
+            type: string
+            description: The space the change request belongs to.
+          changeRequest:
+            $ref: '#/components/schemas/ChangeRequest'
+    OrganizationEvent:
+      name: OrganizationEvent
+      title: Organization Event
+      summary: An event related to an organization.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - organization.updated
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organization:
+            $ref: '#/components/schemas/Organization'
+    OrganizationMemberEvent:
+      name: OrganizationMemberEvent
+      title: Organization Member Event
+      summary: An event related to organization membership changes.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - organization.memberAdded
+              - organization.memberRemoved
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization affected.
+          user:
+            $ref: '#/components/schemas/User'
+    CollectionEvent:
+      name: CollectionEvent
+      title: Collection Event
+      summary: An event related to a collection.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - collection.created
+              - collection.updated
+              - collection.deleted
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization the collection belongs to.
+          collection:
+            $ref: '#/components/schemas/Collection'
+    DocsSiteEvent:
+      name: DocsSiteEvent
+      title: Docs Site Event
+      summary: An event related to a docs site.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - docsSite.created
+              - docsSite.updated
+              - docsSite.deleted
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          organizationId:
+            type: string
+            description: The organization the docs site belongs to.
+          docsSite:
+            $ref: '#/components/schemas/DocsSite'
+    UserEvent:
+      name: UserEvent
+      title: User Event
+      summary: An event related to a user profile change.
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          eventId:
+            type: string
+            description: Unique identifier for this event.
+          eventType:
+            type: string
+            description: The type of event.
+            enum:
+              - user.updated
+          timestamp:
+            type: string
+            format: date-time
+            description: The time the event occurred.
+          user:
+            $ref: '#/components/schemas/User'
+  schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the organization.
+        title:
+          type: string
+          description: The display name of the organization.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the space.
+        title:
+          type: string
+          description: The title of the space.
+        visibility:
+          type: string
+          enum:
+            - public
+            - unlisted
+            - share-link
+            - in-collection
+            - private
+          description: The visibility setting of the space.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the page.
+        title:
+          type: string
+          description: The title of the page.
+        description:
+          type: string
+          description: The description of the page.
+        kind:
+          type: string
+          enum:
+            - sheet
+            - group
+            - link
+          description: The type of page.
+        path:
+          type: string
+          description: The URL-friendly path of the page.
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+    ChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the change request.
+        number:
+          type: integer
+          description: The sequential number of the change request.
+        subject:
+          type: string
+          description: The title of the change request.
+        description:
+          type: string
+          description: A description of the change request.
+        status:
+          type: string
+          enum:
+            - open
+            - merged
+            - closed
+          description: The current status of the change request.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        mergedAt:
+          type: string
+          format: date-time
+    Collection:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the collection.
+        title:
+          type: string
+          description: The title of the collection.
+        description:
+          type: string
+          description: The description of the collection.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    DocsSite:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the docs site.
+        title:
+          type: string
+          description: The title of the docs site.
+        hostname:
+          type: string
+          description: The hostname of the docs site.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

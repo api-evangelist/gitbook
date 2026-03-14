@@ -1,0 +1,89 @@
+{
+  "@context": {
+    "@vocab": "https://schema.org/",
+    "gitbook": "https://docs.gitbook.com/developers/",
+    "Organization": {
+      "@id": "gitbook:organization",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "title": "https://schema.org/name",
+        "createdAt": "https://schema.org/dateCreated",
+        "updatedAt": "https://schema.org/dateModified",
+        "urls": "https://schema.org/url"
+      }
+    },
+    "Space": {
+      "@id": "gitbook:space",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "title": "https://schema.org/name",
+        "emoji": "https://schema.org/character",
+        "visibility": "https://schema.org/accessMode",
+        "createdAt": "https://schema.org/dateCreated",
+        "updatedAt": "https://schema.org/dateModified",
+        "deletedAt": "https://schema.org/dateDeleted",
+        "urls": "https://schema.org/url"
+      }
+    },
+    "Page": {
+      "@id": "gitbook:page",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "title": "https://schema.org/name",
+        "description": "https://schema.org/description",
+        "kind": "https://schema.org/additionalType",
+        "path": "https://schema.org/urlTemplate",
+        "pages": "https://schema.org/hasPart",
+        "document": "https://schema.org/text"
+      }
+    },
+    "User": {
+      "@id": "gitbook:user",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "displayName": "https://schema.org/name",
+        "email": "https://schema.org/email",
+        "photoURL": "https://schema.org/image",
+        "urls": "https://schema.org/url"
+      }
+    },
+    "ChangeRequest": {
+      "@id": "gitbook:change-request",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "number": "https://schema.org/position",
+        "subject": "https://schema.org/name",
+        "description": "https://schema.org/description",
+        "status": "https://schema.org/status",
+        "createdBy": {
+          "@id": "gitbook:user",
+          "@type": "@id"
+        },
+        "createdAt": "https://schema.org/dateCreated",
+        "updatedAt": "https://schema.org/dateModified",
+        "mergedAt": "https://schema.org/dateModified"
+      }
+    },
+    "DocsSite": {
+      "@id": "gitbook:docs-site",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "title": "https://schema.org/name",
+        "hostname": "https://schema.org/url",
+        "urls": "https://schema.org/url",
+        "createdAt": "https://schema.org/dateCreated",
+        "updatedAt": "https://schema.org/dateModified"
+      }
+    },
+    "Collection": {
+      "@id": "gitbook:collection",
+      "@context": {
+        "id": "https://schema.org/identifier",
+        "title": "https://schema.org/name",
+        "description": "https://schema.org/description",
+        "createdAt": "https://schema.org/dateCreated",
+        "updatedAt": "https://schema.org/dateModified"
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/change-request.json",
+  "title": "GitBook Change Request",
+  "description": "A change request in GitBook represents a proposed set of content changes to a space, similar to a pull request. Change requests support collaborative review workflows before merging into the main content.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the change request."
+    },
+    "number": {
+      "type": "integer",
+      "description": "The sequential number of the change request."
+    },
+    "subject": {
+      "type": "string",
+      "description": "The title or subject of the change request."
+    },
+    "description": {
+      "type": "string",
+      "description": "A description of the change request."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "merged",
+        "closed"
+      ],
+      "description": "The current status of the change request."
+    },
+    "createdBy": {
+      "$ref": "user.json",
+      "description": "The user who created the change request."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the change request was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the change request was last updated."
+    },
+    "mergedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the change request was merged, if applicable."
+    }
+  }
+}

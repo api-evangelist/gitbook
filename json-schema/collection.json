@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/collection.json",
+  "title": "GitBook Collection",
+  "description": "A collection in GitBook that organizes and groups related spaces together within an organization.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the collection."
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the collection."
+    },
+    "description": {
+      "type": "string",
+      "description": "The description of the collection."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the collection was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the collection was last updated."
+    }
+  }
+}

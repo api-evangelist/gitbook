@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/docs-site.json",
+  "title": "GitBook Docs Site",
+  "description": "A published documentation site in GitBook that serves content from one or more spaces under a configured hostname.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the docs site."
+    },
+    "title": {
+      "type": "string",
+      "description": "The title of the docs site."
+    },
+    "hostname": {
+      "type": "string",
+      "description": "The hostname of the docs site."
+    },
+    "urls": {
+      "type": "object",
+      "description": "URLs associated with the docs site.",
+      "properties": {
+        "app": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the docs site in the GitBook app."
+        },
+        "published": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the published docs site."
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the docs site was created."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the docs site was last updated."
+    }
+  }
+}

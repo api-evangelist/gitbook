@@ -17,6 +17,24 @@ apis:
         type: Documentation
       - url: openapi/gitbook-gitbook-api-openapi.yml
         type: OpenAPI
+      - url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+        type: AsyncAPI
+      - url: json-schema/organization.json
+        type: JSONSchema
+      - url: json-schema/space.json
+        type: JSONSchema
+      - url: json-schema/page.json
+        type: JSONSchema
+      - url: json-schema/user.json
+        type: JSONSchema
+      - url: json-schema/change-request.json
+        type: JSONSchema
+      - url: json-schema/docs-site.json
+        type: JSONSchema
+      - url: json-schema/collection.json
+        type: JSONSchema
+      - url: json-ld/gitbook-context.jsonld
+        type: JSONLD
     description: >-
       GitBook is a modern documentation platform that helps teams create,
       collaborate on, and publish product and engineering knowledge. It combines

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/api-evangelist/gitbook/blob/main/json-schema/user.json",
+  "title": "GitBook User",
+  "description": "A user account in GitBook with profile information including display name, email, and photo.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier of the user."
+    },
+    "displayName": {
+      "type": "string",
+      "description": "The display name of the user."
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "The email address of the user."
+    },
+    "photoURL": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the user's profile photo."
+    },
+    "urls": {
+      "type": "object",
+      "description": "URLs associated with the user.",
+      "properties": {
+        "app": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the user's profile in the GitBook app."
+        }
+      }
+    }
+  }
+}
