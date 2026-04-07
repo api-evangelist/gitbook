@@ -72,7 +72,7 @@ paths:
   /user:
     get:
       operationId: getCurrentUser
-      summary: Get the authenticated user
+      summary: GitBook Get the authenticated user
       description: Returns the currently authenticated user.
       tags:
         - Users
@@ -88,7 +88,7 @@ paths:
   /users/{userId}:
     get:
       operationId: getUserById
-      summary: Get a user by ID
+      summary: GitBook Get a user by ID
       description: Returns a user by their unique identifier.
       tags:
         - Users
@@ -108,7 +108,7 @@ paths:
   /orgs:
     get:
       operationId: listOrganizations
-      summary: List organizations
+      summary: GitBook List organizations
       description: >-
         Returns the list of organizations for the currently authenticated
         user.
@@ -131,7 +131,7 @@ paths:
   /orgs/{organizationId}:
     get:
       operationId: getOrganization
-      summary: Get an organization
+      summary: GitBook Get an organization
       description: Returns an organization by its ID.
       tags:
         - Organizations
@@ -150,7 +150,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       operationId: updateOrganization
-      summary: Update an organization
+      summary: GitBook Update an organization
       description: Updates an organization's settings.
       tags:
         - Organizations
@@ -180,7 +180,7 @@ paths:
   /orgs/{organizationId}/members:
     get:
       operationId: listOrganizationMembers
-      summary: List organization members
+      summary: GitBook List organization members
       description: Returns the list of members in an organization.
       tags:
         - Organization Members
@@ -209,7 +209,7 @@ paths:
   /orgs/{organizationId}/members/{userId}:
     get:
       operationId: getOrganizationMember
-      summary: Get an organization member
+      summary: GitBook Get an organization member
       description: Returns details about a specific organization member.
       tags:
         - Organization Members
@@ -229,7 +229,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       operationId: updateOrganizationMember
-      summary: Update an organization member
+      summary: GitBook Update an organization member
       description: Updates the role of an organization member.
       tags:
         - Organization Members
@@ -258,7 +258,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: removeOrganizationMember
-      summary: Remove an organization member
+      summary: GitBook Remove an organization member
       description: Removes a member from an organization.
       tags:
         - Organization Members
@@ -275,7 +275,7 @@ paths:
   /orgs/{organizationId}/teams:
     get:
       operationId: listOrganizationTeams
-      summary: List organization teams
+      summary: GitBook List organization teams
       description: Returns the list of teams in an organization.
       tags:
         - Organization Teams
@@ -304,7 +304,7 @@ paths:
   /orgs/{organizationId}/teams/{teamId}:
     get:
       operationId: getOrganizationTeam
-      summary: Get a team
+      summary: GitBook Get a team
       description: Returns a team by its ID.
       tags:
         - Organization Teams
@@ -325,7 +325,7 @@ paths:
   /orgs/{organizationId}/spaces:
     get:
       operationId: listSpacesInOrganization
-      summary: List spaces in an organization
+      summary: GitBook List spaces in an organization
       description: Returns the list of spaces in an organization.
       tags:
         - Spaces
@@ -353,7 +353,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: createSpaceInOrganization
-      summary: Create a space in an organization
+      summary: GitBook Create a space in an organization
       description: Creates a new space in an organization.
       tags:
         - Spaces
@@ -391,7 +391,7 @@ paths:
   /spaces/{spaceId}:
     get:
       operationId: getSpace
-      summary: Get a space
+      summary: GitBook Get a space
       description: Returns a space by its ID.
       tags:
         - Spaces
@@ -410,7 +410,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       operationId: updateSpace
-      summary: Update a space
+      summary: GitBook Update a space
       description: Updates a space's settings.
       tags:
         - Spaces
@@ -451,7 +451,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: deleteSpace
-      summary: Delete a space
+      summary: GitBook Delete a space
       description: Deletes a space.
       tags:
         - Spaces
@@ -467,7 +467,7 @@ paths:
   /spaces/{spaceId}/duplicate:
     post:
       operationId: duplicateSpace
-      summary: Duplicate a space
+      summary: GitBook Duplicate a space
       description: Creates a duplicate of the specified space.
       tags:
         - Spaces
@@ -487,7 +487,7 @@ paths:
   /spaces/{spaceId}/move:
     post:
       operationId: moveSpace
-      summary: Move a space
+      summary: GitBook Move a space
       description: Moves a space to a different parent collection or organization.
       tags:
         - Spaces
@@ -518,7 +518,7 @@ paths:
   /spaces/{spaceId}/transfer:
     post:
       operationId: transferSpace
-      summary: Transfer a space
+      summary: GitBook Transfer a space
       description: Transfers a space to another organization.
       tags:
         - Spaces
@@ -550,7 +550,7 @@ paths:
   /spaces/{spaceId}/restore:
     post:
       operationId: restoreSpace
-      summary: Restore a deleted space
+      summary: GitBook Restore a deleted space
       description: Restores a previously deleted space.
       tags:
         - Spaces
@@ -570,7 +570,7 @@ paths:
   /spaces/{spaceId}/permissions/users:
     get:
       operationId: listSpaceUsers
-      summary: List space user permissions
+      summary: GitBook List space user permissions
       description: Returns the list of users with permissions on a space.
       tags:
         - Space Users
@@ -599,7 +599,7 @@ paths:
   /spaces/{spaceId}/permissions/users/{userId}:
     patch:
       operationId: updateSpaceUser
-      summary: Update space user permissions
+      summary: GitBook Update space user permissions
       description: Updates a user's permission role on a space.
       tags:
         - Space Users
@@ -630,7 +630,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: removeSpaceUser
-      summary: Remove a space user
+      summary: GitBook Remove a space user
       description: Removes a user's permissions from a space.
       tags:
         - Space Users
@@ -647,7 +647,7 @@ paths:
   /spaces/{spaceId}/content:
     get:
       operationId: getSpaceContent
-      summary: Get space content
+      summary: GitBook Get space content
       description: Returns the content tree of a space including all pages.
       tags:
         - Space Content
@@ -672,7 +672,7 @@ paths:
   /spaces/{spaceId}/content/page/{pageId}:
     get:
       operationId: getPageInSpace
-      summary: Get a page in a space
+      summary: GitBook Get a page in a space
       description: Returns a specific page within a space.
       tags:
         - Space Content
@@ -692,7 +692,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       operationId: updatePageInSpace
-      summary: Update a page in a space
+      summary: GitBook Update a page in a space
       description: Updates the content or metadata of a page within a space.
       tags:
         - Space Content
@@ -729,7 +729,7 @@ paths:
   /spaces/{spaceId}/content/files:
     get:
       operationId: listFilesInSpace
-      summary: List files in a space
+      summary: GitBook List files in a space
       description: Returns the list of files uploaded to a space.
       tags:
         - Space Content
@@ -758,7 +758,7 @@ paths:
   /orgs/{organizationId}/collections:
     get:
       operationId: listCollectionsInOrganization
-      summary: List collections
+      summary: GitBook List collections
       description: Returns the list of collections in an organization.
       tags:
         - Collections
@@ -786,7 +786,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: createCollection
-      summary: Create a collection
+      summary: GitBook Create a collection
       description: Creates a new collection in an organization.
       tags:
         - Collections
@@ -818,7 +818,7 @@ paths:
   /collections/{collectionId}:
     get:
       operationId: getCollection
-      summary: Get a collection
+      summary: GitBook Get a collection
       description: Returns a collection by its ID.
       tags:
         - Collections
@@ -837,7 +837,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: deleteCollection
-      summary: Delete a collection
+      summary: GitBook Delete a collection
       description: Deletes a collection.
       tags:
         - Collections
@@ -853,7 +853,7 @@ paths:
   /spaces/{spaceId}/change-requests:
     get:
       operationId: listChangeRequests
-      summary: List change requests
+      summary: GitBook List change requests
       description: Returns the list of change requests for a space.
       tags:
         - Change Requests
@@ -890,7 +890,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: createChangeRequest
-      summary: Create a change request
+      summary: GitBook Create a change request
       description: Creates a new change request for a space.
       tags:
         - Change Requests
@@ -925,7 +925,7 @@ paths:
   /spaces/{spaceId}/change-requests/{changeRequestId}:
     get:
       operationId: getChangeRequest
-      summary: Get a change request
+      summary: GitBook Get a change request
       description: Returns a change request by its ID.
       tags:
         - Change Requests
@@ -945,7 +945,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       operationId: updateChangeRequest
-      summary: Update a change request
+      summary: GitBook Update a change request
       description: Updates a change request's subject or description.
       tags:
         - Change Requests
@@ -979,7 +979,7 @@ paths:
   /spaces/{spaceId}/change-requests/{changeRequestId}/merge:
     post:
       operationId: mergeChangeRequest
-      summary: Merge a change request
+      summary: GitBook Merge a change request
       description: Merges a change request into the main content of the space.
       tags:
         - Change Requests
@@ -1000,7 +1000,7 @@ paths:
   /spaces/{spaceId}/change-requests/{changeRequestId}/content:
     get:
       operationId: getChangeRequestContent
-      summary: Get change request content
+      summary: GitBook Get change request content
       description: >-
         Returns the content tree of a change request including all pages
         and files.
@@ -1028,7 +1028,7 @@ paths:
   /spaces/{spaceId}/change-requests/{changeRequestId}/content/page/{pageId}:
     get:
       operationId: getPageInChangeRequest
-      summary: Get a page in a change request
+      summary: GitBook Get a page in a change request
       description: Returns a specific page within a change request.
       tags:
         - Change Request Content
@@ -1049,7 +1049,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       operationId: updatePageInChangeRequest
-      summary: Update a page in a change request
+      summary: GitBook Update a page in a change request
       description: Updates a page within a change request.
       tags:
         - Change Request Content
@@ -1087,7 +1087,7 @@ paths:
   /spaces/{spaceId}/change-requests/{changeRequestId}/reviewers:
     get:
       operationId: listChangeRequestReviewers
-      summary: List change request reviewers
+      summary: GitBook List change request reviewers
       description: Returns the list of requested reviewers for a change request.
       tags:
         - Change Request Reviewers
@@ -1112,7 +1112,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: requestChangeRequestReview
-      summary: Request a review
+      summary: GitBook Request a review
       description: Requests a review from a user for a change request.
       tags:
         - Change Request Reviewers
@@ -1145,7 +1145,7 @@ paths:
   /orgs/{organizationId}/sites:
     get:
       operationId: listDocsSites
-      summary: List docs sites
+      summary: GitBook List docs sites
       description: Returns the list of docs sites in an organization.
       tags:
         - Docs Sites
@@ -1173,7 +1173,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: createDocsSite
-      summary: Create a docs site
+      summary: GitBook Create a docs site
       description: Creates a new docs site in an organization.
       tags:
         - Docs Sites
@@ -1205,7 +1205,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}:
     get:
       operationId: getDocsSite
-      summary: Get a docs site
+      summary: GitBook Get a docs site
       description: Returns a docs site by its ID.
       tags:
         - Docs Sites
@@ -1225,7 +1225,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     patch:
       operationId: updateDocsSite
-      summary: Update a docs site
+      summary: GitBook Update a docs site
       description: Updates a docs site's settings.
       tags:
         - Docs Sites
@@ -1255,7 +1255,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: deleteDocsSite
-      summary: Delete a docs site
+      summary: GitBook Delete a docs site
       description: Deletes a docs site.
       tags:
         - Docs Sites
@@ -1272,7 +1272,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}/site-spaces:
     get:
       operationId: listSiteSpaces
-      summary: List site spaces
+      summary: GitBook List site spaces
       description: Returns the list of spaces linked to a docs site.
       tags:
         - Site Spaces
@@ -1297,7 +1297,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: addSiteSpace
-      summary: Add a space to a docs site
+      summary: GitBook Add a space to a docs site
       description: Links a space to a docs site.
       tags:
         - Site Spaces
@@ -1333,7 +1333,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}:
     patch:
       operationId: updateSiteSpace
-      summary: Update a site space
+      summary: GitBook Update a site space
       description: Updates the configuration of a space within a docs site.
       tags:
         - Site Spaces
@@ -1364,7 +1364,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: removeSiteSpace
-      summary: Remove a space from a docs site
+      summary: GitBook Remove a space from a docs site
       description: Unlinks a space from a docs site.
       tags:
         - Site Spaces
@@ -1382,7 +1382,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}/move:
     post:
       operationId: moveSiteSpace
-      summary: Move a site space
+      summary: GitBook Move a site space
       description: Moves a site space to a different position or section.
       tags:
         - Site Spaces
@@ -1416,7 +1416,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}/ask:
     post:
       operationId: askSiteAI
-      summary: Ask a question to a site
+      summary: GitBook Ask a question to a site
       description: >-
         Queries a GitBook docs site using AI to find answers from the
         published content.
@@ -1466,7 +1466,7 @@ paths:
   /orgs/{organizationId}/search:
     get:
       operationId: searchOrganizationContent
-      summary: Search content in an organization
+      summary: GitBook Search content in an organization
       description: Searches for content across all spaces in an organization.
       tags:
         - Search
@@ -1510,7 +1510,7 @@ paths:
   /orgs/{organizationId}/openapi:
     get:
       operationId: listOpenAPISpecs
-      summary: List OpenAPI specifications
+      summary: GitBook List OpenAPI specifications
       description: Returns the list of OpenAPI specs in an organization.
       tags:
         - OpenAPI Specs
@@ -1534,7 +1534,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       operationId: uploadOpenAPISpec
-      summary: Upload an OpenAPI specification
+      summary: GitBook Upload an OpenAPI specification
       description: Uploads a new OpenAPI specification to an organization.
       tags:
         - OpenAPI Specs
@@ -1568,7 +1568,7 @@ paths:
   /orgs/{organizationId}/openapi/{specSlug}:
     get:
       operationId: getOpenAPISpec
-      summary: Get an OpenAPI specification
+      summary: GitBook Get an OpenAPI specification
       description: Returns a specific OpenAPI specification by its slug.
       tags:
         - OpenAPI Specs
@@ -1594,7 +1594,7 @@ paths:
   /orgs/{organizationId}/integrations:
     get:
       operationId: listIntegrations
-      summary: List integrations
+      summary: GitBook List integrations
       description: Returns the list of integrations installed in an organization.
       tags:
         - Integrations
@@ -1623,7 +1623,7 @@ paths:
   /orgs/{organizationId}/integrations/{integrationId}:
     get:
       operationId: getIntegration
-      summary: Get an integration
+      summary: GitBook Get an integration
       description: Returns details about an installed integration.
       tags:
         - Integrations
@@ -1644,7 +1644,7 @@ paths:
   /spaces/{spaceId}/import/content:
     post:
       operationId: importContentToSpace
-      summary: Import content to a space
+      summary: GitBook Import content to a space
       description: >-
         Imports content from an external source into a space. Supports
         various formats.
@@ -1688,7 +1688,7 @@ paths:
   /urls/content:
     get:
       operationId: resolveContentURL
-      summary: Resolve a content URL
+      summary: GitBook Resolve a content URL
       description: >-
         Resolves a URL to find the corresponding GitBook content (space or
         page).
@@ -1721,7 +1721,7 @@ paths:
   /urls/embed:
     get:
       operationId: resolveEmbedURL
-      summary: Resolve an embed URL
+      summary: GitBook Resolve an embed URL
       description: >-
         Resolves an external URL to get embed information for rendering
         within GitBook.
@@ -1758,7 +1758,7 @@ paths:
   /orgs/{organizationId}/sites/{siteId}/custom-hostname:
     get:
       operationId: getCustomHostname
-      summary: Get custom hostname
+      summary: GitBook Get custom hostname
       description: Returns the custom hostname configured for a docs site.
       tags:
         - Custom Hostnames
@@ -1785,7 +1785,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       operationId: setCustomHostname
-      summary: Set custom hostname
+      summary: GitBook Set custom hostname
       description: Configures a custom hostname for a docs site.
       tags:
         - Custom Hostnames
@@ -1822,7 +1822,7 @@ paths:
           $ref: '#/components/responses/NotFound'
     delete:
       operationId: removeCustomHostname
-      summary: Remove custom hostname
+      summary: GitBook Remove custom hostname
       description: Removes the custom hostname from a docs site.
       tags:
         - Custom Hostnames
