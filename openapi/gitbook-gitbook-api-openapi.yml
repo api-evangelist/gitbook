@@ -22,52 +22,50 @@ servers:
 security:
   - bearerAuth: []
 tags:
-  - name: Users
-    description: Manage user accounts and profiles.
-  - name: Organizations
-    description: >-
-      Create and configure organizations to group users, spaces, and
-      collections.
-  - name: Organization Members
-    description: Manage members and their roles within an organization.
-  - name: Organization Teams
-    description: Manage teams within an organization.
-  - name: Spaces
-    description: >-
-      Manage spaces which are containers for documentation or knowledge base
-      content.
-  - name: Space Users
-    description: Manage user permissions within a space.
-  - name: Space Content
-    description: Manage pages and content within a space.
-  - name: Collections
-    description: Organize and manage grouped sets of spaces.
-  - name: Change Requests
-    description: >-
-      Create, list, review, merge, and update change requests for
-      collaborative editing.
   - name: Change Request Content
     description: Manage content within a change request.
   - name: Change Request Reviewers
     description: Manage reviewers for change requests.
+  - name: Change Requests
+    description: >-
+      Create, list, review, merge, and update change requests for
+      collaborative editing.
+  - name: Collections
+    description: Organize and manage grouped sets of spaces.
+  - name: Custom Hostnames
+    description: Configure custom hostnames for docs sites.
   - name: Docs Sites
     description: Manage published documentation sites.
-  - name: Site Spaces
-    description: Manage spaces within a docs site.
+  - name: Imports
+    description: Import content into spaces.
   - name: Integrations
     description: Install and manage third-party integrations.
   - name: OpenAPI Specs
     description: Upload and manage OpenAPI specifications.
-  - name: URLs
-    description: Resolve and manage content URLs.
+  - name: Organization Members
+    description: Manage members and their roles within an organization.
+  - name: Organization Teams
+    description: Manage teams within an organization.
+  - name: Organizations
+    description: >-
+      Create and configure organizations to group users, spaces, and
+      collections.
   - name: Search
     description: Search content across an organization.
-  - name: Imports
-    description: Import content into spaces.
-  - name: Custom Hostnames
-    description: Configure custom hostnames for docs sites.
-  - name: SSO
-    description: Manage single sign-on configurations.
+  - name: Site Spaces
+    description: Manage spaces within a docs site.
+  - name: Space Content
+    description: Manage pages and content within a space.
+  - name: Space Users
+    description: Manage user permissions within a space.
+  - name: Spaces
+    description: >-
+      Manage spaces which are containers for documentation or knowledge base
+      content.
+  - name: URLs
+    description: Resolve and manage content URLs.
+  - name: Users
+    description: Manage user accounts and profiles.
 paths:
   /user:
     get:

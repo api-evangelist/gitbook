@@ -5,12 +5,12 @@ apis:
   - aid: gitbook:gitbook
     name: GitBook
     tags:
-      - Integrations
-      - SDKs
-      - Platform
-      - Documentation
       - Content
+      - Documentation
       - Experience
+      - Integrations
+      - Platform
+      - SDKs
     humanURL: https://docs.gitbook.com/developers
     properties:
       - url: https://docs.gitbook.com/developers
@@ -44,12 +44,12 @@ apis:
       and analytics.
 name: GitBook
 tags:
-  - Integrations
-  - SDKs
-  - Platform
-  - Documentation
   - Content
+  - Documentation
   - Experience
+  - Integrations
+  - Platform
+  - SDKs
 type: Index
 image: https://kinlane-productions.s3.amazonaws.com/apis-json/apis-json-logo.jpg
 access: 3rd-Party
