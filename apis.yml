@@ -72,6 +72,8 @@ common:
     name: GitBook guides | Guides | GitBook Documentation
     type: Guide
     description: 'null'
+  - type: Integrations
+    url: https://www.gitbook.com/integrations
 created: '2025-01-08'
 modified: '2026-04-28'
 position: Consumer
@@ -82,6 +84,74 @@ description: >-
   team members. With GitBook, users can easily create a professional-looking book
   or documentation site with features such as version control, markdown formatting,
   and customizable themes.
+integrations:
+  - name: The Linear logo
+  - name: The Slack logo
+  - name: Featured Google Analytics
+  - name: Ahrefs
+  - name: Amplitude
+  - name: Arcade
+  - name: Auth0
+  - name: AWS Cognito
+  - name: Azure
+  - name: Crisp
+  - name: DevTune
+  - name: Discord
+  - name: Fathom
+  - name: Figma
+  - name: Formspree
+  - name: Freshdesk
+  - name: Front
+  - name: Fullstory
+  - name: GitHub Channel
+  - name: GitHub Discussions Connector
+  - name: GitHub Files
+  - name: GitHub Issues Connector
+  - name: GitLab Files
+  - name: Gurubase
+  - name: Heap
+  - name: Hexus
+  - name: Hotjar
+  - name: HowdyGo
+  - name: Inkeep
+  - name: Intercom
+  - name: Jira
+  - name: kapa.ai
+  - name: LaunchDarkly
+  - name: LetMeExplain
+  - name: Linear
+  - name: Lucid
+  - name: Mailchimp
+  - name: Marketo
+  - name: Matomo
+  - name: Mermaid
+  - name: Mixpanel
+  - name: Okta
+  - name: OneTrust
+  - name: OpenID Connect protocol
+  - name: Pendo
+  - name: Plausible
+  - name: PostHog
+  - name: Reflag
+  - name: Reo.dev
+  - name: RunKit
+  - name: RunLLM
+  - name: SalesViewer
+  - name: Scarf
+  - name: Segment
+  - name: Sentry
+  - name: Sevii.ai
+  - name: Slack
+  - name: Storylane
+  - name: Supademo
+  - name: SwiftCX
+  - name: Toucan Toco
+  - name: Unify
+  - name: Webhook
+  - name: Website Connector
+  - name: Wistia
+  - name: YouTube Connector
+  - name: ZoomInfo
 maintainers:
   - FN: Kin Lane
     email: info@apievangelist.com
