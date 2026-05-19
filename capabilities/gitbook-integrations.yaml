@@ -1,0 +1,102 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — Integrations
+  description: 'GitBook API — Integrations. 2 operations. Lead operation: GitBook List integrations. Self-contained Naftiko
+    capability covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - Integrations
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-integrations
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — Integrations business capability. Self-contained, no shared references.
+    resources:
+    - name: orgs-organizationId-integrations
+      path: /orgs/{organizationId}/integrations
+      operations:
+      - name: listintegrations
+        method: GET
+        description: GitBook List integrations
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    - name: orgs-organizationId-integrations-integrationId
+      path: /orgs/{organizationId}/integrations/{integrationId}
+      operations:
+      - name: getintegration
+        method: GET
+        description: GitBook Get an integration
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-integrations-rest
+    port: 8080
+    description: REST adapter for GitBook API — Integrations. One Spectral-compliant resource per consumed operation, prefixed
+      with /v1.
+    resources:
+    - path: /v1/orgs/{organizationid}/integrations
+      name: orgs-organizationid-integrations
+      description: REST surface for orgs-organizationId-integrations.
+      operations:
+      - method: GET
+        name: listintegrations
+        description: GitBook List integrations
+        call: gitbook-integrations.listintegrations
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/orgs/{organizationid}/integrations/{integrationid}
+      name: orgs-organizationid-integrations-integrationid
+      description: REST surface for orgs-organizationId-integrations-integrationId.
+      operations:
+      - method: GET
+        name: getintegration
+        description: GitBook Get an integration
+        call: gitbook-integrations.getintegration
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-integrations-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — Integrations. One tool per consumed operation, routed inline through this capability's
+      consumes block.
+    tools:
+    - name: gitbook-list-integrations
+      description: GitBook List integrations
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-integrations.listintegrations
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-get-integration
+      description: GitBook Get an integration
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-integrations.getintegration
+      outputParameters:
+      - type: object
+        mapping: $.

@@ -1,0 +1,137 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — Organizations
+  description: 'GitBook API — Organizations. 3 operations. Lead operation: GitBook List organizations. Self-contained Naftiko
+    capability covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - Organizations
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-organizations
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — Organizations business capability. Self-contained, no shared references.
+    resources:
+    - name: orgs
+      path: /orgs
+      operations:
+      - name: listorganizations
+        method: GET
+        description: GitBook List organizations
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    - name: orgs-organizationId
+      path: /orgs/{organizationId}
+      operations:
+      - name: getorganization
+        method: GET
+        description: GitBook Get an organization
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updateorganization
+        method: PATCH
+        description: GitBook Update an organization
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-organizations-rest
+    port: 8080
+    description: REST adapter for GitBook API — Organizations. One Spectral-compliant resource per consumed operation, prefixed
+      with /v1.
+    resources:
+    - path: /v1/orgs
+      name: orgs
+      description: REST surface for orgs.
+      operations:
+      - method: GET
+        name: listorganizations
+        description: GitBook List organizations
+        call: gitbook-organizations.listorganizations
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/orgs/{organizationid}
+      name: orgs-organizationid
+      description: REST surface for orgs-organizationId.
+      operations:
+      - method: GET
+        name: getorganization
+        description: GitBook Get an organization
+        call: gitbook-organizations.getorganization
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PATCH
+        name: updateorganization
+        description: GitBook Update an organization
+        call: gitbook-organizations.updateorganization
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-organizations-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — Organizations. One tool per consumed operation, routed inline through this
+      capability's consumes block.
+    tools:
+    - name: gitbook-list-organizations
+      description: GitBook List organizations
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-organizations.listorganizations
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-get-organization
+      description: GitBook Get an organization
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-organizations.getorganization
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-update-organization
+      description: GitBook Update an organization
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: gitbook-organizations.updateorganization
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.

@@ -1,0 +1,162 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — Organization Members
+  description: 'GitBook API — Organization Members. 4 operations. Lead operation: GitBook List organization members. Self-contained
+    Naftiko capability covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - Organization Members
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-organization-members
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — Organization Members business capability. Self-contained, no shared references.
+    resources:
+    - name: orgs-organizationId-members
+      path: /orgs/{organizationId}/members
+      operations:
+      - name: listorganizationmembers
+        method: GET
+        description: GitBook List organization members
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    - name: orgs-organizationId-members-userId
+      path: /orgs/{organizationId}/members/{userId}
+      operations:
+      - name: getorganizationmember
+        method: GET
+        description: GitBook Get an organization member
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updateorganizationmember
+        method: PATCH
+        description: GitBook Update an organization member
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+      - name: removeorganizationmember
+        method: DELETE
+        description: GitBook Remove an organization member
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-organization-members-rest
+    port: 8080
+    description: REST adapter for GitBook API — Organization Members. One Spectral-compliant resource per consumed operation,
+      prefixed with /v1.
+    resources:
+    - path: /v1/orgs/{organizationid}/members
+      name: orgs-organizationid-members
+      description: REST surface for orgs-organizationId-members.
+      operations:
+      - method: GET
+        name: listorganizationmembers
+        description: GitBook List organization members
+        call: gitbook-organization-members.listorganizationmembers
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/orgs/{organizationid}/members/{userid}
+      name: orgs-organizationid-members-userid
+      description: REST surface for orgs-organizationId-members-userId.
+      operations:
+      - method: GET
+        name: getorganizationmember
+        description: GitBook Get an organization member
+        call: gitbook-organization-members.getorganizationmember
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PATCH
+        name: updateorganizationmember
+        description: GitBook Update an organization member
+        call: gitbook-organization-members.updateorganizationmember
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: DELETE
+        name: removeorganizationmember
+        description: GitBook Remove an organization member
+        call: gitbook-organization-members.removeorganizationmember
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-organization-members-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — Organization Members. One tool per consumed operation, routed inline through
+      this capability's consumes block.
+    tools:
+    - name: gitbook-list-organization-members
+      description: GitBook List organization members
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-organization-members.listorganizationmembers
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-get-organization-member
+      description: GitBook Get an organization member
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-organization-members.getorganizationmember
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-update-organization-member
+      description: GitBook Update an organization member
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: gitbook-organization-members.updateorganizationmember
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-remove-organization-member
+      description: GitBook Remove an organization member
+      hints:
+        readOnly: false
+        destructive: true
+        idempotent: true
+      call: gitbook-organization-members.removeorganizationmember
+      outputParameters:
+      - type: object
+        mapping: $.

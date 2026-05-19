@@ -1,0 +1,169 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — Space Content
+  description: 'GitBook API — Space Content. 4 operations. Lead operation: GitBook Get space content. Self-contained Naftiko
+    capability covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - Space Content
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-space-content
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — Space Content business capability. Self-contained, no shared references.
+    resources:
+    - name: spaces-spaceId-content
+      path: /spaces/{spaceId}/content
+      operations:
+      - name: getspacecontent
+        method: GET
+        description: GitBook Get space content
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    - name: spaces-spaceId-content-files
+      path: /spaces/{spaceId}/content/files
+      operations:
+      - name: listfilesinspace
+        method: GET
+        description: GitBook List files in a space
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+    - name: spaces-spaceId-content-page-pageId
+      path: /spaces/{spaceId}/content/page/{pageId}
+      operations:
+      - name: getpageinspace
+        method: GET
+        description: GitBook Get a page in a space
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: updatepageinspace
+        method: PUT
+        description: GitBook Update a page in a space
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-space-content-rest
+    port: 8080
+    description: REST adapter for GitBook API — Space Content. One Spectral-compliant resource per consumed operation, prefixed
+      with /v1.
+    resources:
+    - path: /v1/spaces/{spaceid}/content
+      name: spaces-spaceid-content
+      description: REST surface for spaces-spaceId-content.
+      operations:
+      - method: GET
+        name: getspacecontent
+        description: GitBook Get space content
+        call: gitbook-space-content.getspacecontent
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/spaces/{spaceid}/content/files
+      name: spaces-spaceid-content-files
+      description: REST surface for spaces-spaceId-content-files.
+      operations:
+      - method: GET
+        name: listfilesinspace
+        description: GitBook List files in a space
+        call: gitbook-space-content.listfilesinspace
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/spaces/{spaceid}/content/page/{pageid}
+      name: spaces-spaceid-content-page-pageid
+      description: REST surface for spaces-spaceId-content-page-pageId.
+      operations:
+      - method: GET
+        name: getpageinspace
+        description: GitBook Get a page in a space
+        call: gitbook-space-content.getpageinspace
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: PUT
+        name: updatepageinspace
+        description: GitBook Update a page in a space
+        call: gitbook-space-content.updatepageinspace
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-space-content-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — Space Content. One tool per consumed operation, routed inline through this
+      capability's consumes block.
+    tools:
+    - name: gitbook-get-space-content
+      description: GitBook Get space content
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-space-content.getspacecontent
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-list-files-space
+      description: GitBook List files in a space
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-space-content.listfilesinspace
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-get-page-space
+      description: GitBook Get a page in a space
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-space-content.getpageinspace
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-update-page-space
+      description: GitBook Update a page in a space
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: true
+      call: gitbook-space-content.updatepageinspace
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.

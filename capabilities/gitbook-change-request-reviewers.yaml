@@ -1,0 +1,105 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — Change Request Reviewers
+  description: 'GitBook API — Change Request Reviewers. 2 operations. Lead operation: GitBook List change request reviewers.
+    Self-contained Naftiko capability covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - Change Request Reviewers
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-change-request-reviewers
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — Change Request Reviewers business capability. Self-contained, no shared references.
+    resources:
+    - name: spaces-spaceId-change-requests-changeRequestId-reviewers
+      path: /spaces/{spaceId}/change-requests/{changeRequestId}/reviewers
+      operations:
+      - name: listchangerequestreviewers
+        method: GET
+        description: GitBook List change request reviewers
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+      - name: requestchangerequestreview
+        method: POST
+        description: GitBook Request a review
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: body
+          in: body
+          type: object
+          description: Request body (JSON).
+          required: true
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-change-request-reviewers-rest
+    port: 8080
+    description: REST adapter for GitBook API — Change Request Reviewers. One Spectral-compliant resource per consumed operation,
+      prefixed with /v1.
+    resources:
+    - path: /v1/spaces/{spaceid}/change-requests/{changerequestid}/reviewers
+      name: spaces-spaceid-change-requests-changerequestid-reviewers
+      description: REST surface for spaces-spaceId-change-requests-changeRequestId-reviewers.
+      operations:
+      - method: GET
+        name: listchangerequestreviewers
+        description: GitBook List change request reviewers
+        call: gitbook-change-request-reviewers.listchangerequestreviewers
+        outputParameters:
+        - type: object
+          mapping: $.
+      - method: POST
+        name: requestchangerequestreview
+        description: GitBook Request a review
+        call: gitbook-change-request-reviewers.requestchangerequestreview
+        with:
+          body: rest.body
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-change-request-reviewers-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — Change Request Reviewers. One tool per consumed operation, routed inline through
+      this capability's consumes block.
+    tools:
+    - name: gitbook-list-change-request-reviewers
+      description: GitBook List change request reviewers
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-change-request-reviewers.listchangerequestreviewers
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-request-review
+      description: GitBook Request a review
+      hints:
+        readOnly: false
+        destructive: false
+        idempotent: false
+      call: gitbook-change-request-reviewers.requestchangerequestreview
+      with:
+        body: tools.body
+      outputParameters:
+      - type: object
+        mapping: $.

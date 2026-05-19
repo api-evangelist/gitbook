@@ -1,0 +1,122 @@
+naftiko: 1.0.0-alpha2
+info:
+  label: GitBook API — URLs
+  description: 'GitBook API — URLs. 2 operations. Lead operation: GitBook Resolve a content URL. Self-contained Naftiko capability
+    covering one Gitbook business surface.'
+  tags:
+  - Gitbook
+  - URLs
+  created: '2026-05-19'
+  modified: '2026-05-19'
+binds:
+- namespace: env
+  keys:
+    GITBOOK_API_KEY: GITBOOK_API_KEY
+capability:
+  consumes:
+  - type: http
+    namespace: gitbook-urls
+    baseUri: https://api.gitbook.com/v1
+    description: GitBook API — URLs business capability. Self-contained, no shared references.
+    resources:
+    - name: urls-content
+      path: /urls/content
+      operations:
+      - name: resolvecontenturl
+        method: GET
+        description: GitBook Resolve a content URL
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: url
+          in: query
+          type: string
+          description: The URL to resolve.
+          required: true
+    - name: urls-embed
+      path: /urls/embed
+      operations:
+      - name: resolveembedurl
+        method: GET
+        description: GitBook Resolve an embed URL
+        outputRawFormat: json
+        outputParameters:
+        - name: result
+          type: object
+          value: $.
+        inputParameters:
+        - name: url
+          in: query
+          type: string
+          description: The URL to resolve for embedding.
+          required: true
+    authentication:
+      type: bearer
+      token: '{{env.GITBOOK_API_KEY}}'
+  exposes:
+  - type: rest
+    namespace: gitbook-urls-rest
+    port: 8080
+    description: REST adapter for GitBook API — URLs. One Spectral-compliant resource per consumed operation, prefixed with
+      /v1.
+    resources:
+    - path: /v1/urls/content
+      name: urls-content
+      description: REST surface for urls-content.
+      operations:
+      - method: GET
+        name: resolvecontenturl
+        description: GitBook Resolve a content URL
+        call: gitbook-urls.resolvecontenturl
+        with:
+          url: rest.url
+        outputParameters:
+        - type: object
+          mapping: $.
+    - path: /v1/urls/embed
+      name: urls-embed
+      description: REST surface for urls-embed.
+      operations:
+      - method: GET
+        name: resolveembedurl
+        description: GitBook Resolve an embed URL
+        call: gitbook-urls.resolveembedurl
+        with:
+          url: rest.url
+        outputParameters:
+        - type: object
+          mapping: $.
+  - type: mcp
+    namespace: gitbook-urls-mcp
+    port: 9090
+    transport: http
+    description: MCP adapter for GitBook API — URLs. One tool per consumed operation, routed inline through this capability's
+      consumes block.
+    tools:
+    - name: gitbook-resolve-content-url
+      description: GitBook Resolve a content URL
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-urls.resolvecontenturl
+      with:
+        url: tools.url
+      outputParameters:
+      - type: object
+        mapping: $.
+    - name: gitbook-resolve-embed-url
+      description: GitBook Resolve an embed URL
+      hints:
+        readOnly: true
+        destructive: false
+        idempotent: true
+      call: gitbook-urls.resolveembedurl
+      with:
+        url: tools.url
+      outputParameters:
+      - type: object
+        mapping: $.
