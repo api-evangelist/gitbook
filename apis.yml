@@ -4,78 +4,41 @@ apis:
   - aid: gitbook:gitbook
     name: GitBook
     tags:
-    - Content
-    - Documentation
-    - Experience
-    - Integrations
-    - Platform
-    - SDKs
+      - Content
+      - Documentation
+      - Experience
+      - Integrations
+      - Platform
+      - SDKs
     humanURL: https://docs.gitbook.com/developers
     properties:
-    - url: https://docs.gitbook.com/developers
-      type: Documentation
-    - url: openapi/gitbook-gitbook-api-openapi.yml
-      type: OpenAPI
-    - url: asyncapi/gitbook-gitbook-api-asyncapi.yml
-      type: AsyncAPI
-    - url: json-schema/organization.json
-      type: JSONSchema
-    - url: json-schema/space.json
-      type: JSONSchema
-    - url: json-schema/page.json
-      type: JSONSchema
-    - url: json-schema/user.json
-      type: JSONSchema
-    - url: json-schema/change-request.json
-      type: JSONSchema
-    - url: json-schema/docs-site.json
-      type: JSONSchema
-    - url: json-schema/collection.json
-      type: JSONSchema
-    - url: json-ld/gitbook-context.jsonld
-      type: JSONLD
-    - type: NaftikoCapability
-      url: capabilities/gitbook-change-request-content.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-change-request-reviewers.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-change-requests.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-collections.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-custom-hostnames.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-docs-sites.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-imports.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-integrations.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-openapi-specs.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-organization-members.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-organization-teams.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-organizations.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-search.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-site-spaces.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-space-content.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-space-users.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-spaces.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-urls.yaml
-    - type: NaftikoCapability
-      url: capabilities/gitbook-users.yaml
-    description: GitBook is a modern documentation platform that helps teams create, collaborate on, and publish product and
-      engineering knowledge. It combines an intuitive editor with docs-as-code workflows, letting you write in rich text or
-      Markdown, review changes, and version content like code. GitBook can host public docs and private knowledge bases with
-      granular access control, SSO, custom domains, and analytics.
+      - url: https://docs.gitbook.com/developers
+        type: Documentation
+      - url: openapi/gitbook-gitbook-api-openapi.yml
+        type: OpenAPI
+      - url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+        type: AsyncAPI
+      - url: json-schema/organization.json
+        type: JSONSchema
+      - url: json-schema/space.json
+        type: JSONSchema
+      - url: json-schema/page.json
+        type: JSONSchema
+      - url: json-schema/user.json
+        type: JSONSchema
+      - url: json-schema/change-request.json
+        type: JSONSchema
+      - url: json-schema/docs-site.json
+        type: JSONSchema
+      - url: json-schema/collection.json
+        type: JSONSchema
+      - url: json-ld/gitbook-context.jsonld
+        type: JSONLD
+    description: >-
+      GitBook is a modern documentation platform that helps teams create, collaborate on, and publish product and
+      engineering knowledge. It combines an intuitive editor with docs-as-code workflows, letting you write in rich text
+      or Markdown, review changes, and version content like code. GitBook can host public docs and private knowledge
+      bases with granular access control, SSO, custom domains, and analytics.
 name: GitBook
 tags:
   - Content
@@ -95,14 +58,15 @@ common:
   - url: https://www.gitbook.com/
     name: GitBook
     type: Website
-    description: Transform your documentation into a connected knowledge system — one that learns, optimizes, and improves itself
+    description: >-
+      Transform your documentation into a connected knowledge system — one that learns, optimizes, and improves itself
       intelligently
   - url: https://www.gitbook.com/pricing
     name: GitBook – Pricing
     type: Pricing
     description: 'null'
   - url: https://www.gitbook.com/blog
-    name: GitBook – Blog
+    name: "GitBook –\_Blog"
     type: Blog
     description: 'null'
   - url: https://gitbook.com/docs/guides
@@ -114,10 +78,11 @@ common:
 created: '2025-01-08'
 modified: '2026-05-19'
 position: Consumer
-description: GitBook is a platform that allows users to create, publish, and share online books and documentation. It provides
-  a simple and user-friendly interface for writing and organizing content, as well as tools for collaborating with other authors
-  or team members. With GitBook, users can easily create a professional-looking book or documentation site with features such
-  as version control, markdown formatting, and customizable themes.
+description: >-
+  GitBook is a platform that allows users to create, publish, and share online books and documentation. It provides a
+  simple and user-friendly interface for writing and organizing content, as well as tools for collaborating with other
+  authors or team members. With GitBook, users can easily create a professional-looking book or documentation site with
+  features such as version control, markdown formatting, and customizable themes.
 integrations:
   - name: The Linear logo
   - name: The Slack logo
