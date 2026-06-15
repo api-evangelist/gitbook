@@ -1,0 +1,1798 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Users",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get the authenticated user",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/user"
+          },
+          "docs": "Returns the currently authenticated user."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a user by ID",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/users/:userId",
+            "params": [
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ]
+          },
+          "docs": "Returns a user by their unique identifier."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Organizations",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List organizations",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs"
+          },
+          "docs": "Returns the list of organizations for the currently authenticated user."
+        },
+        {
+          "info": {
+            "name": "GitBook Get an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ]
+          },
+          "docs": "Returns an organization by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates an organization's settings."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Organization Members",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List organization members",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/members",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of members in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get an organization member",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/members/:userId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ]
+          },
+          "docs": "Returns details about a specific organization member."
+        },
+        {
+          "info": {
+            "name": "GitBook Update an organization member",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/members/:userId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the role of an organization member."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove an organization member",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/members/:userId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ]
+          },
+          "docs": "Removes a member from an organization."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Organization Teams",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List organization teams",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/teams",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of teams in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a team",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/teams/:teamId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "teamId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the team."
+              }
+            ]
+          },
+          "docs": "Returns a team by its ID."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Spaces",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List spaces in an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of spaces in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a space in an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new space in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Returns a space by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a space's settings."
+        },
+        {
+          "info": {
+            "name": "GitBook Delete a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Deletes a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Duplicate a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/duplicate",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Creates a duplicate of the specified space."
+        },
+        {
+          "info": {
+            "name": "GitBook Move a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/move",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Moves a space to a different parent collection or organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Transfer a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/transfer",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Transfers a space to another organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Restore a deleted space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/restore",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Restores a previously deleted space."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Space Users",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List space user permissions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/permissions/users",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of users with permissions on a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Update space user permissions",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/permissions/users/:userId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a user's permission role on a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove a space user",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/permissions/users/:userId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "userId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the user."
+              }
+            ]
+          },
+          "docs": "Removes a user's permissions from a space."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Space Content",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get space content",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Returns the content tree of a space including all pages."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a page in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ]
+          },
+          "docs": "Returns a specific page within a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a page in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the content or metadata of a page within a space."
+        },
+        {
+          "info": {
+            "name": "GitBook List files in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/files",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of files uploaded to a space."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Collections",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List collections",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/collections",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of collections in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a collection",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/collections",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new collection in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a collection",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/collections/:collectionId",
+            "params": [
+              {
+                "name": "collectionId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the collection."
+              }
+            ]
+          },
+          "docs": "Returns a collection by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Delete a collection",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/collections/:collectionId",
+            "params": [
+              {
+                "name": "collectionId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the collection."
+              }
+            ]
+          },
+          "docs": "Deletes a collection."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Change Requests",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List change requests",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by change request status."
+              }
+            ]
+          },
+          "docs": "Returns the list of change requests for a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new change request for a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Returns a change request by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a change request's subject or description."
+        },
+        {
+          "info": {
+            "name": "GitBook Merge a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/merge",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Merges a change request into the main content of the space."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Change Request Content",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get change request content",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Returns the content tree of a change request including all pages and files."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a page in a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ]
+          },
+          "docs": "Returns a specific page within a change request."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a page in a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a page within a change request."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Change Request Reviewers",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List change request reviewers",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/reviewers",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Returns the list of requested reviewers for a change request."
+        },
+        {
+          "info": {
+            "name": "GitBook Request a review",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/reviewers",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Requests a review from a user for a change request."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Docs Sites",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List docs sites",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of docs sites in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new docs site in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns a docs site by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a docs site's settings."
+        },
+        {
+          "info": {
+            "name": "GitBook Delete a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Deletes a docs site."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Site Spaces",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List site spaces",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns the list of spaces linked to a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Add a space to a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Links a space to a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a site space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the configuration of a space within a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove a space from a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ]
+          },
+          "docs": "Unlinks a space from a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Move a site space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId/move",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Moves a site space to a different position or section."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Search",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Ask a question to a site",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/ask",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Queries a GitBook docs site using AI to find answers from the published content."
+        },
+        {
+          "info": {
+            "name": "GitBook Search content in an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/search",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "The search query."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Searches for content across all spaces in an organization."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "OpenAPI Specs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List OpenAPI specifications",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ]
+          },
+          "docs": "Returns the list of OpenAPI specs in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Upload an OpenAPI specification",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Uploads a new OpenAPI specification to an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get an OpenAPI specification",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi/:specSlug",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "specSlug",
+                "value": "",
+                "type": "path",
+                "description": "The slug of the OpenAPI specification."
+              }
+            ]
+          },
+          "docs": "Returns a specific OpenAPI specification by its slug."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Integrations",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List integrations",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/integrations",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of integrations installed in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get an integration",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/integrations/:integrationId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "integrationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the integration."
+              }
+            ]
+          },
+          "docs": "Returns details about an installed integration."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Imports",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Import content to a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/import/content",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Imports content from an external source into a space. Supports various formats."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "URLs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Resolve a content URL",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/urls/content",
+            "params": [
+              {
+                "name": "url",
+                "value": "",
+                "type": "query",
+                "description": "The URL to resolve."
+              }
+            ]
+          },
+          "docs": "Resolves a URL to find the corresponding GitBook content (space or page)."
+        },
+        {
+          "info": {
+            "name": "GitBook Resolve an embed URL",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/urls/embed",
+            "params": [
+              {
+                "name": "url",
+                "value": "",
+                "type": "query",
+                "description": "The URL to resolve for embedding."
+              }
+            ]
+          },
+          "docs": "Resolves an external URL to get embed information for rendering within GitBook."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Custom Hostnames",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns the custom hostname configured for a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Set custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Configures a custom hostname for a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Removes the custom hostname from a docs site."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
