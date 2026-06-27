@@ -3,12 +3,12 @@
   "feeds": [
     {
       "source": "https://www.gitbook.com/blog",
-      "feed_url": "https://www.gitbook.com/blog",
-      "title": "",
-      "saved": 0,
-      "method": "none"
+      "feed_url": "",
+      "saved": 2,
+      "method": "agent-scrape"
     }
   ],
-  "post_count": 1,
-  "fetched": "2026-06-14T20:42:17Z"
+  "post_count": 5,
+  "fetched": "2026-06-27T12:44:02Z",
+  "agent_pulled": "2026-06-27"
 }
