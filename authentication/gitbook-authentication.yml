@@ -1,0 +1,15 @@
+generated: '2026-07-11'
+method: derived
+source: openapi/gitbook-gitbook-api-openapi.yml
+summary:
+  types:
+  - http
+schemes:
+- name: bearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: token
+  description: API access token. Generate one from the Developer settings of your GitBook user
+    account.
+  sources:
+  - openapi/gitbook-gitbook-api-openapi.yml

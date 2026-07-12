@@ -51,6 +51,10 @@ type: Index
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
 access: 3rd-Party
 common:
+  - type: DomainSecurity
+    url: security/gitbook-domain-security.yml
+  - type: Authentication
+    url: authentication/gitbook-authentication.yml
   - type: GitHubOrganization
     url: https://github.com/gitbookio
   - type: LinkedIn
