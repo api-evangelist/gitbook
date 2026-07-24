@@ -1,0 +1,245 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Space Content API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Space Content
+  description: Manage pages and content within a space.
+paths:
+  /spaces/{spaceId}/content:
+    get:
+      operationId: getSpaceContent
+      summary: GitBook Get space content
+      description: Returns the content tree of a space including all pages.
+      tags:
+      - Space Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The content tree of the space.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/content/page/{pageId}:
+    get:
+      operationId: getPageInSpace
+      summary: GitBook Get a page in a space
+      description: Returns a specific page within a space.
+      tags:
+      - Space Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/pageId'
+      responses:
+        '200':
+          description: The requested page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updatePageInSpace
+      summary: GitBook Update a page in a space
+      description: Updates the content or metadata of a page within a space.
+      tags:
+      - Space Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/pageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the page.
+                description:
+                  type: string
+                  description: The description of the page.
+                document:
+                  type: object
+                  description: The document content of the page.
+      responses:
+        '200':
+          description: The updated page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/content/files:
+    get:
+      operationId: listFilesInSpace
+      summary: GitBook List files in a space
+      description: Returns the list of files uploaded to a space.
+      tags:
+      - Space Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of files.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/File'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    pageId:
+      name: pageId
+      in: path
+      required: true
+      description: The unique identifier of the page.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    File:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the file.
+        name:
+          type: string
+          description: The file name.
+        contentType:
+          type: string
+          description: The MIME type of the file.
+        downloadURL:
+          type: string
+          format: uri
+          description: URL to download the file.
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the page.
+        title:
+          type: string
+          description: The title of the page.
+        description:
+          type: string
+          description: The description of the page.
+        kind:
+          type: string
+          enum:
+          - sheet
+          - group
+          - link
+          description: The type of page.
+        path:
+          type: string
+          description: The URL-friendly path of the page.
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Page'
+          description: Child pages nested under this page.
+        document:
+          type: object
+          description: The document content of the page.
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

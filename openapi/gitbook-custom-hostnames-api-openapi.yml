@@ -1,0 +1,149 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Custom Hostnames API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Custom Hostnames
+  description: Configure custom hostnames for docs sites.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/custom-hostname:
+    get:
+      operationId: getCustomHostname
+      summary: GitBook Get custom hostname
+      description: Returns the custom hostname configured for a docs site.
+      tags:
+      - Custom Hostnames
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: The custom hostname configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hostname:
+                    type: string
+                    description: The custom hostname.
+                  status:
+                    type: string
+                    description: The verification status.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: setCustomHostname
+      summary: GitBook Set custom hostname
+      description: Configures a custom hostname for a docs site.
+      tags:
+      - Custom Hostnames
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - hostname
+              properties:
+                hostname:
+                  type: string
+                  description: The custom hostname to set.
+      responses:
+        '200':
+          description: The custom hostname was configured.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hostname:
+                    type: string
+                  status:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeCustomHostname
+      summary: GitBook Remove custom hostname
+      description: Removes the custom hostname from a docs site.
+      tags:
+      - Custom Hostnames
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: Custom hostname removed.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+  parameters:
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

@@ -1,0 +1,150 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Organization Teams API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Organization Teams
+  description: Manage teams within an organization.
+paths:
+  /orgs/{organizationId}/teams:
+    get:
+      operationId: listOrganizationTeams
+      summary: GitBook List organization teams
+      description: Returns the list of teams in an organization.
+      tags:
+      - Organization Teams
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of teams.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/teams/{teamId}:
+    get:
+      operationId: getOrganizationTeam
+      summary: GitBook Get a team
+      description: Returns a team by its ID.
+      tags:
+      - Organization Teams
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/teamId'
+      responses:
+        '200':
+          description: The requested team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the team.
+        title:
+          type: string
+          description: The display name of the team.
+        members:
+          type: integer
+          description: The number of members in the team.
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+  parameters:
+    teamId:
+      name: teamId
+      in: path
+      required: true
+      description: The unique identifier of the team.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

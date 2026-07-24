@@ -1,0 +1,155 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Organizations API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Organizations
+  description: Create and configure organizations to group users, spaces, and collections.
+paths:
+  /orgs:
+    get:
+      operationId: listOrganizations
+      summary: GitBook List organizations
+      description: Returns the list of organizations for the currently authenticated user.
+      tags:
+      - Organizations
+      responses:
+        '200':
+          description: A list of organizations.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /orgs/{organizationId}:
+    get:
+      operationId: getOrganization
+      summary: GitBook Get an organization
+      description: Returns an organization by its ID.
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: The requested organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateOrganization
+      summary: GitBook Update an organization
+      description: Updates an organization's settings.
+      tags:
+      - Organizations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The display name of the organization.
+      responses:
+        '200':
+          description: The updated organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the organization.
+        title:
+          type: string
+          description: The display name of the organization.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

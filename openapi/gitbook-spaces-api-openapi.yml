@@ -1,0 +1,372 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Spaces API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Spaces
+  description: Manage spaces which are containers for documentation or knowledge base content.
+paths:
+  /orgs/{organizationId}/spaces:
+    get:
+      operationId: listSpacesInOrganization
+      summary: GitBook List spaces in an organization
+      description: Returns the list of spaces in an organization.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of spaces.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Space'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createSpaceInOrganization
+      summary: GitBook Create a space in an organization
+      description: Creates a new space in an organization.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the space.
+                emoji:
+                  type: string
+                  description: An emoji icon for the space.
+                parent:
+                  type: string
+                  description: The ID of the parent collection.
+      responses:
+        '201':
+          description: The newly created space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}:
+    get:
+      operationId: getSpace
+      summary: GitBook Get a space
+      description: Returns a space by its ID.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The requested space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateSpace
+      summary: GitBook Update a space
+      description: Updates a space's settings.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the space.
+                emoji:
+                  type: string
+                  description: An emoji icon for the space.
+                visibility:
+                  type: string
+                  enum:
+                  - public
+                  - unlisted
+                  - share-link
+                  - in-collection
+                  - private
+                  description: The visibility of the space.
+      responses:
+        '200':
+          description: The updated space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteSpace
+      summary: GitBook Delete a space
+      description: Deletes a space.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '204':
+          description: Space deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/duplicate:
+    post:
+      operationId: duplicateSpace
+      summary: GitBook Duplicate a space
+      description: Creates a duplicate of the specified space.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '201':
+          description: The duplicated space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/move:
+    post:
+      operationId: moveSpace
+      summary: GitBook Move a space
+      description: Moves a space to a different parent collection or organization.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parent:
+                  type: string
+                  description: The ID of the target parent collection or organization.
+      responses:
+        '200':
+          description: The moved space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/transfer:
+    post:
+      operationId: transferSpace
+      summary: GitBook Transfer a space
+      description: Transfers a space to another organization.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - organization
+              properties:
+                organization:
+                  type: string
+                  description: The ID of the target organization.
+      responses:
+        '200':
+          description: The transferred space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/restore:
+    post:
+      operationId: restoreSpace
+      summary: GitBook Restore a deleted space
+      description: Restores a previously deleted space.
+      tags:
+      - Spaces
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The restored space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the space.
+        title:
+          type: string
+          description: The title of the space.
+        emoji:
+          type: string
+          description: The emoji icon for the space.
+        visibility:
+          type: string
+          enum:
+          - public
+          - unlisted
+          - share-link
+          - in-collection
+          - private
+          description: The visibility setting of the space.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the space was deleted, if applicable.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

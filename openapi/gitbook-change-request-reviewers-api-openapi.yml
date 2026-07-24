@@ -1,0 +1,161 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Change Request Reviewers API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Change Request Reviewers
+  description: Manage reviewers for change requests.
+paths:
+  /spaces/{spaceId}/change-requests/{changeRequestId}/reviewers:
+    get:
+      operationId: listChangeRequestReviewers
+      summary: GitBook List change request reviewers
+      description: Returns the list of requested reviewers for a change request.
+      tags:
+      - Change Request Reviewers
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: A list of reviewers.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Reviewer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: requestChangeRequestReview
+      summary: GitBook Request a review
+      description: Requests a review from a user for a change request.
+      tags:
+      - Change Request Reviewers
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - userId
+              properties:
+                userId:
+                  type: string
+                  description: The ID of the user to request a review from.
+      responses:
+        '201':
+          description: Review requested successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reviewer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    Reviewer:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - changes-requested
+          description: The review status.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

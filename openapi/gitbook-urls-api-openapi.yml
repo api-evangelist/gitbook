@@ -1,0 +1,119 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content URLs API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: URLs
+  description: Resolve and manage content URLs.
+paths:
+  /urls/content:
+    get:
+      operationId: resolveContentURL
+      summary: GitBook Resolve a content URL
+      description: Resolves a URL to find the corresponding GitBook content (space or page).
+      tags:
+      - URLs
+      parameters:
+      - name: url
+        in: query
+        required: true
+        description: The URL to resolve.
+        schema:
+          type: string
+          format: uri
+      responses:
+        '200':
+          description: The resolved content reference.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  spaceId:
+                    type: string
+                  pageId:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /urls/embed:
+    get:
+      operationId: resolveEmbedURL
+      summary: GitBook Resolve an embed URL
+      description: Resolves an external URL to get embed information for rendering within GitBook.
+      tags:
+      - URLs
+      parameters:
+      - name: url
+        in: query
+        required: true
+        description: The URL to resolve for embedding.
+        schema:
+          type: string
+          format: uri
+      responses:
+        '200':
+          description: Embed information for the URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: The type of embed.
+                  title:
+                    type: string
+                  html:
+                    type: string
+                    description: HTML content for embedding.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

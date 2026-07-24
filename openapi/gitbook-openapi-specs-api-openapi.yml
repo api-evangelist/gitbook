@@ -1,0 +1,167 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content OpenAPI Specs API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: OpenAPI Specs
+  description: Upload and manage OpenAPI specifications.
+paths:
+  /orgs/{organizationId}/openapi:
+    get:
+      operationId: listOpenAPISpecs
+      summary: GitBook List OpenAPI specifications
+      description: Returns the list of OpenAPI specs in an organization.
+      tags:
+      - OpenAPI Specs
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: A list of OpenAPI specifications.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: uploadOpenAPISpec
+      summary: GitBook Upload an OpenAPI specification
+      description: Uploads a new OpenAPI specification to an organization.
+      tags:
+      - OpenAPI Specs
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: URL to an OpenAPI specification file.
+                slug:
+                  type: string
+                  description: A unique slug for the specification.
+      responses:
+        '201':
+          description: The uploaded OpenAPI specification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/openapi/{specSlug}:
+    get:
+      operationId: getOpenAPISpec
+      summary: GitBook Get an OpenAPI specification
+      description: Returns a specific OpenAPI specification by its slug.
+      tags:
+      - OpenAPI Specs
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - name: specSlug
+        in: path
+        required: true
+        description: The slug of the OpenAPI specification.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: The requested OpenAPI specification.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    OpenAPISpec:
+      type: object
+      properties:
+        slug:
+          type: string
+          description: The unique slug of the OpenAPI specification.
+        url:
+          type: string
+          format: uri
+          description: The URL of the specification file.
+        title:
+          type: string
+          description: The title of the specification.
+        version:
+          type: string
+          description: The version of the specification.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

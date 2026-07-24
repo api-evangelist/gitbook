@@ -1,0 +1,226 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Organization Members API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Organization Members
+  description: Manage members and their roles within an organization.
+paths:
+  /orgs/{organizationId}/members:
+    get:
+      operationId: listOrganizationMembers
+      summary: GitBook List organization members
+      description: Returns the list of members in an organization.
+      tags:
+      - Organization Members
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of organization members.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizationMember'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/members/{userId}:
+    get:
+      operationId: getOrganizationMember
+      summary: GitBook Get an organization member
+      description: Returns details about a specific organization member.
+      tags:
+      - Organization Members
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The organization member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateOrganizationMember
+      summary: GitBook Update an organization member
+      description: Updates the role of an organization member.
+      tags:
+      - Organization Members
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: '#/components/schemas/MemberRole'
+      responses:
+        '200':
+          description: The updated organization member.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeOrganizationMember
+      summary: GitBook Remove an organization member
+      description: Removes a member from an organization.
+      tags:
+      - Organization Members
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '204':
+          description: Member removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  schemas:
+    MemberRole:
+      type: string
+      enum:
+      - admin
+      - create
+      - review
+      - edit
+      - comment
+      - read
+      description: The role of a member within an organization.
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    OrganizationMember:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        createdAt:
+          type: string
+          format: date-time
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

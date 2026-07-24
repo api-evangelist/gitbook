@@ -1,0 +1,242 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Docs Sites API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Docs Sites
+  description: Manage published documentation sites.
+paths:
+  /orgs/{organizationId}/sites:
+    get:
+      operationId: listDocsSites
+      summary: GitBook List docs sites
+      description: Returns the list of docs sites in an organization.
+      tags:
+      - Docs Sites
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/pageParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: A list of docs sites.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocsSite'
+                  next:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createDocsSite
+      summary: GitBook Create a docs site
+      description: Creates a new docs site in an organization.
+      tags:
+      - Docs Sites
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - title
+              properties:
+                title:
+                  type: string
+                  description: The title of the docs site.
+      responses:
+        '201':
+          description: The newly created docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}:
+    get:
+      operationId: getDocsSite
+      summary: GitBook Get a docs site
+      description: Returns a docs site by its ID.
+      tags:
+      - Docs Sites
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: The requested docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      operationId: updateDocsSite
+      summary: GitBook Update a docs site
+      description: Updates a docs site's settings.
+      tags:
+      - Docs Sites
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the docs site.
+      responses:
+        '200':
+          description: The updated docs site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocsSite'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteDocsSite
+      summary: GitBook Delete a docs site
+      description: Deletes a docs site.
+      tags:
+      - Docs Sites
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: Docs site deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    DocsSite:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the docs site.
+        title:
+          type: string
+          description: The title of the docs site.
+        hostname:
+          type: string
+          description: The hostname of the docs site.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+  parameters:
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

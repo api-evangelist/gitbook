@@ -1,0 +1,190 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Change Request Content
+  description: Manage content within a change request.
+paths:
+  /spaces/{spaceId}/change-requests/{changeRequestId}/content:
+    get:
+      operationId: getChangeRequestContent
+      summary: GitBook Get change request content
+      description: Returns the content tree of a change request including all pages and files.
+      tags:
+      - Change Request Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: The content of the change request.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/content/page/{pageId}:
+    get:
+      operationId: getPageInChangeRequest
+      summary: GitBook Get a page in a change request
+      description: Returns a specific page within a change request.
+      tags:
+      - Change Request Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      - $ref: '#/components/parameters/pageId'
+      responses:
+        '200':
+          description: The requested page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updatePageInChangeRequest
+      summary: GitBook Update a page in a change request
+      description: Updates a page within a change request.
+      tags:
+      - Change Request Content
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      - $ref: '#/components/parameters/pageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: The title of the page.
+                description:
+                  type: string
+                  description: The description of the page.
+                document:
+                  type: object
+                  description: The document content of the page.
+      responses:
+        '200':
+          description: The updated page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    pageId:
+      name: pageId
+      in: path
+      required: true
+      description: The unique identifier of the page.
+      schema:
+        type: string
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the page.
+        title:
+          type: string
+          description: The title of the page.
+        description:
+          type: string
+          description: The description of the page.
+        kind:
+          type: string
+          enum:
+          - sheet
+          - group
+          - link
+          description: The type of page.
+        path:
+          type: string
+          description: The URL-friendly path of the page.
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Page'
+          description: Child pages nested under this page.
+        document:
+          type: object
+          description: The document content of the page.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

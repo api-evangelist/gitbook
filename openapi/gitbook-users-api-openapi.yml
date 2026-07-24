@@ -1,0 +1,120 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Users API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Users
+  description: Manage user accounts and profiles.
+paths:
+  /user:
+    get:
+      operationId: getCurrentUser
+      summary: GitBook Get the authenticated user
+      description: Returns the currently authenticated user.
+      tags:
+      - Users
+      responses:
+        '200':
+          description: The authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      summary: GitBook Get a user by ID
+      description: Returns a user by their unique identifier.
+      tags:
+      - Users
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The requested user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.

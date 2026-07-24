@@ -1,0 +1,273 @@
+openapi: 3.1.0
+info:
+  title: GitBook Change Request Content Site Spaces API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  version: 1.0.0
+  contact:
+    name: GitBook
+    url: https://www.gitbook.com
+  license:
+    name: Proprietary
+    url: https://www.gitbook.com/terms
+servers:
+- url: https://api.gitbook.com/v1
+  description: GitBook API v1
+security:
+- bearerAuth: []
+tags:
+- name: Site Spaces
+  description: Manage spaces within a docs site.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/site-spaces:
+    get:
+      operationId: listSiteSpaces
+      summary: GitBook List site spaces
+      description: Returns the list of spaces linked to a docs site.
+      tags:
+      - Site Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: A list of site spaces.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: addSiteSpace
+      summary: GitBook Add a space to a docs site
+      description: Links a space to a docs site.
+      tags:
+      - Site Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - spaceId
+              properties:
+                spaceId:
+                  type: string
+                  description: The ID of the space to add.
+                sectionId:
+                  type: string
+                  description: Optional section ID for the space.
+      responses:
+        '201':
+          description: The space was added to the site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}:
+    patch:
+      operationId: updateSiteSpace
+      summary: GitBook Update a site space
+      description: Updates the configuration of a space within a docs site.
+      tags:
+      - Site Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteSpaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                path:
+                  type: string
+                  description: The URL path for this space on the site.
+      responses:
+        '200':
+          description: The updated site space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: removeSiteSpace
+      summary: GitBook Remove a space from a docs site
+      description: Unlinks a space from a docs site.
+      tags:
+      - Site Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteSpaceId'
+      responses:
+        '204':
+          description: Space removed from the site.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}/move:
+    post:
+      operationId: moveSiteSpace
+      summary: GitBook Move a site space
+      description: Moves a site space to a different position or section.
+      tags:
+      - Site Spaces
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteSpaceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sectionId:
+                  type: string
+                  description: The target section ID.
+                position:
+                  type: integer
+                  description: The target position index.
+      responses:
+        '200':
+          description: The moved site space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    Space:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the space.
+        title:
+          type: string
+          description: The title of the space.
+        emoji:
+          type: string
+          description: The emoji icon for the space.
+        visibility:
+          type: string
+          enum:
+          - public
+          - unlisted
+          - share-link
+          - in-collection
+          - private
+          description: The visibility setting of the space.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          description: The timestamp when the space was deleted, if applicable.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
+            published:
+              type: string
+              format: uri
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    SiteSpace:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the site space link.
+        space:
+          $ref: '#/components/schemas/Space'
+        path:
+          type: string
+          description: The URL path for this space on the site.
+        sectionId:
+          type: string
+          description: The section this space belongs to.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    siteSpaceId:
+      name: siteSpaceId
+      in: path
+      required: true
+      description: The unique identifier of the site space link.
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token
+      description: API access token. Generate one from the Developer settings of your GitBook user account.
