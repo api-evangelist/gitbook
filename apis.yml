@@ -1,44 +1,557 @@
 aid: gitbook
 url: https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/apis.yml
 apis:
-  - aid: gitbook:gitbook
-    name: GitBook
-    tags:
-      - Content
-      - Documentation
-      - Experience
-      - Integrations
-      - Platform
-      - SDKs
-    humanURL: https://docs.gitbook.com/developers
-    properties:
-      - url: https://docs.gitbook.com/developers
-        type: Documentation
-      - url: openapi/gitbook-gitbook-api-openapi.yml
-        type: OpenAPI
-      - url: asyncapi/gitbook-gitbook-api-asyncapi.yml
-        type: AsyncAPI
-      - url: json-schema/organization.json
-        type: JSONSchema
-      - url: json-schema/space.json
-        type: JSONSchema
-      - url: json-schema/page.json
-        type: JSONSchema
-      - url: json-schema/user.json
-        type: JSONSchema
-      - url: json-schema/change-request.json
-        type: JSONSchema
-      - url: json-schema/docs-site.json
-        type: JSONSchema
-      - url: json-schema/collection.json
-        type: JSONSchema
-      - url: json-ld/gitbook-context.jsonld
-        type: JSONLD
-    description: >-
-      GitBook is a modern documentation platform that helps teams create, collaborate on, and publish product and
-      engineering knowledge. It combines an intuitive editor with docs-as-code workflows, letting you write in rich text
-      or Markdown, review changes, and version content like code. GitBook can host public docs and private knowledge
-      bases with granular access control, SSO, custom domains, and analytics.
+- aid: gitbook:gitbook-change-request-content-api
+  name: GitBook Change Request Content API
+  description: Manage content within a change request.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Change Request Content
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-change-request-content-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-change-request-reviewers-api
+  name: GitBook Change Request Reviewers API
+  description: Manage reviewers for change requests.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Change Request Reviewers
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-change-request-reviewers-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-change-requests-api
+  name: GitBook Change Requests API
+  description: Create, list, review, merge, and update change requests for collaborative editing.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Change Requests
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-change-requests-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-collections-api
+  name: GitBook Collections API
+  description: Organize and manage grouped sets of spaces.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Collections
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-collections-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-custom-hostnames-api
+  name: GitBook Custom Hostnames API
+  description: Configure custom hostnames for docs sites.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Custom Hostnames
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-custom-hostnames-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-docs-sites-api
+  name: GitBook Docs Sites API
+  description: Manage published documentation sites.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Docs Sites
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-docs-sites-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-imports-api
+  name: GitBook Imports API
+  description: Import content into spaces.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Imports
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-imports-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-integrations-api
+  name: GitBook Integrations API
+  description: Install and manage third-party integrations.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Integrations
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-integrations-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-openapi-specs-api
+  name: GitBook OpenAPI Specs API
+  description: Upload and manage OpenAPI specifications.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - OpenAPI Specs
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-openapi-specs-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-organization-members-api
+  name: GitBook Organization Members API
+  description: Manage members and their roles within an organization.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Organization Members
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-organization-members-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-organization-teams-api
+  name: GitBook Organization Teams API
+  description: Manage teams within an organization.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Organization Teams
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-organization-teams-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-organizations-api
+  name: GitBook Organizations API
+  description: Create and configure organizations to group users, spaces, and collections.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Organizations
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-organizations-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-search-api
+  name: GitBook Search API
+  description: Search content across an organization.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Search
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-search-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-site-spaces-api
+  name: GitBook Site Spaces API
+  description: Manage spaces within a docs site.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Site Spaces
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-site-spaces-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-space-content-api
+  name: GitBook Space Content API
+  description: Manage pages and content within a space.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Space Content
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-space-content-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-space-users-api
+  name: GitBook Space Users API
+  description: Manage user permissions within a space.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Space Users
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-space-users-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-spaces-api
+  name: GitBook Spaces API
+  description: Manage spaces which are containers for documentation or knowledge base content.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Spaces
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-spaces-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-urls-api
+  name: GitBook URLs API
+  description: Resolve and manage content URLs.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - URLs
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-urls-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
+- aid: gitbook:gitbook-users-api
+  name: GitBook Users API
+  description: Manage user accounts and profiles.
+  humanURL: https://docs.gitbook.com/developers
+  tags:
+  - Users
+  properties:
+  - type: OpenAPI
+    url: openapi/gitbook-users-api-openapi.yml
+  - type: Documentation
+    url: https://docs.gitbook.com/developers
+  - type: AsyncAPI
+    url: asyncapi/gitbook-gitbook-api-asyncapi.yml
+  - type: JSONSchema
+    url: json-schema/organization.json
+  - type: JSONSchema
+    url: json-schema/space.json
+  - type: JSONSchema
+    url: json-schema/page.json
+  - type: JSONSchema
+    url: json-schema/user.json
+  - type: JSONSchema
+    url: json-schema/change-request.json
+  - type: JSONSchema
+    url: json-schema/docs-site.json
+  - type: JSONSchema
+    url: json-schema/collection.json
+  - type: JSONLD
+    url: json-ld/gitbook-context.jsonld
 name: GitBook
 tags:
   - Content
@@ -48,7 +561,20 @@ tags:
   - Platform
   - SDKs
 type: Index
-image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/apis-json-logo.jpg
+accessModel:
+  pricing: freemium
+  onboarding: self-serve
+  trial: false
+  try_now: true
+  public: false
+  label: Freemium · Self-serve signup
+  confidence: high
+  source:
+  - plans
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/gitbook.png
 access: 3rd-Party
 common:
   - type: AgenticAccess
