@@ -1,0 +1,62 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content URLs API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "URLs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Resolve a content URL",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/urls/content",
+            "params": [
+              {
+                "name": "url",
+                "value": "",
+                "type": "query",
+                "description": "The URL to resolve."
+              }
+            ]
+          },
+          "docs": "Resolves a URL to find the corresponding GitBook content (space or page)."
+        },
+        {
+          "info": {
+            "name": "GitBook Resolve an embed URL",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/urls/embed",
+            "params": [
+              {
+                "name": "url",
+                "value": "",
+                "type": "query",
+                "description": "The URL to resolve for embedding."
+              }
+            ]
+          },
+          "docs": "Resolves an external URL to get embed information for rendering within GitBook."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,157 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Docs Sites API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Docs Sites",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List docs sites",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of docs sites in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new docs site in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns a docs site by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a docs site's settings."
+        },
+        {
+          "info": {
+            "name": "GitBook Delete a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Deletes a docs site."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

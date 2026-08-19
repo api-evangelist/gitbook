@@ -1,0 +1,179 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Site Spaces API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Site Spaces",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List site spaces",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns the list of spaces linked to a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Add a space to a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Links a space to a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a site space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the configuration of a space within a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove a space from a docs site",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ]
+          },
+          "docs": "Unlinks a space from a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Move a site space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/site-spaces/:siteSpaceId/move",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              },
+              {
+                "name": "siteSpaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the site space link."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Moves a site space to a different position or section."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,223 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Spaces API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Spaces",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List spaces in an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of spaces in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a space in an organization",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/spaces",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new space in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Returns a space by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a space's settings."
+        },
+        {
+          "info": {
+            "name": "GitBook Delete a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Deletes a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Duplicate a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/duplicate",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Creates a duplicate of the specified space."
+        },
+        {
+          "info": {
+            "name": "GitBook Move a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/move",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Moves a space to a different parent collection or organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Transfer a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/transfer",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Transfers a space to another organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Restore a deleted space",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/restore",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Restores a previously deleted space."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,91 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content OpenAPI Specs API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "OpenAPI Specs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List OpenAPI specifications",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ]
+          },
+          "docs": "Returns the list of OpenAPI specs in an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Upload an OpenAPI specification",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Uploads a new OpenAPI specification to an organization."
+        },
+        {
+          "info": {
+            "name": "GitBook Get an OpenAPI specification",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/openapi/:specSlug",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "specSlug",
+                "value": "",
+                "type": "path",
+                "description": "The slug of the OpenAPI specification."
+              }
+            ]
+          },
+          "docs": "Returns a specific OpenAPI specification by its slug."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

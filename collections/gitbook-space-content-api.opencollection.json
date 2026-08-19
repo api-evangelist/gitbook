@@ -1,0 +1,128 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Space Content API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Space Content",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get space content",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ]
+          },
+          "docs": "Returns the content tree of a space including all pages."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a page in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ]
+          },
+          "docs": "Returns a specific page within a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a page in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates the content or metadata of a page within a space."
+        },
+        {
+          "info": {
+            "name": "GitBook List files in a space",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/content/files",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              }
+            ]
+          },
+          "docs": "Returns the list of files uploaded to a space."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

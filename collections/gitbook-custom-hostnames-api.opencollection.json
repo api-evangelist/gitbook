@@ -1,0 +1,103 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Custom Hostnames API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Custom Hostnames",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Returns the custom hostname configured for a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Set custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Configures a custom hostname for a docs site."
+        },
+        {
+          "info": {
+            "name": "GitBook Remove custom hostname",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.gitbook.com/v1/orgs/:organizationId/sites/:siteId/custom-hostname",
+            "params": [
+              {
+                "name": "organizationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the organization."
+              },
+              {
+                "name": "siteId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the docs site."
+              }
+            ]
+          },
+          "docs": "Removes the custom hostname from a docs site."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

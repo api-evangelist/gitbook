@@ -1,0 +1,115 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Change Request Content",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook Get change request content",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Returns the content tree of a change request including all pages and files."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a page in a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ]
+          },
+          "docs": "Returns a specific page within a change request."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a page in a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "PUT",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/content/page/:pageId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              },
+              {
+                "name": "pageId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the page."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a page within a change request."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

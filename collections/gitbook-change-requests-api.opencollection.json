@@ -1,0 +1,163 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "GitBook Change Request Content Change Requests API",
+    "version": "1.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Change Requests",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "GitBook List change requests",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Pagination cursor for the next page of results."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of items to return per page."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by change request status."
+              }
+            ]
+          },
+          "docs": "Returns the list of change requests for a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Create a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Creates a new change request for a space."
+        },
+        {
+          "info": {
+            "name": "GitBook Get a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Returns a change request by its ID."
+        },
+        {
+          "info": {
+            "name": "GitBook Update a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Updates a change request's subject or description."
+        },
+        {
+          "info": {
+            "name": "GitBook Merge a change request",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.gitbook.com/v1/spaces/:spaceId/change-requests/:changeRequestId/merge",
+            "params": [
+              {
+                "name": "spaceId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the space."
+              },
+              {
+                "name": "changeRequestId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the change request."
+              }
+            ]
+          },
+          "docs": "Merges a change request into the main content of the space."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
