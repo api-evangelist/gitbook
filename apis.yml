@@ -93,6 +93,8 @@ apis:
   description: Organize and manage grouped sets of spaces.
   humanURL: https://docs.gitbook.com/developers
   tags:
+  - Collection
+  tags_raw:
   - Collections
   properties:
   - type: OpenAPI
@@ -209,6 +211,8 @@ apis:
   description: Install and manage third-party integrations.
   humanURL: https://docs.gitbook.com/developers
   tags:
+  - Integration
+  tags_raw:
   - Integrations
   properties:
   - type: OpenAPI
@@ -325,6 +329,8 @@ apis:
   description: Create and configure organizations to group users, spaces, and collections.
   humanURL: https://docs.gitbook.com/developers
   tags:
+  - Organization
+  tags_raw:
   - Organizations
   properties:
   - type: OpenAPI
@@ -528,6 +534,8 @@ apis:
   description: Manage user accounts and profiles.
   humanURL: https://docs.gitbook.com/developers
   tags:
+  - User
+  tags_raw:
   - Users
   properties:
   - type: OpenAPI
@@ -554,6 +562,13 @@ apis:
     url: json-ld/gitbook-context.jsonld
 name: GitBook
 tags:
+  - Content
+  - Documentation
+  - Experience
+  - Integration
+  - Platform
+  - SDK
+tags_raw:
   - Content
   - Documentation
   - Experience
