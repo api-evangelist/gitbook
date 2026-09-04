@@ -595,11 +595,12 @@ accessModel:
   try_now: true
   public: false
   label: Freemium · Self-serve signup
-  confidence: high
+  confidence: medium
   source:
   - plans
   - authentication
-  generated: '2026-07-22'
+  - security
+  generated: '2026-09-03'
   method: derived
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/gitbook.png
 access: 3rd-Party
@@ -636,7 +637,7 @@ common:
     url: https://www.gitbook.com/integrations
 created: '2025-01-08'
 modified: '2026-05-19'
-position: Consumer
+position: Consuming
 description: >-
   GitBook is a platform that allows users to create, publish, and share online books and documentation. It provides a
   simple and user-friendly interface for writing and organizing content, as well as tools for collaborating with other
