@@ -1,7 +1,7 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  title: GitBook Change Request Content Change Requests API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations. It supports creating, updating, and deleting organizations, spaces, collections, and published docs sites; managing users, teams, and access permissions; importing and exporting content; creating, listing, reviewing, merging, and updating change requests; managing comments; configuring custom hostnames and URLs; and managing integrations and OpenAPI documentation.
+  title: GitBook Change Requests API
+  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
   version: 1.0.0
   contact:
     name: GitBook
@@ -167,6 +167,45 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+    ChangeRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the change request.
+        number:
+          type: integer
+          description: The sequential number of the change request.
+        subject:
+          type: string
+          description: The title/subject of the change request.
+        description:
+          type: string
+          description: A description of the change request.
+        status:
+          type: string
+          enum:
+          - open
+          - merged
+          - closed
+          description: The current status of the change request.
+        createdBy:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        mergedAt:
+          type: string
+          format: date-time
     User:
       type: object
       properties:
@@ -202,54 +241,15 @@ components:
             message:
               type: string
               description: A description of the error.
-    ChangeRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the change request.
-        number:
-          type: integer
-          description: The sequential number of the change request.
-        subject:
-          type: string
-          description: The title/subject of the change request.
-        description:
-          type: string
-          description: A description of the change request.
-        status:
-          type: string
-          enum:
-          - open
-          - merged
-          - closed
-          description: The current status of the change request.
-        createdBy:
-          $ref: '#/components/schemas/User'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        mergedAt:
-          type: string
-          format: date-time
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
   responses:
-    NotFound:
-      description: The requested resource was not found.
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
+    NotFound:
+      description: The requested resource was not found.
       content:
         application/json:
           schema:
@@ -262,6 +262,19 @@ components:
       description: The unique identifier of the change request.
       schema:
         type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
     limitParam:
       name: limit
       in: query
@@ -270,19 +283,6 @@ components:
         type: integer
         default: 20
         maximum: 100
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http

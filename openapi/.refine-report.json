@@ -1,25 +1,7 @@
 {
   "provider": "gitbook",
   "sources": [
-    "gitbook-change-request-content-api-openapi.yml",
-    "gitbook-change-request-reviewers-api-openapi.yml",
-    "gitbook-change-requests-api-openapi.yml",
-    "gitbook-collections-api-openapi.yml",
-    "gitbook-custom-hostnames-api-openapi.yml",
-    "gitbook-docs-sites-api-openapi.yml",
-    "gitbook-imports-api-openapi.yml",
-    "gitbook-integrations-api-openapi.yml",
-    "gitbook-openapi-specs-api-openapi.yml",
-    "gitbook-organization-members-api-openapi.yml",
-    "gitbook-organization-teams-api-openapi.yml",
-    "gitbook-organizations-api-openapi.yml",
-    "gitbook-search-api-openapi.yml",
-    "gitbook-site-spaces-api-openapi.yml",
-    "gitbook-space-content-api-openapi.yml",
-    "gitbook-space-users-api-openapi.yml",
-    "gitbook-spaces-api-openapi.yml",
-    "gitbook-urls-api-openapi.yml",
-    "gitbook-users-api-openapi.yml"
+    "_original/gitbook-gitbook-api-openapi.yml"
   ],
   "outputs": [
     "gitbook-change-request-content-api-openapi.yml",
@@ -45,6 +27,30 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "gitbook-gitbook-api-openapi.yml: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "gitbook-change-request-content-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-change-request-reviewers-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-change-requests-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-collections-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-custom-hostnames-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-docs-sites-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-imports-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-integrations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-openapi-specs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-organization-members-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-organization-teams-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-organizations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-search-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-site-spaces-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-space-content-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-space-users-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-spaces-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-urls-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "gitbook-users-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
