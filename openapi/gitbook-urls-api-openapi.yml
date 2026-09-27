@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: GitBook UR Ls API
+  title: GitBook URLs API
   description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
   version: 1.0.0
   contact:
@@ -85,19 +85,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     Error:
       type: object
@@ -111,6 +98,19 @@ components:
             message:
               type: string
               description: A description of the error.
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       type: http

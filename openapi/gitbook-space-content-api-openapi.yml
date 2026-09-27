@@ -130,29 +130,61 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+    pageId:
+      name: pageId
+      in: path
+      required: true
+      description: The unique identifier of the page.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
   schemas:
-    Pagination:
+    Error:
       type: object
       properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
-    File:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the file.
-        name:
-          type: string
-          description: The file name.
-        contentType:
-          type: string
-          description: The MIME type of the file.
-        downloadURL:
-          type: string
-          format: uri
-          description: URL to download the file.
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
     Page:
       type: object
       properties:
@@ -183,60 +215,28 @@ components:
         document:
           type: object
           description: The document content of the page.
-    Error:
+    File:
       type: object
       properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-  parameters:
-    pageId:
-      name: pageId
-      in: path
-      required: true
-      description: The unique identifier of the page.
-      schema:
-        type: string
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-  responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+        id:
+          type: string
+          description: The unique identifier of the file.
+        name:
+          type: string
+          description: The file name.
+        contentType:
+          type: string
+          description: The MIME type of the file.
+        downloadURL:
+          type: string
+          format: uri
+          description: URL to download the file.
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
   securitySchemes:
     bearerAuth:
       type: http

@@ -114,7 +114,61 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
     User:
       type: object
       properties:
@@ -138,22 +192,6 @@ components:
             app:
               type: string
               format: uri
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
-    MemberRole:
-      type: string
-      enum:
-      - admin
-      - create
-      - review
-      - edit
-      - comment
-      - read
-      description: The role of a member within an organization.
     OrganizationMember:
       type: object
       properties:
@@ -164,60 +202,22 @@ components:
         createdAt:
           type: string
           format: date-time
-    Error:
+    MemberRole:
+      type: string
+      enum:
+      - admin
+      - create
+      - review
+      - edit
+      - comment
+      - read
+      description: The role of a member within an organization.
+    Pagination:
       type: object
       properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-  responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  parameters:
-    userId:
-      name: userId
-      in: path
-      required: true
-      description: The unique identifier of the user.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
+        page:
+          type: string
+          description: The cursor for the next page of results.
   securitySchemes:
     bearerAuth:
       type: http
