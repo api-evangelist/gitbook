@@ -100,21 +100,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
-    siteId:
-      name: siteId
-      in: path
-      required: true
-      description: The unique identifier of the docs site.
-      schema:
-        type: string
   responses:
     Unauthorized:
       description: Authentication is required or the token is invalid.
@@ -128,6 +113,21 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+  parameters:
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
   schemas:
     Error:
       type: object

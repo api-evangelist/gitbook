@@ -96,36 +96,20 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    SpaceRole:
-      type: string
-      enum:
-      - admin
-      - create
-      - review
-      - edit
-      - comment
-      - read
-      description: The permission role of a user on a space.
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-    SpaceUser:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        role:
-          $ref: '#/components/schemas/SpaceRole'
     User:
       type: object
       properties:
@@ -149,31 +133,60 @@ components:
             app:
               type: string
               format: uri
+    SpaceUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/SpaceRole'
     Pagination:
       type: object
       properties:
         page:
           type: string
           description: The cursor for the next page of results.
-  responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+    SpaceRole:
+      type: string
+      enum:
+      - admin
+      - create
+      - review
+      - edit
+      - comment
+      - read
+      description: The permission role of a user on a space.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
   parameters:
     spaceId:
       name: spaceId
       in: path
       required: true
       description: The unique identifier of the space.
+      schema:
+        type: string
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
       schema:
         type: string
     limitParam:
@@ -184,19 +197,6 @@ components:
         type: integer
         default: 20
         maximum: 100
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-    userId:
-      name: userId
-      in: path
-      required: true
-      description: The unique identifier of the user.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http

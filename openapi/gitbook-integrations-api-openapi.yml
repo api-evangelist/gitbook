@@ -69,41 +69,33 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  schemas:
-    Integration:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the integration.
-        name:
-          type: string
-          description: The name of the integration.
-        description:
-          type: string
-          description: A description of the integration.
-        installedAt:
-          type: string
-          format: date-time
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
+  responses:
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    integrationId:
+      name: integrationId
+      in: path
+      required: true
+      description: The unique identifier of the integration.
+      schema:
+        type: string
     organizationId:
       name: organizationId
       in: path
@@ -119,32 +111,40 @@ components:
         type: integer
         default: 20
         maximum: 100
-    integrationId:
-      name: integrationId
-      in: path
-      required: true
-      description: The unique identifier of the integration.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-  responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
+    Integration:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the integration.
+        name:
+          type: string
+          description: The name of the integration.
+        description:
+          type: string
+          description: A description of the integration.
+        installedAt:
+          type: string
+          format: date-time
   securitySchemes:
     bearerAuth:
       type: http

@@ -90,22 +90,30 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-  parameters:
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
-    changeRequestId:
-      name: changeRequestId
-      in: path
-      required: true
-      description: The unique identifier of the change request.
-      schema:
-        type: string
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
     Error:
       type: object
       properties:
@@ -130,29 +138,21 @@ components:
           - approved
           - changes-requested
           description: The review status.
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the user.
-        displayName:
-          type: string
-          description: The display name of the user.
-        email:
-          type: string
-          format: email
-          description: The email address of the user.
-        photoURL:
-          type: string
-          format: uri
-          description: URL to the user's profile photo.
-        urls:
-          type: object
-          properties:
-            app:
-              type: string
-              format: uri
+  parameters:
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http
