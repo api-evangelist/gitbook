@@ -1,5 +1,8 @@
 aid: gitbook
 url: https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/apis.yml
+x-docs-platform: gitbook
+x-docs-platform-confidence: high
+x-docs-platform-checked: 2026-10-03
 apis:
 - aid: gitbook:gitbook-change-request-content-api
   name: GitBook Change Request Content API
