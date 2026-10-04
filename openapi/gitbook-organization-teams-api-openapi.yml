@@ -69,19 +69,6 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
-  responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   parameters:
     pageParam:
       name: page
@@ -111,6 +98,19 @@ components:
       description: The unique identifier of the team.
       schema:
         type: string
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     Pagination:
       type: object
@@ -118,18 +118,6 @@ components:
         page:
           type: string
           description: The cursor for the next page of results.
-    Team:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the team.
-        title:
-          type: string
-          description: The display name of the team.
-        members:
-          type: integer
-          description: The number of members in the team.
     Error:
       type: object
       properties:
@@ -142,6 +130,18 @@ components:
             message:
               type: string
               description: A description of the error.
+    Team:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the team.
+        title:
+          type: string
+          description: The display name of the team.
+        members:
+          type: integer
+          description: The number of members in the team.
   securitySchemes:
     bearerAuth:
       type: http

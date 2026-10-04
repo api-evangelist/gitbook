@@ -130,50 +130,49 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    pageId:
+      name: pageId
+      in: path
+      required: true
+      description: The unique identifier of the page.
+      schema:
+        type: string
+    limitParam:
+      name: limit
+      in: query
+      description: Maximum number of items to return per page.
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
   responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     NotFound:
       description: The requested resource was not found.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    Page:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the page.
-        title:
-          type: string
-          description: The title of the page.
-        description:
-          type: string
-          description: The description of the page.
-        kind:
-          type: string
-          enum:
-          - sheet
-          - group
-          - link
-          description: The type of page.
-        path:
-          type: string
-          description: The URL-friendly path of the page.
-        pages:
-          type: array
-          items:
-            $ref: '#/components/schemas/Page'
-          description: Child pages nested under this page.
-        document:
-          type: object
-          description: The document content of the page.
     Pagination:
       type: object
       properties:
@@ -208,35 +207,36 @@ components:
           type: string
           format: uri
           description: URL to download the file.
-  parameters:
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-    pageId:
-      name: pageId
-      in: path
-      required: true
-      description: The unique identifier of the page.
-      schema:
-        type: string
+    Page:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the page.
+        title:
+          type: string
+          description: The title of the page.
+        description:
+          type: string
+          description: The description of the page.
+        kind:
+          type: string
+          enum:
+          - sheet
+          - group
+          - link
+          description: The type of page.
+        path:
+          type: string
+          description: The URL-friendly path of the page.
+        pages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Page'
+          description: Child pages nested under this page.
+        document:
+          type: object
+          description: The document content of the page.
   securitySchemes:
     bearerAuth:
       type: http

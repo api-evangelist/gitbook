@@ -1,5 +1,166 @@
 aid: gitbook
+
 url: https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/apis.yml
+
+name: GitBook
+
+tags:
+  - Content
+  - Documentation
+  - Experience
+  - Integration
+  - Platform
+  - SDK
+
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: true
+  label: Hosted service · you call their endpoint
+  confidence: high
+  source:
+  - openapi
+  - pricing
+  generated: '2026-08-28'
+  method: derived
+
+accessModel:
+  pricing: freemium
+  onboarding: self-serve
+  trial: false
+  try_now: true
+  public: false
+  label: Freemium · Self-serve signup
+  confidence: medium
+  source:
+  - plans
+  - authentication
+  - security
+  generated: '2026-09-03'
+  method: derived
+
+image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/gitbook.png
+
+access: 3rd-Party
+
+created: '2025-01-08'
+
+modified: '2026-05-19'
+
+position: Consuming
+
+description: >-
+  GitBook is a documentation and knowledge platform, positioned as "the knowledge layer for AI", that connects a
+  company's docs, product and users, answers user questions with AI, and identifies gaps in its knowledge. Teams write
+  and publish product and API documentation with docs-as-code support and AI insights built in.
+
+maintainers:
+  - FN: Kin Lane
+    email: info@apievangelist.com
+
+specificationVersion: '0.23'
+
+common:
+  - type: FinOps
+    url: finops/gitbook-finops.yml
+  - type: RateLimits
+    url: rate-limits/gitbook-rate-limits.yml
+  - type: Plans
+    url: plans/gitbook-plans-pricing.yml
+  - type: Spectral
+    url: rules/gitbook-rules.yml
+  - type: Spectral
+    url: rules/gitbook-jsonschema-spectral-rules.yml
+  - type: Spectral
+    url: rules/gitbook-asyncapi-spectral-rules.yml
+  - type: Vocabulary
+    url: vocabulary/gitbook-vocabulary.yml
+  - type: AgentSkill
+    url: skills/_index.yml
+  - type: Webhooks
+    url: asyncapi/gitbook-webhooks.yml
+  - type: DataModel
+    url: data-model/gitbook-data-model.yml
+  - type: CLI
+    url: cli/gitbook-cli.yml
+  - type: Conventions
+    url: conventions/gitbook-conventions.yml
+  - type: ErrorCatalog
+    url: errors/gitbook-problem-types.yml
+  - type: Conformance
+    url: conformance/gitbook-conformance.yml
+  - type: LLMsTxt
+    url: llms/gitbook-llms.txt
+  - type: MCPServer
+    url: mcp/gitbook-mcp.yml
+  - type: WellKnown
+    url: well-known/gitbook-well-known.yml
+  - type: Hosts
+    url: hosts/gitbook-hosts.yml
+  - type: Vendors
+    url: vendors/gitbook-vendors.yml
+  - type: SDKs
+    url: packages/gitbook-packages.yml
+  - type: Packages
+    url: packages/gitbook-packages.yml
+  - type: Webhooks
+    url: https://www.gitbook.com/integrations/webhook
+  - type: Support
+    url: https://www.gitbook.com/solutions/help-center
+  - type: Security
+    url: https://www.gitbook.com/industries/security
+  - type: Documentation
+    url: https://developer.gitbook.com/
+  - type: VendorFacets
+    url: vendor-facets/gitbook-vendor-facets.yml
+  - type: AgenticAccess
+    url: agentic-access/gitbook-agentic-access.yml
+  - type: DomainSecurity
+    url: security/gitbook-domain-security.yml
+  - type: Authentication
+    url: authentication/gitbook-authentication.yml
+  - type: GitHubOrganization
+    url: https://github.com/gitbookio
+  - type: LinkedIn
+    url: https://www.linkedin.com/company/gitbook
+  - url: https://www.gitbook.com/
+    name: GitBook
+    type: Website
+    description: >-
+      Transform your documentation into a connected knowledge system — one that learns, optimizes, and improves itself
+      intelligently
+  - url: https://www.gitbook.com/pricing
+    name: GitBook – Pricing
+    type: Pricing
+    description: 'null'
+  - url: https://www.gitbook.com/blog
+    name: "GitBook –\_Blog"
+    type: Blog
+    description: 'null'
+  - url: https://gitbook.com/docs/guides
+    name: GitBook guides | Guides | GitBook Documentation
+    type: Guide
+    description: 'null'
+  - type: Integrations
+    url: https://www.gitbook.com/integrations
+  - type: SignUp
+    url: https://app.gitbook.com/join
+  - type: GettingStarted
+    url: https://gitbook.com/docs
+  - type: ChangeLog
+    url: https://gitbook.com/docs/changelog
+  - type: StatusPage
+    url: https://www.gitbookstatus.com/
+  - type: TermsOfService
+    url: https://gitbook.com/docs/policies/terms
+  - type: PrivacyPolicy
+    url: https://gitbook.com/docs/policies/privacy-and-security/statement
+  - type: APIReference
+    url: https://gitbook.com/docs/developers
+  - type: SDK
+    url: https://www.npmjs.com/package/@gitbook/api
+
 apis:
 - aid: gitbook:gitbook-change-request-content-api
   name: GitBook Change Request Content API
@@ -566,14 +727,7 @@ apis:
     url: json-schema/collection.json
   - type: JSONLD
     url: json-ld/gitbook-context.jsonld
-name: GitBook
-tags:
-  - Content
-  - Documentation
-  - Experience
-  - Integration
-  - Platform
-  - SDK
+
 tags_raw:
   - Content
   - Documentation
@@ -581,91 +735,9 @@ tags_raw:
   - Integrations
   - Platform
   - SDKs
+
 type: Index
-deliveryModel:
-  model: saas
-  open_source: false
-  commercial: true
-  callable_host: true
-  label: Hosted service · you call their endpoint
-  confidence: high
-  source:
-  - openapi
-  - pricing
-  generated: '2026-08-28'
-  method: derived
-accessModel:
-  pricing: freemium
-  onboarding: self-serve
-  trial: false
-  try_now: true
-  public: false
-  label: Freemium · Self-serve signup
-  confidence: medium
-  source:
-  - plans
-  - authentication
-  - security
-  generated: '2026-09-03'
-  method: derived
-image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/gitbook.png
-access: 3rd-Party
-common:
-  - type: VendorFacets
-    url: vendor-facets/gitbook-vendor-facets.yml
-  - type: AgenticAccess
-    url: agentic-access/gitbook-agentic-access.yml
-  - type: DomainSecurity
-    url: security/gitbook-domain-security.yml
-  - type: Authentication
-    url: authentication/gitbook-authentication.yml
-  - type: GitHubOrganization
-    url: https://github.com/gitbookio
-  - type: LinkedIn
-    url: https://www.linkedin.com/company/gitbook
-  - url: https://www.gitbook.com/
-    name: GitBook
-    type: Website
-    description: >-
-      Transform your documentation into a connected knowledge system — one that learns, optimizes, and improves itself
-      intelligently
-  - url: https://www.gitbook.com/pricing
-    name: GitBook – Pricing
-    type: Pricing
-    description: 'null'
-  - url: https://www.gitbook.com/blog
-    name: "GitBook –\_Blog"
-    type: Blog
-    description: 'null'
-  - url: https://gitbook.com/docs/guides
-    name: GitBook guides | Guides | GitBook Documentation
-    type: Guide
-    description: 'null'
-  - type: Integrations
-    url: https://www.gitbook.com/integrations
-  - type: SignUp
-    url: https://app.gitbook.com/join
-  - type: GettingStarted
-    url: https://gitbook.com/docs
-  - type: ChangeLog
-    url: https://gitbook.com/docs/changelog
-  - type: StatusPage
-    url: https://www.gitbookstatus.com/
-  - type: TermsOfService
-    url: https://gitbook.com/docs/policies/terms
-  - type: PrivacyPolicy
-    url: https://gitbook.com/docs/policies/privacy-and-security/statement
-  - type: APIReference
-    url: https://gitbook.com/docs/developers
-  - type: SDK
-    url: https://www.npmjs.com/package/@gitbook/api
-created: '2025-01-08'
-modified: '2026-05-19'
-position: Consuming
-description: >-
-  GitBook is a documentation and knowledge platform, positioned as "the knowledge layer for AI", that connects a
-  company's docs, product and users, answers user questions with AI, and identifies gaps in its knowledge. Teams write
-  and publish product and API documentation with docs-as-code support and AI insights built in.
+
 integrations:
   - name: The Linear logo
   - name: The Slack logo
@@ -734,10 +806,7 @@ integrations:
   - name: Wistia
   - name: YouTube Connector
   - name: ZoomInfo
-maintainers:
-  - FN: Kin Lane
-    email: info@apievangelist.com
-specificationVersion: '0.23'
+
 x-correction-request:
   requested: '2026-10-03'
   source:
@@ -745,3 +814,9 @@ x-correction-request:
   request: 'Influence-tier artifact submission 575f8bf9 (2026-09-23): SDKs at https://www.npmjs.com/package/@gitbook/api.
     Verify it is live and real (MCP: initialize/tools/list or server card; OpenAPI: paths), then record it as a
     pointer and harvest it.'
+x-enrichment:
+  date: '2026-10-04'
+  status: enriched
+  artifacts_added: 21
+  pass: modular-v1
+  engine: identity=local,contract=local,surfaces=local,docs=local,regulatory=local

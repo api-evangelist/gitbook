@@ -164,55 +164,19 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   responses:
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     NotFound:
       description: The requested resource was not found.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-  parameters:
-    siteId:
-      name: siteId
-      in: path
-      required: true
-      description: The unique identifier of the docs site.
-      schema:
-        type: string
-    siteSpaceId:
-      name: siteSpaceId
-      in: path
-      required: true
-      description: The unique identifier of the site space link.
-      schema:
-        type: string
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
-    SiteSpace:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the site space link.
-        space:
-          $ref: '#/components/schemas/Space'
-        path:
-          type: string
-          description: The URL path for this space on the site.
-        sectionId:
-          type: string
-          description: The section this space belongs to.
     Space:
       type: object
       properties:
@@ -265,6 +229,42 @@ components:
             message:
               type: string
               description: A description of the error.
+    SiteSpace:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the site space link.
+        space:
+          $ref: '#/components/schemas/Space'
+        path:
+          type: string
+          description: The URL path for this space on the site.
+        sectionId:
+          type: string
+          description: The section this space belongs to.
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+    siteSpaceId:
+      name: siteSpaceId
+      in: path
+      required: true
+      description: The unique identifier of the site space link.
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
   securitySchemes:
     bearerAuth:
       type: http
