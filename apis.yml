@@ -614,6 +614,12 @@ accessModel:
 image: https://kinlane-images.s3.amazonaws.com/shared/apis-json/icons/gitbook.png
 access: 3rd-Party
 common:
+  - type: Plans
+    url: plans/gitbook-plans-pricing.yml
+  - type: RateLimits
+    url: rate-limits/gitbook-rate-limits.yml
+  - type: FinOps
+    url: finops/gitbook-finops.yml
   - type: VendorFacets
     url: vendor-facets/gitbook-vendor-facets.yml
   - type: AgenticAccess
