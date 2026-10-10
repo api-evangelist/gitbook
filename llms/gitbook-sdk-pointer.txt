@@ -1,0 +1,6 @@
+generated: 2026-10-05
+method: probed
+source: https://registry.npmjs.org/@gitbook/api
+status: 200
+content-type: application/json
+note: NPM package @gitbook/api is live, version latest 0.204.0, provides SDK.

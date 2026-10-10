@@ -1,0 +1,33 @@
+generated: '2026-10-04'
+method: searched
+generator: extract-docs-artifacts.py (local)
+source: https://www.gitbook.com/industries/security
+sources:
+- https://www.gitbook.com/industries/security
+- https://gitbook.com/docs/policies/privacy-and-security/statement.md
+standards:
+- id: soc2
+  conforms: true
+  evidence: Documentation infrastructure your security team can stand behind SOC 2 compliant.
+- id: gdpr
+  conforms: true
+  evidence: we are compliant with the General Data Protection Regulation (GDPR).
+- id: openapi-3.2
+  conforms: true
+  evidence: the document declares 3.2.0
+- id: oauth2
+  conforms: false
+  evidence: 'securitySchemes: bearerAuth (http)'
+- id: rfc9457
+  conforms: false
+  evidence: no response declares application/problem+json
+- id: idempotency
+  conforms: false
+  evidence: no idempotency key parameter on mutating operations
+- id: pagination
+  conforms: true
+  evidence: list operations take limit, page
+- id: openapi-3.1
+  conforms: true
+  evidence: the document declares 3.1.0
+docs: https://www.gitbook.com/industries/security

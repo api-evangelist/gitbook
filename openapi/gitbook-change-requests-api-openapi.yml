@@ -167,12 +167,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     limitParam:
       name: limit
       in: query
@@ -181,18 +175,24 @@ components:
         type: integer
         default: 20
         maximum: 100
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
     changeRequestId:
       name: changeRequestId
       in: path
       required: true
       description: The unique identifier of the change request.
+      schema:
+        type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
       schema:
         type: string
   responses:
@@ -227,6 +227,29 @@ components:
             message:
               type: string
               description: A description of the error.
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the user.
+        displayName:
+          type: string
+          description: The display name of the user.
+        email:
+          type: string
+          format: email
+          description: The email address of the user.
+        photoURL:
+          type: string
+          format: uri
+          description: URL to the user's profile photo.
+        urls:
+          type: object
+          properties:
+            app:
+              type: string
+              format: uri
     ChangeRequest:
       type: object
       properties:
@@ -260,29 +283,6 @@ components:
         mergedAt:
           type: string
           format: date-time
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the user.
-        displayName:
-          type: string
-          description: The display name of the user.
-        email:
-          type: string
-          format: email
-          description: The email address of the user.
-        photoURL:
-          type: string
-          format: uri
-          description: URL to the user's profile photo.
-        urls:
-          type: object
-          properties:
-            app:
-              type: string
-              format: uri
   securitySchemes:
     bearerAuth:
       type: http

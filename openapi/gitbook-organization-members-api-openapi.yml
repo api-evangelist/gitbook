@@ -115,12 +115,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     organizationId:
       name: organizationId
       in: path
@@ -143,6 +137,12 @@ components:
       description: The unique identifier of the user.
       schema:
         type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
   responses:
     NotFound:
       description: The requested resource was not found.
@@ -163,6 +163,16 @@ components:
         page:
           type: string
           description: The cursor for the next page of results.
+    OrganizationMember:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/MemberRole'
+        createdAt:
+          type: string
+          format: date-time
     Error:
       type: object
       properties:
@@ -175,6 +185,16 @@ components:
             message:
               type: string
               description: A description of the error.
+    MemberRole:
+      type: string
+      enum:
+      - admin
+      - create
+      - review
+      - edit
+      - comment
+      - read
+      description: The role of a member within an organization.
     User:
       type: object
       properties:
@@ -198,26 +218,6 @@ components:
             app:
               type: string
               format: uri
-    MemberRole:
-      type: string
-      enum:
-      - admin
-      - create
-      - review
-      - edit
-      - comment
-      - read
-      description: The role of a member within an organization.
-    OrganizationMember:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        role:
-          $ref: '#/components/schemas/MemberRole'
-        createdAt:
-          type: string
-          format: date-time
   securitySchemes:
     bearerAuth:
       type: http

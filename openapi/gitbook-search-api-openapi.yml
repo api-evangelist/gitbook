@@ -112,12 +112,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     organizationId:
       name: organizationId
       in: path
@@ -133,6 +127,12 @@ components:
         type: integer
         default: 20
         maximum: 100
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
     siteId:
       name: siteId
       in: path

@@ -77,19 +77,35 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique identifier of the space.
+      schema:
+        type: string
   schemas:
-    Reviewer:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        status:
-          type: string
-          enum:
-          - pending
-          - approved
-          - changes-requested
-          description: The review status.
     Error:
       type: object
       properties:
@@ -125,34 +141,18 @@ components:
             app:
               type: string
               format: uri
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  parameters:
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
-    changeRequestId:
-      name: changeRequestId
-      in: path
-      required: true
-      description: The unique identifier of the change request.
-      schema:
-        type: string
+    Reviewer:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        status:
+          type: string
+          enum:
+          - pending
+          - approved
+          - changes-requested
+          description: The review status.
   securitySchemes:
     bearerAuth:
       type: http

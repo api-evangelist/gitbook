@@ -264,12 +264,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     organizationId:
       name: organizationId
       in: path
@@ -292,6 +286,12 @@ components:
       description: The unique identifier of the space.
       schema:
         type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
   responses:
     NotFound:
       description: The requested resource was not found.
@@ -306,6 +306,24 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: string
+          description: The cursor for the next page of results.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
     Space:
       type: object
       properties:
@@ -346,24 +364,6 @@ components:
             published:
               type: string
               format: uri
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
   securitySchemes:
     bearerAuth:
       type: http

@@ -97,12 +97,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     limitParam:
       name: limit
       in: query
@@ -125,6 +119,12 @@ components:
       description: The unique identifier of the space.
       schema:
         type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
   schemas:
     SpaceRole:
       type: string
@@ -136,6 +136,13 @@ components:
       - comment
       - read
       description: The permission role of a user on a space.
+    SpaceUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          $ref: '#/components/schemas/SpaceRole'
     Pagination:
       type: object
       properties:
@@ -177,13 +184,6 @@ components:
             app:
               type: string
               format: uri
-    SpaceUser:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        role:
-          $ref: '#/components/schemas/SpaceRole'
   responses:
     NotFound:
       description: The requested resource was not found.

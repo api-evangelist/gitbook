@@ -1,0 +1,21 @@
+generated: '2026-10-10'
+method: searched
+generator: extract-docs-artifacts.py (local)
+source: https://gitbook.com/docs/developers/gitbook-api/pagination
+sources:
+- https://gitbook.com/docs/developers/gitbook-api/pagination
+- https://gitbook.com/docs/getting-started/quickstart.md
+- https://gitbook.com/docs/getting-started/llm-ready-docs.md
+- https://gitbook.com/docs/getting-started/import.md
+idempotency:
+  coverage: none
+pagination:
+  style: cursor-based token via `page` query parameter
+  params:
+  - page
+  response_fields:
+  - items
+  - next.page
+  - previous.page
+  docs: https://gitbook.com/docs/developers/gitbook-api/pagination
+docs: https://gitbook.com/docs/developers/gitbook-api/pagination

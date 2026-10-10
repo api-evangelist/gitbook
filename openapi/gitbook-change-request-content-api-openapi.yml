@@ -104,7 +104,27 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  responses:
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Authentication is required or the token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique identifier of the change request.
+      schema:
+        type: string
     pageId:
       name: pageId
       in: path
@@ -119,39 +139,7 @@ components:
       description: The unique identifier of the space.
       schema:
         type: string
-    changeRequestId:
-      name: changeRequestId
-      in: path
-      required: true
-      description: The unique identifier of the change request.
-      schema:
-        type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
     Page:
       type: object
       properties:
@@ -182,6 +170,18 @@ components:
         document:
           type: object
           description: The document content of the page.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
   securitySchemes:
     bearerAuth:
       type: http

@@ -1,0 +1,16 @@
+# GitBook Documentation
+
+## Documentation
+
+- [GitBook documentation](https://gitbook.com/docs/readme.md): Create and publish AI-native documentation your users will love. GitBook gives you intelligent tools to build product guides, API references, and documentation that improves over time.
+- [Quickstart](https://gitbook.com/docs/getting-started/quickstart.md): Get up and running in GitBook and publish your first docs site in minutes
+- [LLM-ready docs](https://gitbook.com/docs/getting-started/llm-ready-docs.md): Make your published docs easier for AI tools to discover, read, and use
+- [Migrate to GitBook](https://gitbook.com/docs/getting-started/import.md): How to import existing content into GitBook from Confluence, Notion, Git and more
+- [Site workspace](https://gitbook.com/docs/getting-started/sites-first.md): Learn how the site workspace changes navigation, content structure, and permissions in GitBook
+- [Content structure](https://gitbook.com/docs/create-content/content-structure.md): Learn how sites, sections, groups, and pages organize your GitBook content.
+- [Sections](https://gitbook.com/docs/create-content/content-structure/space.md)
+- [Groups](https://gitbook.com/docs/create-content/content-structure/collection.md): Organize related sections within your site
+- [Pages](https://gitbook.com/docs/create-content/content-structure/page.md): Add pages, page groups or external links — and learn about the options you have on each page
+- [Tags](https://gitbook.com/docs/create-content/content-structure/page/tags.md): Tags are reusable labels you can add to tags
+- [All content](https://gitbook.com/docs/create-content/content-structure/all-content.md): Browse, search, and manage content across all of your sites, and content that isn’t part of a site yet, from one screen
+- [Format content](https://gitbook.com/docs/create-content/formatting.md):

@@ -163,6 +163,28 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 components:
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique identifier of the organization.
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique identifier of the docs site.
+      schema:
+        type: string
+    siteSpaceId:
+      name: siteSpaceId
+      in: path
+      required: true
+      description: The unique identifier of the site space link.
+      schema:
+        type: string
   responses:
     NotFound:
       description: The requested resource was not found.
@@ -177,6 +199,18 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
     Space:
       type: object
       properties:
@@ -217,18 +251,6 @@ components:
             published:
               type: string
               format: uri
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
     SiteSpace:
       type: object
       properties:
@@ -243,28 +265,6 @@ components:
         sectionId:
           type: string
           description: The section this space belongs to.
-  parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
-    siteSpaceId:
-      name: siteSpaceId
-      in: path
-      required: true
-      description: The unique identifier of the site space link.
-      schema:
-        type: string
-    siteId:
-      name: siteId
-      in: path
-      required: true
-      description: The unique identifier of the docs site.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http

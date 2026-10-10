@@ -1,0 +1,41 @@
+generated: '2026-10-10'
+method: searched
+generator: extract-docs-artifacts.py (local)
+source: https://gitbook.com/docs/docs-as-code/gitbook-cli.md
+sources:
+- https://gitbook.com/docs/docs-as-code/gitbook-cli.md
+- https://gitbook.com/docs/developers/integrations/reference
+- https://gitbook.com/docs/docs-as-code/gitbook-cli
+- https://gitbook.com/docs/developers/integrations/reference/cli-reference
+install:
+- method: npm
+  command: npm install @gitbook/cli -g
+commands:
+- group: auth
+  commands:
+  - login
+  - auth --token <token>
+  - auth
+  - whoami
+  - logout
+- group: organizations
+  commands:
+  - list
+  - ask stream <organizationId> --query "<question>"
+- group: spaces
+  commands:
+  - list --organization <organizationId>
+  - get <spaceId>
+  - content pages list <spaceId>
+- group: integrations
+  commands:
+  - new
+  - dev
+  - publish
+  - unpublish <integration-name>
+- group: help
+  commands:
+  - --help
+  - help
+binary: gitbook
+docs: https://gitbook.com/docs/docs-as-code/gitbook-cli.md

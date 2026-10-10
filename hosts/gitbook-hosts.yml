@@ -1,0 +1,207 @@
+generated: '2026-10-10'
+method: derived
+source: the pre-flight dossier, apis.yml pointers, spec servers, well-known, vendors -- nothing fetched here
+generator: derive-hosts.py
+summary:
+  hosts: 15
+  own: 9
+  other_domain: 3
+  platform: 3
+  roles:
+  - api
+  - docs
+  - identity
+  - other
+  - portal
+  - source
+  - status
+  - website
+hosts:
+- host: api.gitbook.com
+  found_by:
+  - probed
+  - site-links
+  - spec-found
+  - contract-discovery
+  - well-known
+  types: []
+  serves:
+  - spec
+  registrable_domain: gitbook.com
+  role: api
+  relation: own
+- host: api.gitbookstatus.com
+  found_by:
+  - contract-discovery
+  types: []
+  serves: []
+  registrable_domain: gitbookstatus.com
+  role: api
+  relation: other-domain
+- host: app.gitbook.com
+  found_by:
+  - pointer
+  - probed
+  - site-links
+  - well-known
+  types:
+  - SignUp
+  serves: []
+  registrable_domain: gitbook.com
+  role: identity
+  relation: own
+- host: developer.gitbook.com
+  found_by:
+  - pointer
+  - probed
+  - namespace-probe
+  - well-known
+  - vendor-detect
+  types:
+  - Documentation
+  serves:
+  - cdn
+  - documentation
+  - hosting
+  title: Developer documentation | Developers | GitBook Documentation
+  status: 200
+  vendor: cloudflare
+  registrable_domain: gitbook.com
+  role: docs
+  relation: own
+- host: developers.gitbook.com
+  found_by:
+  - probed
+  - site-links
+  - namespace-probe
+  types: []
+  serves: []
+  title: Developer documentation | Developers | GitBook Documentation
+  status: 200
+  registrable_domain: gitbook.com
+  role: portal
+  relation: own
+- host: docs.gitbook.com
+  found_by:
+  - apis[]
+  - probed
+  - contract-discovery
+  - well-known
+  types: []
+  serves:
+  - docs
+  registrable_domain: gitbook.com
+  role: docs
+  relation: own
+- host: gitbook.com
+  found_by:
+  - pointer
+  - probed
+  - site-links
+  - docs-index
+  - well-known
+  types:
+  - Guide
+  - GettingStarted
+  - ChangeLog
+  - TermsOfService
+  - PrivacyPolicy
+  - APIReference
+  serves:
+  - docs
+  registrable_domain: gitbook.com
+  role: docs
+  relation: own
+- host: github.com
+  found_by:
+  - pointer
+  types:
+  - GitHubOrganization
+  serves: []
+  registrable_domain: github.com
+  role: source
+  relation: platform
+- host: mcp.gitbook.com
+  found_by:
+  - probed
+  - contract-discovery
+  - well-known
+  types: []
+  serves: []
+  registrable_domain: gitbook.com
+  role: other
+  relation: own
+- host: security.gitbook.com
+  found_by:
+  - probed
+  - site-links
+  - docs-index
+  types: []
+  serves:
+  - docs
+  registrable_domain: gitbook.com
+  role: other
+  relation: own
+- host: www.gitbook.com
+  found_by:
+  - pointer
+  - probed
+  - docs-index
+  - contract-discovery
+  - well-known
+  types:
+  - Webhooks
+  - Support
+  - Security
+  - Website
+  - Pricing
+  - Blog
+  - Integrations
+  serves:
+  - docs
+  registrable_domain: gitbook.com
+  role: website
+  relation: own
+- host: www.gitbookstatus.com
+  found_by:
+  - pointer
+  - probed
+  - docs-index
+  - well-known
+  - vendor-detect
+  types:
+  - StatusPage
+  serves:
+  - docs
+  - status-page
+  vendor: incident-io
+  registrable_domain: gitbookstatus.com
+  role: status
+  relation: other-domain
+- host: www.linkedin.com
+  found_by:
+  - pointer
+  types:
+  - LinkedIn
+  serves: []
+  registrable_domain: linkedin.com
+  role: other
+  relation: platform
+- host: www.npmjs.com
+  found_by:
+  - pointer
+  types:
+  - SDK
+  serves: []
+  registrable_domain: npmjs.com
+  role: other
+  relation: platform
+- host: www.stateofdocs.com
+  found_by:
+  - docs-index
+  types: []
+  serves:
+  - docs
+  registrable_domain: stateofdocs.com
+  role: other
+  relation: other-domain

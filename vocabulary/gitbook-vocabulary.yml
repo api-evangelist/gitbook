@@ -1,0 +1,205 @@
+generated: '2026-10-10'
+method: derived
+generator: derive-vocabulary.py
+source:
+- openapi/gitbook-change-request-content-api-openapi.yml
+- openapi/gitbook-change-request-reviewers-api-openapi.yml
+- openapi/gitbook-change-requests-api-openapi.yml
+- openapi/gitbook-collections-api-openapi.yml
+- openapi/gitbook-custom-hostnames-api-openapi.yml
+vocabulary:
+  name: GitBook Domain Vocabulary
+  description: 'Terms declared by GitBook''s own API contract: its resource groups, objects and enumerations, with the contract''s definitions.
+    Derived, not authored.'
+  version: '2026-10-10'
+  terms:
+  - term: Change Request Content
+    definition: Manage content within a change request.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-change-request-content-api-openapi.yml
+  - term: Change Request Reviewers
+    definition: Manage reviewers for change requests.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-change-request-reviewers-api-openapi.yml
+  - term: Change Requests
+    definition: Create, list, review, merge, and update change requests for collaborative editing.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-change-requests-api-openapi.yml
+  - term: Collections
+    definition: Organize and manage grouped sets of spaces.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-collections-api-openapi.yml
+  - term: Custom Hostnames
+    definition: Configure custom hostnames for docs sites.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-custom-hostnames-api-openapi.yml
+  - term: Docs Sites
+    definition: Manage published documentation sites.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-docs-sites-api-openapi.yml
+  - term: Imports
+    definition: Import content into spaces.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-imports-api-openapi.yml
+  - term: Integrations
+    definition: Install and manage third-party integrations.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-integrations-api-openapi.yml
+  - term: OpenAPI Specs
+    definition: Upload and manage OpenAPI specifications.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-openapi-specs-api-openapi.yml
+  - term: Organization Members
+    definition: Manage members and their roles within an organization.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-organization-members-api-openapi.yml
+  - term: Organization Teams
+    definition: Manage teams within an organization.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-organization-teams-api-openapi.yml
+  - term: Organizations
+    definition: Create and configure organizations to group users, spaces, and collections.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-organizations-api-openapi.yml
+  - term: Search
+    definition: Search content across an organization.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-search-api-openapi.yml
+  - term: Site Spaces
+    definition: Manage spaces within a docs site.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-site-spaces-api-openapi.yml
+  - term: Space Content
+    definition: Manage pages and content within a space.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-space-content-api-openapi.yml
+  - term: Space Users
+    definition: Manage user permissions within a space.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-space-users-api-openapi.yml
+  - term: Spaces
+    definition: Manage spaces which are containers for documentation or knowledge base content.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-spaces-api-openapi.yml
+  - term: URLs
+    definition: Resolve and manage content URLs.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-urls-api-openapi.yml
+  - term: Users
+    definition: Manage user accounts and profiles.
+    tags:
+    - Resource Group
+    source: openapi/gitbook-users-api-openapi.yml
+  - term: Error
+    definition: 'Object declared by the contract with fields: error.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-request-content-api-openapi.yml#/components/schemas/Error
+  - term: Page
+    definition: 'Object declared by the contract with fields: id, title, description, kind, path, pages, document.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-request-content-api-openapi.yml#/components/schemas/Page
+  - term: Reviewer
+    definition: 'Object declared by the contract with fields: user, status.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-request-reviewers-api-openapi.yml#/components/schemas/Reviewer
+  - term: User
+    definition: 'Object declared by the contract with fields: id, displayName, email, photoURL, urls.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-request-reviewers-api-openapi.yml#/components/schemas/User
+  - term: Pagination
+    definition: 'Object declared by the contract with fields: page.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-requests-api-openapi.yml#/components/schemas/Pagination
+  - term: ChangeRequest
+    definition: 'Object declared by the contract with fields: id, number, subject, description, status, createdBy, createdAt, updatedAt, mergedAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-change-requests-api-openapi.yml#/components/schemas/ChangeRequest
+  - term: Collection
+    definition: 'Object declared by the contract with fields: id, title, description, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-collections-api-openapi.yml#/components/schemas/Collection
+  - term: DocsSite
+    definition: 'Object declared by the contract with fields: id, title, hostname, urls, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-docs-sites-api-openapi.yml#/components/schemas/DocsSite
+  - term: Integration
+    definition: 'Object declared by the contract with fields: id, name, description, installedAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-integrations-api-openapi.yml#/components/schemas/Integration
+  - term: OpenAPISpec
+    definition: 'Object declared by the contract with fields: slug, url, title, version, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-openapi-specs-api-openapi.yml#/components/schemas/OpenAPISpec
+  - term: MemberRole
+    definition: The role of a member within an organization.
+    tags:
+    - Enumeration
+    source: openapi/gitbook-organization-members-api-openapi.yml#/components/schemas/MemberRole
+  - term: OrganizationMember
+    definition: 'Object declared by the contract with fields: user, role, createdAt.'
+    tags:
+    - Object
+    source: openapi/gitbook-organization-members-api-openapi.yml#/components/schemas/OrganizationMember
+  - term: Team
+    definition: 'Object declared by the contract with fields: id, title, members.'
+    tags:
+    - Object
+    source: openapi/gitbook-organization-teams-api-openapi.yml#/components/schemas/Team
+  - term: Organization
+    definition: 'Object declared by the contract with fields: id, title, createdAt, updatedAt, urls.'
+    tags:
+    - Object
+    source: openapi/gitbook-organizations-api-openapi.yml#/components/schemas/Organization
+  - term: Space
+    definition: 'Object declared by the contract with fields: id, title, emoji, visibility, createdAt, updatedAt, deletedAt, urls.'
+    tags:
+    - Object
+    source: openapi/gitbook-site-spaces-api-openapi.yml#/components/schemas/Space
+  - term: SiteSpace
+    definition: 'Object declared by the contract with fields: id, space, path, sectionId.'
+    tags:
+    - Object
+    source: openapi/gitbook-site-spaces-api-openapi.yml#/components/schemas/SiteSpace
+  - term: File
+    definition: 'Object declared by the contract with fields: id, name, contentType, downloadURL.'
+    tags:
+    - Object
+    source: openapi/gitbook-space-content-api-openapi.yml#/components/schemas/File
+  - term: SpaceRole
+    definition: The permission role of a user on a space.
+    tags:
+    - Enumeration
+    source: openapi/gitbook-space-users-api-openapi.yml#/components/schemas/SpaceRole
+  - term: SpaceUser
+    definition: 'Object declared by the contract with fields: user, role.'
+    tags:
+    - Object
+    source: openapi/gitbook-space-users-api-openapi.yml#/components/schemas/SpaceUser

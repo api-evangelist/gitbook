@@ -1,0 +1,38 @@
+generated: '2026-10-10'
+method: derived
+generator: derive-problem-types.py
+source:
+- openapi/gitbook-change-request-content-api-openapi.yml
+- openapi/gitbook-change-request-reviewers-api-openapi.yml
+- openapi/gitbook-change-requests-api-openapi.yml
+- openapi/gitbook-collections-api-openapi.yml
+- openapi/gitbook-custom-hostnames-api-openapi.yml
+- openapi/gitbook-docs-sites-api-openapi.yml
+- openapi/gitbook-imports-api-openapi.yml
+- openapi/gitbook-integrations-api-openapi.yml
+- openapi/gitbook-openapi-specs-api-openapi.yml
+- openapi/gitbook-organization-members-api-openapi.yml
+- openapi/gitbook-organization-teams-api-openapi.yml
+- openapi/gitbook-organizations-api-openapi.yml
+format: custom
+envelope:
+  media_type: application/json
+  schema: Error
+coverage:
+  operations: 64
+  statuses_declared: 2
+problems:
+- status: 401
+  title: Unauthorized
+  description: Authentication is required or the token is invalid.
+  operations: 64
+  media_types:
+  - application/json
+  schema: Error
+- status: 404
+  title: Not Found
+  description: The requested resource was not found.
+  operations: 62
+  media_types:
+  - application/json
+  schema: Error

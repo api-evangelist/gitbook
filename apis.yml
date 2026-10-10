@@ -4,6 +4,9 @@ url: https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/ap
 
 name: GitBook
 
+x-docs-platform: gitbook
+x-docs-platform-confidence: high
+x-docs-platform-checked: 2026-10-04
 tags:
   - Content
   - Documentation
@@ -62,6 +65,10 @@ maintainers:
 specificationVersion: '0.23'
 
 common:
+  - type: ChangeLog
+    url: changelog/gitbook-changelog.yml
+  - type: OAuthScopes
+    url: scopes/gitbook-scopes.yml
   - type: FinOps
     url: finops/gitbook-finops.yml
   - type: RateLimits
@@ -160,6 +167,10 @@ common:
     url: https://gitbook.com/docs/developers
   - type: SDK
     url: https://www.npmjs.com/package/@gitbook/api
+    generated: '2026-10-05'
+    method: probed
+    source:
+      - npmjs
 
 apis:
 - aid: gitbook:gitbook-change-request-content-api
@@ -815,8 +826,8 @@ x-correction-request:
     Verify it is live and real (MCP: initialize/tools/list or server card; OpenAPI: paths), then record it as a
     pointer and harvest it.'
 x-enrichment:
-  date: '2026-10-04'
+  date: '2026-10-10'
   status: enriched
-  artifacts_added: 21
+  artifacts_added: 29
   pass: modular-v1
   engine: identity=local,contract=local,surfaces=local,docs=local,regulatory=local

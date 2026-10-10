@@ -1,0 +1,36 @@
+generated: '2026-10-10'
+method: probed
+generator: harvest-packages.py
+source: registry metadata endpoints (registry.npmjs.org, pypi.org, rubygems.org, api.nuget.org, packagist.org, crates.io)
+ownership_rule: 'official: true only when the registry metadata (homepage, repository, author, URLs) names the provider''s domain (agentic-access/gitbook-agentic-access.yml,
+  asyncapi/gitbook-webhooks.yml, authentication/gitbook-authentication.yml, cli/gitbook-cli.yml, conformance/gitbook-conformance.yml, conventions/gitbook-conventions.yml,
+  data-model/gitbook-data-model.yml, errors/gitbook-problem-types.yml, finops/gitbook-finops.yml, gitbook.com, gitbookstatus.com, hosts/gitbook-hosts.yml,
+  linkedin.com, llms/gitbook-llms.txt, mcp/gitbook-mcp.yml, npmjs.com, packages/gitbook-packages.yml, plans/gitbook-plans-pricing.yml, rate-limits/gitbook-rate-limits.yml,
+  rules/gitbook-asyncapi-spectral-rules.yml, rules/gitbook-jsonschema-spectral-rules.yml, rules/gitbook-rules.yml, scopes/gitbook-scopes.yml,
+  security/gitbook-domain-security.yml, skills/_index.yml, vendor-facets/gitbook-vendor-facets.yml, vendors/gitbook-vendors.yml, vocabulary/gitbook-vocabulary.yml,
+  well-known/gitbook-well-known.yml) or its accepted GitHub org.'
+packages:
+- name: gitbook
+  registry: npm
+  url: https://www.npmjs.com/package/gitbook
+  language: JavaScript
+  official: true
+  version: 2.6.9
+  published: '2018-10-11'
+  evidence: metadata names npmjs.com
+- name: gitbook
+  registry: pypi
+  url: https://pypi.org/project/gitbook/
+  language: Python
+  official: false
+  version: 0.1.0
+  published: '2022-09-11'
+  evidence: 'name match only: the metadata names neither the provider''s domain nor its GitHub org'
+- name: "@gitbook/api"
+  registry: "npm"
+  url: "https://www.npmjs.com/package/@gitbook/api"
+  language: "javascript"
+  official: true
+  version: "0.205.0"
+  published: null
+  evidence: "metadata latest version from npm registry"

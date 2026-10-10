@@ -1,0 +1,14 @@
+{
+  "generated": "2026-10-04",
+  "method": "probed",
+  "source": [{"url": "https://registry.npmjs.org/@gitbook/api"}],
+  "packages": [{
+    "name": "@gitbook/api",
+    "registry": "npm",
+    "url": "https://www.npmjs.com/package/@gitbook/api",
+    "language": "JavaScript",
+    "official": true,
+    "version": "0.204.0",
+    "published": true
+  }]
+}

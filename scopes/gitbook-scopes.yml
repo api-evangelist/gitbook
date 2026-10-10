@@ -1,0 +1,198 @@
+generated: '2026-10-05'
+method: derived
+source: openapi/gitbook-openapi.json
+schemes:
+- name: oauth
+  source: openapi/gitbook-openapi.json
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://oauth.gitbook.com/authorize
+    tokenUrl: https://oauth.gitbook.com/token
+scopes:
+- scope: change-request:merge
+  description: Merge change requests, publishing their changes to the space. Creating, editing
+    and reviewing change requests only requires space:write.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: integration:delete
+  description: Unpublish integrations, permanently deleting them and every installation of them.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: integration:installations:read
+  description: Read integration installations and their configuration, which can include credentials
+    for third-party services.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: integration:installations:write
+  description: Install and configure integrations on an organization, its spaces and its sites.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: integration:publish
+  description: Publish integrations, which can request their own permissions on your content,
+    and route their events to a development tunnel.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: integration:read
+  description: Read integrations, their status and where they are installed.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: openapi:read
+  description: Read OpenAPI specifications.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: openapi:write
+  description: Create, update and delete OpenAPI specifications.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:ask
+  description: Ask AI questions across an organization's content.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:members:read
+  description: Read organization members, teams, invites and link invites.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:members:write
+  description: Manage organization members, teams, invites and link invites.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:read
+  description: Read the organizations you belong to, their settings and metadata, and their
+    AI agent conversations.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:search
+  description: Search across an organization's content.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: organization:write
+  description: Create organizations, and update organization settings and AI agent conversations.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:ask
+  description: Ask AI questions across a site's content.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:auth:read
+  description: Read how visitors authenticate on a site and its security configuration, including
+    private share links.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:auth:write
+  description: Manage how visitors authenticate on a site and its security configuration, including
+    private share links.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:insights:read
+  description: Read site analytics and insights, including the questions visitors asked Ask
+    AI and the answers they received.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:permissions:read
+  description: Read the users and teams who have access to sites.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:permissions:write
+  description: Manage who has access to sites, including inviting users and teams.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:publish
+  description: Publish and unpublish sites, controlling their public exposure.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:read
+  description: Read sites and their settings, including navigation structure, linked spaces,
+    customization, redirects, topics, AI configuration and documentation issues.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:search
+  description: Search across a site's content.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: site:write
+  description: Create, update and delete sites and their settings, including navigation structure
+    (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: space:permissions:read
+  description: Read the users and teams who have access to spaces and collections.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: space:permissions:write
+  description: Manage who has access to spaces and collections, including inviting users and
+    teams.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: space:read
+  description: Read spaces and their content, including pages, change requests and their reviews,
+    comments, files and revision history.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: space:write
+  description: Create, update and delete spaces and their content, including change requests
+    (create, edit, review), comments, and content imports and exports. Merging a change request
+    also requires change-request:merge.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json
+- scope: user:read
+  description: Read your GitBook user profile.
+  flows:
+  - authorizationCode
+  sources:
+  - openapi/gitbook-openapi.json

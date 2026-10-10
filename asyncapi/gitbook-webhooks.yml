@@ -1,0 +1,20 @@
+generated: '2026-10-10'
+method: searched
+generator: extract-docs-artifacts.py (local)
+source: https://gitbook.com/docs/developers/integrations/guides/webhook
+sources:
+- https://gitbook.com/docs/developers/integrations/guides/webhook
+- https://www.gitbook.com/events
+- https://gitbook.com/docs/collaborate/notifications
+description: GitBook provides webhook notifications for real‑time events in spaces and sites.
+events:
+- event: space_content_updated
+  description: Content updates – When content in your space is modified.
+- event: site_view
+  description: Site views – When users visit pages on your site.
+- event: page_feedback
+  description: Page feedback – When users provide feedback on pages.
+delivery:
+  signature: All webhook requests include an HMAC‑SHA256 signature in the X‑GitBook‑Signature header.
+  retries: Automatic retry logic with exponential backoff (max 3 attempts, base delay 1 second, jitter ±10%).
+docs: https://gitbook.com/docs/developers/integrations/guides/webhook

@@ -70,12 +70,6 @@ paths:
           $ref: '#/components/responses/NotFound'
 components:
   parameters:
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
     organizationId:
       name: organizationId
       in: path
@@ -98,6 +92,12 @@ components:
       description: The unique identifier of the team.
       schema:
         type: string
+    pageParam:
+      name: page
+      in: query
+      description: Pagination cursor for the next page of results.
+      schema:
+        type: string
   responses:
     NotFound:
       description: The requested resource was not found.
@@ -118,18 +118,6 @@ components:
         page:
           type: string
           description: The cursor for the next page of results.
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
     Team:
       type: object
       properties:
@@ -142,6 +130,18 @@ components:
         members:
           type: integer
           description: The number of members in the team.
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: The HTTP error code.
+            message:
+              type: string
+              description: A description of the error.
   securitySchemes:
     bearerAuth:
       type: http

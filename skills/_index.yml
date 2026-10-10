@@ -1,0 +1,35 @@
+generated: '2026-10-04'
+method: generated
+generator: extract-docs-artifacts.py skills (local)
+source: openapi/gitbook-spaces-api-openapi.yml
+skills:
+- file: skills/gitbook-create-and-list-spaces.md
+  name: gitbook-create-and-list-spaces
+  api: openapi/gitbook-spaces-api-openapi.yml
+  operations:
+  - createSpaceInOrganization
+  - listSpacesInOrganization
+- file: skills/gitbook-manage-docs-sites.md
+  name: gitbook-manage-docs-sites
+  api: openapi/gitbook-docs-sites-api-openapi.yml
+  operations:
+  - createDocsSite
+  - listDocsSites
+  - getDocsSite
+  - updateDocsSite
+  - deleteDocsSite
+- file: skills/gitbook-collection-management.md
+  name: gitbook-collection-management
+  api: openapi/gitbook-collections-api-openapi.yml
+  operations:
+  - createCollection
+  - getCollection
+  - listCollectionsInOrganization
+  - deleteCollection
+- file: skills/gitbook-openapi-specs-workflow.md
+  name: gitbook-openapi-specs-workflow
+  api: openapi/gitbook-openapi-specs-api-openapi.yml
+  operations:
+  - listOpenAPISpecs
+  - uploadOpenAPISpec
+  - getOpenAPISpec

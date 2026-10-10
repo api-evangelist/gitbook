@@ -68,6 +68,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: The unique identifier of the user.
+      schema:
+        type: string
   schemas:
     Error:
       type: object
@@ -104,14 +112,6 @@ components:
             app:
               type: string
               format: uri
-  parameters:
-    userId:
-      name: userId
-      in: path
-      required: true
-      description: The unique identifier of the user.
-      schema:
-        type: string
   securitySchemes:
     bearerAuth:
       type: http
