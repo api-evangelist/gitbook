@@ -6,6 +6,7 @@ specification: FinOps Framework
 specificationVersion: '1.0'
 provider: GitBook
 providerId: gitbook
+name: GitBook API FinOps
 publisherName: GitBook
 serviceCategory: API
 created: '2026-05-04'
