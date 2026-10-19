@@ -1,0 +1,985 @@
+openapi: 3.2.0
+info:
+  title: GitBook Git API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: Git
+paths:
+  /orgs/{organizationId}/sites/{siteId}/spaces/git/installations:
+    get:
+      operationId: listSiteGitSyncInstallations
+      summary: List the Git Sync installations for a site and its spaces
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: Git Sync installations for the site and its spaces
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GitSyncInstallation'
+                required:
+                - items
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations:
+    post:
+      operationId: installGitSyncProviderOnTarget
+      summary: Install a Git Sync provider on a target
+      tags:
+      - Git
+      security:
+      - user: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  $ref: '#/components/schemas/GitSyncInstallationProvider'
+                target:
+                  $ref: '#/components/schemas/GitSyncInstallationTarget'
+              required:
+              - provider
+              - target
+      responses:
+        '201':
+          description: Git Sync installation was created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+  /git/installations/{installationId}:
+    get:
+      operationId: getGitSyncInstallationById
+      summary: Get a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: Git Sync installation was found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncInstallation'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateGitSyncInstallationById
+      summary: Update a Git Sync installation configuration
+      description: 'Updates the installation configuration, then queues a sync operation using the new settings.
+
+        A `git` priority queues an import from the selected repository and branch into GitBook; a
+
+        `gitbook` priority queues an export from GitBook to the repository. Site imports require a
+
+        `gitbook-docs.yaml` file at the configured project directory and return a conflict without saving or
+
+        queuing the sync when the file is missing.'
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/GitSyncInstallationSetup'
+              - type: object
+                properties:
+                  childInstallationProjectDirectories:
+                    type: object
+                    description: Project directories keyed by child installation ID for a site installation.
+                    additionalProperties:
+                      type: string
+      responses:
+        '200':
+          description: Git Sync installation was updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncInstallation'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: The site Git Sync configuration is missing from the repository
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/Error'
+                - type: object
+                  required:
+                  - error
+                  properties:
+                    error:
+                      type: object
+                      required:
+                      - type
+                      - details
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                          - missing_site_git_sync_config
+                        details:
+                          type: object
+                          required:
+                          - path
+                          - branch
+                          - prompt
+                          properties:
+                            path:
+                              type: string
+                              description: Repository-relative path where `gitbook-docs.yaml` is required.
+                            branch:
+                              type: string
+                              description: Repository branch where `gitbook-docs.yaml` is required.
+                            prompt:
+                              type: string
+                              description: Prompt for a coding agent to create and commit the missing file.
+    delete:
+      operationId: uninstallGitSyncInstallation
+      summary: Uninstall a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '205':
+          description: Git Sync installation was removed successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/github/repos:
+    get:
+      operationId: listGitHubRepositoriesForGitSyncInstallation
+      summary: List GitHub repositories available for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: GitHub repositories available for the Git Sync installation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GitSyncGitHubRepository'
+                required:
+                - items
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/github/repos/{accountName}/{repositoryName}/branches:
+    get:
+      operationId: listGitHubRepoBranchesForGitSyncInstallation
+      summary: List GitHub repository branches available for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      - name: accountName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: GitHub branches available for the selected repository
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GitSyncBranch'
+                required:
+                - items
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/github/repos/{accountName}/{repositoryName}/file:
+    get:
+      operationId: getGitHubRepoFileForGitSyncInstallation
+      summary: Get a file from a GitHub repository for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      - name: accountName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: File found in the selected GitHub repository
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncRepositoryFile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/gitlab/projects:
+    get:
+      operationId: listGitLabProjectsForGitSyncInstallation
+      summary: List GitLab projects available for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: GitLab projects available for the Git Sync installation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GitSyncGitLabProject'
+                required:
+                - items
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/gitlab/projects/{projectId}/branches:
+    get:
+      operationId: listGitLabProjectBranchesForGitSyncInstallation
+      summary: List GitLab project branches available for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: number
+      responses:
+        '200':
+          description: GitLab branches available for the selected project
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GitSyncBranch'
+                required:
+                - items
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /git/installations/{installationId}/gitlab/projects/{projectId}/file:
+    get:
+      operationId: getGitLabProjectFileForGitSyncInstallation
+      summary: Get a file from a GitLab project for a Git Sync installation
+      tags:
+      - Git
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/installationId'
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: number
+      - name: path
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: ref
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: File found in the selected GitLab project
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncRepositoryFile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    GitSyncInstallationProvider:
+      type: string
+      description: The provider of the Git Sync installation.
+      enum:
+      - github
+      - gitlab
+    GitRepositoryConnection:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - git-repository-connection
+        id:
+          type: string
+          description: Unique identifier of the repository connection.
+        provider:
+          $ref: '#/components/schemas/GitSyncInstallationProvider'
+        repositoryId:
+          type: string
+          description: Repository identifier assigned by the provider.
+        repositoryName:
+          type: string
+          description: Full repository name assigned by the provider.
+        repositoryUrl:
+          type: string
+          format: uri
+          description: URL of the repository on the provider.
+        defaultBranch:
+          type: string
+          description: Default branch reported by the provider.
+        authState:
+          type: string
+          enum:
+          - pending
+          - active
+          - unauthenticated
+        capabilities:
+          type: object
+          description: Provider operations available to this repository connection.
+          properties:
+            pullRequests:
+              type: boolean
+              description: Whether the connection can create and update GitHub pull requests or GitLab merge requests.
+            commitStatuses:
+              type: boolean
+              description: Whether the connection can publish GitBook synchronization results as provider commit statuses.
+          required:
+          - pullRequests
+          - commitStatuses
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - object
+      - id
+      - provider
+      - repositoryId
+      - repositoryName
+      - repositoryUrl
+      - authState
+      - capabilities
+      - createdAt
+      - updatedAt
+    GitSyncGitLabProject:
+      type: object
+      description: GitLab project that can be selected for Git Sync.
+      properties:
+        id:
+          type: number
+        accountName:
+          type: string
+        repositoryName:
+          type: string
+        fullName:
+          type: string
+        defaultBranch:
+          type:
+          - string
+          - 'null'
+      required:
+      - id
+      - accountName
+      - repositoryName
+      - fullName
+      - defaultBranch
+    GitRepositoryRef:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - git-repository-ref
+        id:
+          type: string
+          description: Unique identifier of the repository ref.
+        name:
+          type: string
+          description: Fully qualified provider ref name.
+        type:
+          type: string
+          enum:
+          - branch
+          - tag
+          - change-request-head
+        latestObservedCommitId:
+          type: string
+        latestImportedCommitId:
+          type: string
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - object
+      - id
+      - name
+      - type
+      - updatedAt
+    GitSyncRoot:
+      type: object
+      description: A repository-backed review and permission boundary for GitBook content.
+      properties:
+        object:
+          type: string
+          enum:
+          - git-sync-root
+        id:
+          type: string
+          description: Unique identifier of the Sync Root.
+        installationId:
+          type: string
+          description: Unique identifier of the top-level installation that owns this Sync Root.
+        target:
+          $ref: '#/components/schemas/GitSyncInstallationTarget'
+        defaultMergeAuthorityPolicy:
+          type: string
+          enum:
+          - provider
+          - gitbook
+          description: System responsible for completing merges by default for this Sync Root.
+        status:
+          type: string
+          enum:
+          - active
+          - disabled
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - object
+      - id
+      - installationId
+      - target
+      - defaultMergeAuthorityPolicy
+      - status
+      - createdAt
+      - updatedAt
+    GitSyncInstallation:
+      allOf:
+      - $ref: '#/components/schemas/GitSyncInstallationSetup'
+      - type: object
+        properties:
+          object:
+            type: string
+            enum:
+            - git-sync-installation
+          id:
+            type: string
+            description: Unique identifier of the Git Sync installation.
+          parentInstallationId:
+            type: string
+            description: The ID of the parent Git Sync installation, if any.
+          target:
+            $ref: '#/components/schemas/GitSyncInstallationTarget'
+          status:
+            $ref: '#/components/schemas/GitSyncInstallationStatus'
+          repositoryConnection:
+            $ref: '#/components/schemas/GitRepositoryConnection'
+          repositoryRef:
+            $ref: '#/components/schemas/GitRepositoryRef'
+          syncRoot:
+            $ref: '#/components/schemas/GitSyncRoot'
+            description: Effective Sync Root for this installation, inherited from its parent when present.
+          createdAt:
+            $ref: '#/components/schemas/Timestamp'
+          createdBy:
+            type: string
+            description: Identifier of the user who created the installation.
+          updatedAt:
+            $ref: '#/components/schemas/Timestamp'
+          urls:
+            type: object
+            description: URLs associated with the installation
+            properties:
+              location:
+                type: string
+                description: URL of the installation endpoint in the API
+                format: uri
+            required:
+            - location
+        required:
+        - object
+        - id
+        - target
+        - status
+        - createdAt
+        - createdBy
+        - updatedAt
+        - urls
+    GitSyncInstallationSetupCommon:
+      type: object
+      description: Common setup fields for a Git Sync installation.
+      properties:
+        projectDirectory:
+          type: string
+          description: Optional directory used when syncing a monorepo subdirectory.
+        commitMessageTemplate:
+          type: string
+          description: Optional template used when generating commit messages.
+        previewExternalBranches:
+          type: boolean
+          description: Whether previews should be generated from branches outside the configured branch. For space installations belonging to a parent installation, this field is inherited from the parent installation and cannot be set.
+        agentInstructions:
+          type: array
+          description: Agent instruction files GitBook should always export at the repository root. For space installations belonging to a parent installation, this field is inherited from the parent installation and cannot be set.
+          items:
+            type: string
+            enum:
+            - agents
+            - claude
+        priority:
+          $ref: '#/components/schemas/GitSyncInstallationPriority'
+    GitSyncInstallationSetup:
+      description: Provider-specific setup payload for a Git Sync installation.
+      allOf:
+      - $ref: '#/components/schemas/GitSyncInstallationSetupCommon'
+      - oneOf:
+        - $ref: '#/components/schemas/GitSyncInstallationSetupGitHub'
+        - $ref: '#/components/schemas/GitSyncInstallationSetupGitLab'
+        discriminator:
+          propertyName: provider
+    GitSyncRepositoryFile:
+      type: object
+      description: A file found in a Git Sync repository at a specific ref.
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        sha:
+          type: string
+        size:
+          type: number
+      required:
+      - name
+      - path
+      - sha
+      - size
+    GitSyncInstallationStatus:
+      type: string
+      enum:
+      - unauthenticated
+      - active
+      - pending
+    GitSyncInstallationSetupGitLab:
+      type: object
+      description: GitLab provider configuration for a Git Sync installation.
+      properties:
+        provider:
+          type: string
+          enum:
+          - gitlab
+        providerConfiguration:
+          type: object
+          description: GitLab specific configuration for the Git Sync installation.
+          properties:
+            projectId:
+              type: number
+              description: GitLab project identifier.
+            accessToken:
+              type: string
+              description: GitLab access token with appropriate scopes for repository access.
+            customInstanceURL:
+              oneOf:
+              - type: string
+              - type: 'null'
+              description: Custom GitLab instance URL, if using a self-hosted GitLab. Use null to clear a self-hosted URL.
+            branch:
+              type: string
+              pattern: ^refs/heads/.+$
+              description: GitLab repository branch ref.
+      required:
+      - provider
+      - providerConfiguration
+    GitSyncBranch:
+      type: object
+      description: Branch that can be used for Git Sync.
+      properties:
+        name:
+          type: string
+        ref:
+          type: string
+      required:
+      - name
+      - ref
+    Timestamp:
+      type: string
+      format: date-time
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    GitSyncInstallationTarget:
+      description: Resource targeted by a Git Sync installation.
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - space
+            description: Type of resource targeted by the Git Sync installation.
+          spaceId:
+            type: string
+            description: Unique identifier of the space targeted by the Git Sync installation.
+          siteId:
+            type: string
+            description: Unique identifier of the site whose Git Sync installation should manage the space installation. Omit to install Git Sync directly on the space.
+        required:
+        - type
+        - spaceId
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - site
+            description: Type of resource targeted by the Git Sync installation.
+          siteId:
+            type: string
+            description: Unique identifier of the site targeted by the Git Sync installation.
+        required:
+        - type
+        - siteId
+      discriminator:
+        propertyName: type
+    GitSyncInstallationPriority:
+      type: string
+      description: Which side should be treated as the source of truth when Git Sync is configured.
+      enum:
+      - git
+      - gitbook
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              format: int32
+            message:
+              type: string
+          required:
+          - code
+          - message
+    GitSyncGitHubRepository:
+      type: object
+      description: GitHub repository that can be selected for Git Sync.
+      properties:
+        id:
+          type: number
+        accountName:
+          type: string
+        repositoryName:
+          type: string
+        fullName:
+          type: string
+        defaultBranch:
+          type:
+          - string
+          - 'null'
+      required:
+      - id
+      - accountName
+      - repositoryName
+      - fullName
+      - defaultBranch
+    GitSyncInstallationSetupGitHub:
+      type: object
+      description: GitHub provider configuration for a Git Sync installation.
+      properties:
+        provider:
+          type: string
+          enum:
+          - github
+        providerConfiguration:
+          type: object
+          description: GitHub specific configuration for the Git Sync installation.
+          properties:
+            repositoryId:
+              type: number
+              description: GitHub repository identifier.
+            branch:
+              type: string
+              pattern: ^refs/heads/.+$
+              description: GitHub repository branch ref.
+      required:
+      - provider
+      - providerConfiguration
+  parameters:
+    installationId:
+      name: installationId
+      in: path
+      required: true
+      description: Identifier of the installation
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    ConflictError:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 409
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 401
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

@@ -1,115 +1,73 @@
 openapi: 3.2.0
 info:
   title: GitBook Spaces API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
 - name: Spaces
-  description: Manage spaces which are containers for documentation or knowledge base content.
+  x-page-icon: book-sparkles
+  x-page-title: Spaces
+  x-page-description: Create, maintain, and remove content spaces.
+  description: 'Spaces are containers for your documentation or knowledge base content. Use this API to create new spaces, manage existing ones, and delete or archive spaces you no longer need.
+
+
+    {% openapi-schemas spec="gitbook" schemas="Space" grouped="false" %}
+
+    The Space object
+
+    {% endopenapi-schemas %}'
 paths:
-  /orgs/{organizationId}/spaces:
-    get:
-      operationId: listSpacesInOrganization
-      summary: GitBook List spaces in an organization
-      description: Returns the list of spaces in an organization.
-      tags:
-      - Spaces
-      parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/pageParam'
-      - $ref: '#/components/parameters/limitParam'
-      responses:
-        '200':
-          description: A list of spaces.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Space'
-                  next:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    post:
-      operationId: createSpaceInOrganization
-      summary: GitBook Create a space in an organization
-      description: Creates a new space in an organization.
-      tags:
-      - Spaces
-      parameters:
-      - $ref: '#/components/parameters/organizationId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - title
-              properties:
-                title:
-                  type: string
-                  description: The title of the space.
-                emoji:
-                  type: string
-                  description: An emoji icon for the space.
-                parent:
-                  type: string
-                  description: The ID of the parent collection.
-      responses:
-        '201':
-          description: The newly created space.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
   /spaces/{spaceId}:
     get:
-      operationId: getSpace
-      summary: GitBook Get a space
-      description: Returns a space by its ID.
+      operationId: getSpaceById
+      summary: Get full details of a space by its ID
+      description: Returns the full metadata for a space. Use this to resolve a spaceId into a complete Space object. If you only need content, use the content endpoint instead.
+      x-gitbook-mcp: true
       tags:
       - Spaces
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - space:read
       parameters:
       - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/siteShareKey'
       responses:
         '200':
-          description: The requested space.
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
     patch:
-      operationId: updateSpace
-      summary: GitBook Update a space
-      description: Updates a space's settings.
+      operationId: updateSpaceById
+      summary: Update a space's title, icon, or settings
+      description: Updates a space's metadata and settings. To update page content, use the change-request workflow instead.
+      x-gitbook-mcp: true
       tags:
       - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
       parameters:
       - $ref: '#/components/parameters/spaceId'
       requestBody:
@@ -117,256 +75,1717 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  description: The title of the space.
-                emoji:
-                  type: string
-                  description: An emoji icon for the space.
-                visibility:
-                  type: string
-                  enum:
-                  - public
-                  - unlisted
-                  - share-link
-                  - in-collection
-                  - private
-                  description: The visibility of the space.
+              allOf:
+              - type: object
+                properties:
+                  editMode:
+                    $ref: '#/components/schemas/SpaceEditMode'
+                  title:
+                    $ref: '#/components/schemas/SpaceTitle'
+                  defaultLevel:
+                    $ref: '#/components/schemas/DefaultLevel'
+                  language:
+                    $ref: '#/components/schemas/TranslationLanguage'
+                  mergeRules:
+                    $ref: '#/components/schemas/MergeRulesSpaceConfiguration'
+              - oneOf:
+                - type: object
+                  title: Emoji
+                  properties:
+                    emoji:
+                      $ref: '#/components/schemas/Emoji'
+                  required:
+                  - emoji
+                - type: object
+                  title: Icon
+                  properties:
+                    icon:
+                      $ref: '#/components/schemas/URL'
+                  required:
+                  - icon
+                - type: object
+                  title: Remove icon or emoji
+                  properties:
+                    emoji:
+                      type: 'null'
+                    icon:
+                      type: 'null'
       responses:
         '200':
-          description: The updated space.
+          description: The space has been updated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
     delete:
-      operationId: deleteSpace
-      summary: GitBook Delete a space
-      description: Deletes a space.
+      operationId: deleteSpaceById
+      summary: Delete a space
+      description: Deleted spaces will be permanently removed after 7 days.
       tags:
       - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
       parameters:
       - $ref: '#/components/parameters/spaceId'
       responses:
         '204':
-          description: Space deleted successfully.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+          description: Space did not exist
+        '205':
+          description: Space has been deleted
   /spaces/{spaceId}/duplicate:
     post:
       operationId: duplicateSpace
-      summary: GitBook Duplicate a space
-      description: Creates a duplicate of the specified space.
+      summary: Create a full copy of a space
+      description: Creates a new space that is a complete copy of the specified space, including all pages and their content. The duplicate is created in the same organization. It does not preserve or create a placement in a site. When duplicating from a site context, use duplicateSiteSpace instead. Use this operation for an organization-level or orphan-space copy.
+      x-gitbook-mcp: true
       tags:
       - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
       parameters:
       - $ref: '#/components/parameters/spaceId'
       responses:
         '201':
-          description: The duplicated space.
+          description: Space duplicated
+          headers:
+            Location:
+              description: API URL for the newly created space
+              schema:
+                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /spaces/{spaceId}/move:
-    post:
-      operationId: moveSpace
-      summary: GitBook Move a space
-      description: Moves a space to a different parent collection or organization.
-      tags:
-      - Spaces
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                parent:
-                  type: string
-                  description: The ID of the target parent collection or organization.
-      responses:
-        '200':
-          description: The moved space.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /spaces/{spaceId}/transfer:
-    post:
-      operationId: transferSpace
-      summary: GitBook Transfer a space
-      description: Transfers a space to another organization.
-      tags:
-      - Spaces
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - organization
-              properties:
-                organization:
-                  type: string
-                  description: The ID of the target organization.
-      responses:
-        '200':
-          description: The transferred space.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
   /spaces/{spaceId}/restore:
     post:
       operationId: restoreSpace
-      summary: GitBook Restore a deleted space
-      description: Restores a previously deleted space.
+      summary: Restore a recently deleted space from the trash
+      description: Restores a previously deleted space, making it active again. Only spaces deleted within the last 7 days can be restored; after that they are permanently removed. Returns the restored space object. To delete a space, use the space delete endpoint.
+      x-gitbook-mcp: true
       tags:
       - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
       parameters:
       - $ref: '#/components/parameters/spaceId'
       responses:
         '200':
-          description: The restored space.
+          description: Space restored
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Space'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+  /spaces/{spaceId}/move:
+    post:
+      operationId: moveSpace
+      summary: Move a space to a different collection or position
+      description: Moves a space to a new parent collection and/or a new position within the hierarchy.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                parent:
+                  description: The unique id of the parent collection
+                  type:
+                  - string
+                  - 'null'
+                position:
+                  description: Where to move the space. By default, it will be moved at the end.
+                  $ref: '#/components/schemas/ContentPosition'
+      responses:
+        '200':
+          description: Space moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+        '400':
+          description: Invalid position space or collection provided
+          $ref: '#/components/responses/BadRequestError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: No matching Space found for given ID
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Operation would not result in any update
+          $ref: '#/components/responses/ConflictError'
+  /orgs/{organizationId}/spaces:
+    get:
+      operationId: listSpacesInOrganizationById
+      summary: List all spaces in an organization
+      description: Returns a paginated list of all spaces belonging to the organization. A space is a collection of documentation pages with its own content tree and revision history. Use this to discover spaces before reading their content, adding them to a site, or performing operations on specific spaces.
+      x-gitbook-mcp: true
+      tags:
+      - Spaces
+      security:
+      - user: []
+      - integration-installation: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Space'
+    post:
+      operationId: createSpace
+      summary: Create a new documentation space in an organization
+      description: Creates a new space within the organization. A space is the primary container for documentation content, holding pages, files, and revisions. After creation, add the space to a site to make it publicly accessible, or start adding content directly via the space content endpoints.
+      x-gitbook-mcp: true
+      tags:
+      - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSpace'
+      responses:
+        '201':
+          description: Space created
+          headers:
+            Location:
+              description: API URL for the newly created space
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Space'
+  /orgs/{organizationId}/sites/{siteId}/site-spaces/{siteSpaceId}/duplicate:
+    post:
+      operationId: duplicateSiteSpace
+      summary: Duplicate a space in a site
+      description: Creates a full copy of the space linked by the specified site space. When the site space is the only variant in a section, the copy is placed in a new sibling section. Otherwise, it is added as a variant under the same parent. Prefer this operation over duplicateSpace whenever the request originates from a site or needs to preserve site placement.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - Spaces
+      security:
+      - user: []
+      - oauth:
+        - space:write
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteSpaceId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                draft:
+                  type: boolean
+                  default: false
+                  description: Whether the duplicated site space and any new section should be created as drafts.
+      responses:
+        '201':
+          description: Space duplicated in the site structure
+          headers:
+            Location:
+              description: API URL for the newly created site-space
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteSpace'
 components:
-  parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    Pagination:
+    Expression:
+      type: string
+      description: Expression to evaluate
+      minLength: 0
+      maxLength: 1024
+    CreateSpace:
+      allOf:
+      - type: object
+        properties:
+          title:
+            type: string
+            maxLength: 50
+          emoji:
+            $ref: '#/components/schemas/Emoji'
+          parent:
+            type: string
+            description: ID of a parent collection
+          language:
+            $ref: '#/components/schemas/TranslationLanguage'
+          editMode:
+            $ref: '#/components/schemas/SpaceEditMode'
+            description: The edit mode of the space
+      - anyOf:
+        - type: object
+          properties: {}
+          additionalProperties: true
+        - oneOf:
+          - type: object
+            description: Create a space from a template
+            required:
+            - template
+            properties:
+              template:
+                $ref: '#/components/schemas/ApplySpaceTemplate'
+          - type: object
+            description: Create a space from a computed content source
+            required:
+            - computedSource
+            properties:
+              computedSource:
+                $ref: '#/components/schemas/ComputedContentSourceRevision'
+          - type: object
+            description: Create a completely empty space (no page in it)
+            required:
+            - empty
+            properties:
+              empty:
+                type: boolean
+                enum:
+                - true
+    ComputedContentSourceRevision:
+      oneOf:
+      - $ref: '#/components/schemas/ComputedContentSourceRevisionOpenAPI'
+      - $ref: '#/components/schemas/ComputedContentSourceRevisionTranslation'
+      - $ref: '#/components/schemas/ComputedContentSourceIntegration'
+    ContentRefPage:
       type: object
       properties:
+        kind:
+          type: string
+          enum:
+          - page
         page:
           type: string
-          description: The cursor for the next page of results.
-    Error:
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - page
+    MergeRulesConfigurationRules:
+      type: object
+      description: The merge rules are composed of individual rules that must all pass.
+      properties:
+        type:
+          type: string
+          enum:
+          - rules
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeRule'
+      required:
+      - type
+      - rules
+    VisitorAuth:
+      oneOf:
+      - $ref: '#/components/schemas/VisitorAuthCustomBackend'
+      - allOf:
+        - $ref: '#/components/schemas/VisitorAuthIntegrationBackend'
+        - type: object
+          properties:
+            integration:
+              type: string
+              description: Name of integration being used as the backend for authenticated access
+          required:
+          - integration
+    ContentRef:
+      description: A relative reference to content in GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - $ref: '#/components/schemas/ContentRefPage'
+      - $ref: '#/components/schemas/ContentRefAnchor'
+      - $ref: '#/components/schemas/ContentRefUser'
+      - $ref: '#/components/schemas/ContentRefCollection'
+      - $ref: '#/components/schemas/ContentRefSpace'
+      - $ref: '#/components/schemas/ContentRefReusableContent'
+      - $ref: '#/components/schemas/ContentRefTag'
+      - $ref: '#/components/schemas/ContentRefOpenAPI'
+    GitSyncInstallationStatus:
+      type: string
+      enum:
+      - unauthenticated
+      - active
+      - pending
+    ComputedContentDependencySpace:
       type: object
       properties:
-        error:
-          type: object
+        ref:
+          $ref: '#/components/schemas/ContentRefSpace'
+        value:
+          type:
+          - object
+          - 'null'
+          description: See `Space` schema component.
           properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
+            object:
               type: string
-              description: A description of the error.
+              enum:
+              - space
+            id:
+              type: string
+            revision:
+              type: string
+          required:
+          - object
+          - id
+          - revision
+      required:
+      - ref
+      - value
+    ContentRefURL:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - url
+        url:
+          type: string
+      required:
+      - kind
+      - url
+    GitSyncOperationErrorAction:
+      type: object
+      description: An action the user can take to resolve a failed Git Sync operation.
+      properties:
+        label:
+          type: string
+          description: Label for the action.
+        url:
+          type: string
+          format: uri
+          description: URL where the user can resolve the failure.
+      required:
+      - label
+      - url
+    MergeRulesSpaceConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationInherit'
+      - $ref: '#/components/schemas/MergeRulesStandaloneConfiguration'
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    ComputedContentSourceRevisionOpenAPI:
+      allOf:
+      - $ref: '#/components/schemas/ComputedContentSourceOpenAPIBase'
+      - type: object
+        description: Parameters for an OpenAPI computed revision
+        required:
+        - props
+        properties:
+          props:
+            type: object
+            properties:
+              models:
+                type: boolean
+              downloadLink:
+                type: boolean
+                description: Whether to show a link to download the OpenAPI spec.
+              grouping:
+                type: string
+                enum:
+                - by-tag
+                - by-operation
+                description: How GitBook will group generated pages. "by-tag" groups operations under their tag; "by-operation" creates a separate page per operation. Defaults to "by-tag" when absent.
+            required:
+            - models
+    VisitorAuthIntegrationBackend:
+      type: object
+      title: Integration backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Integration as backend for authenticated access
+          enum:
+          - integration
+      required:
+      - backend
+    DefaultLevel:
+      description: Default level for a piece of content
+      oneOf:
+      - $ref: '#/components/schemas/MemberRoleOrGuest'
+      - type: string
+        enum:
+        - inherit
+    MergeRulesConfigurationInherit:
+      type: object
+      description: The merge rules inherits from the organization configuration.
+      properties:
+        type:
+          type: string
+          enum:
+          - inherit
+      required:
+      - type
+    ContentRefTag:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - tag
+        tag:
+          type: string
+          description: The slug of the tag, also used as the ID, and references the tags defined on a revision.
+        space:
+          type: string
+          description: The space in which the tag is defined. If undefined, the tag is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - tag
+    PreviousGitSyncState:
+      type: object
+      description: What is still known about a target's Git Sync after its installation was removed. Never returned alongside `gitSync`, which describes a live installation.
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          description: The URL to the directory of the repository tree the content synced with before its Git Sync installation was removed, at the branch it synced.
+    ContentRefCollection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - collection
+        collection:
+          type: string
+      required:
+      - kind
+      - collection
+    ComputedContentDependency:
+      type: object
+      description: Dependency for a computation, before its resolution.
+      additionalProperties: false
+      properties:
+        ref:
+          oneOf:
+          - $ref: '#/components/schemas/ContentRefSpace'
+          - $ref: '#/components/schemas/ContentRefOpenAPI'
+          - $ref: '#/components/schemas/TranslationRef'
+      required:
+      - ref
+    ComputedContentDependencyTranslation:
+      type: object
+      properties:
+        ref:
+          $ref: '#/components/schemas/TranslationRef'
+        value:
+          oneOf:
+          - $ref: '#/components/schemas/TranslationResult'
+          - type: 'null'
+            description: Translation has not been run yet
+      required:
+      - ref
+      - value
     Space:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "space"
+          enum:
+          - space
+        id:
+          type: string
+          description: Unique identifier for the space
+        title:
+          $ref: '#/components/schemas/SpaceTitle'
+        emoji:
+          description: An emoji for this space. It'll match the emoji shown in the GitBook app.
+          $ref: '#/components/schemas/Emoji'
+        visibility:
+          $ref: '#/components/schemas/ContentVisibility'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        deletedAt:
+          $ref: '#/components/schemas/Timestamp'
+        editMode:
+          $ref: '#/components/schemas/SpaceEditMode'
+        type:
+          type: string
+          description: Kind of space. Only set to `styleguide` for spaces holding a team's writing style guide; omitted for regular spaces.
+          enum:
+          - styleguide
+        mergeRules:
+          $ref: '#/components/schemas/MergeRulesSpaceConfiguration'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the space in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the space in the application
+              format: uri
+            published:
+              type: string
+              description: URL of the published version of the space. Only defined when visibility is not "private."
+              format: uri
+            public:
+              type: string
+              description: URL of the public version of the space. Only defined when visibility is "public".
+              format: uri
+            icon:
+              description: URL of the icon of this space, if defined.
+              $ref: '#/components/schemas/URL'
+          required:
+          - app
+          - location
+        organization:
+          type: string
+          description: ID of the organization owning this space
+        parent:
+          type: string
+          description: ID of the parent collection.
+        language:
+          $ref: '#/components/schemas/TranslationLanguage'
+        gitSync:
+          $ref: '#/components/schemas/GitSyncState'
+        previousGitSync:
+          $ref: '#/components/schemas/PreviousGitSyncState'
+        imports:
+          description: 'Import runs targeting this space, still running or ended recently, most recent first. Only returned when fetching a single space.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentImportRun'
+        visitorAuth:
+          $ref: '#/components/schemas/VisitorAuth'
+        revision:
+          type: string
+          description: ID of the active revision in the space.
+        defaultLevel:
+          $ref: '#/components/schemas/DefaultLevel'
+        comments:
+          type: number
+          description: Count of opened comments on the space.
+        changeRequests:
+          type: number
+          description: Total count of change requests on the space.
+        changeRequestsOpen:
+          type: number
+          description: Count of open change requests on the space.
+        changeRequestsDraft:
+          type: number
+          description: Count of draft change requests on the space.
+        internal_poweredByV2:
+          type: boolean
+          description: Whether the space is powered by V2 of the content system.
+        internal_singleWebsocket:
+          type: boolean
+          description: Whether the space uses a single websocket connection for all real-time communication.
+        permissions:
+          type: object
+          description: The set of permissions for the space
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the space content.
+            access:
+              type: boolean
+              description: Can the user access the space in the application.
+            admin:
+              type: boolean
+              description: Can the user edit the title, install integrations, and manage the space.
+            viewInviteLinks:
+              type: boolean
+              description: Can the user view the invite links of the space.
+            edit:
+              type: boolean
+              description: Can the user edit the content of the space by creating a change request.
+            triggerGitSync:
+              type: boolean
+              description: Can the user trigger a git sync.
+            comment:
+              type: boolean
+              description: Can the user comment on the content.
+            merge:
+              type: boolean
+              description: Can the user merge change requests.
+            review:
+              type: boolean
+              description: Can the user review change requests.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations in the space.
+          required:
+          - view
+          - access
+          - admin
+          - viewInviteLinks
+          - edit
+          - triggerGitSync
+          - comment
+          - merge
+          - review
+          - installIntegration
+      required:
+      - object
+      - id
+      - title
+      - emoji
+      - organization
+      - visibility
+      - revision
+      - createdAt
+      - updatedAt
+      - comments
+      - changeRequests
+      - changeRequestsOpen
+      - changeRequestsDraft
+      - mergeRules
+      - urls
+      - defaultLevel
+      - permissions
+    TranslationResult:
+      type: object
+      description: Result of a translation.
+      properties:
+        space:
+          type: string
+          description: ID of the space containing the result of the translation
+        revision:
+          type: string
+          description: ID of the revision generated by the translation
+        language:
+          $ref: '#/components/schemas/TranslationLanguage'
+      required:
+      - space
+      - revision
+      - language
+    ApplySpaceTemplate:
       type: object
       properties:
         id:
           type: string
-          description: The unique identifier of the space.
-        title:
-          type: string
-          description: The title of the space.
-        emoji:
-          type: string
-          description: The emoji icon for the space.
-        visibility:
+          description: The ID of the template to use for the space
+        params:
+          $ref: '#/components/schemas/SpaceTemplateParams'
+      required:
+      - id
+    GitSyncProvider:
+      type: string
+      description: The provider of the Git Sync installation.
+      enum:
+      - github
+      - gitlab
+      - github-legacy
+    CollectionPointer:
+      type: object
+      properties:
+        type:
           type: string
           enum:
-          - public
-          - unlisted
-          - share-link
-          - in-collection
-          - private
-          description: The visibility setting of the space.
-        createdAt:
+          - collection
+        collection:
           type: string
-          format: date-time
+          description: Unique identifier for the collection
+      required:
+      - type
+      - collection
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    GitSyncState:
+      type: object
+      properties:
+        repoName:
+          type: string
+          description: Repository name.
+        installationStatus:
+          $ref: '#/components/schemas/GitSyncInstallationStatus'
+        installationProvider:
+          $ref: '#/components/schemas/GitSyncProvider'
+        integration:
+          type: string
+          deprecated: true
+          description: The integration name providing the Git Sync.
+        installationId:
+          type: string
+          description: The ID of the Git Sync installation.
+        parentInstallationId:
+          type: string
+          description: The ID of the parent Git Sync installation, if any.
+        url:
+          type: string
+          description: The URL to the repository tree, used when rendering public content.
+        installationProjectDirectory:
+          type: string
+          description: Directory in the repository this content syncs from, resolved against the parent installation when the installation is managed by a site. Absent when the content syncs from the root of the repository.
+        operation:
+          type: object
+          description: The latest operation on the Git Sync installation.
+          properties:
+            state:
+              $ref: '#/components/schemas/GitSyncOperationState'
+            direction:
+              $ref: '#/components/schemas/GitSyncOperationDirection'
+            startedAt:
+              $ref: '#/components/schemas/Timestamp'
+            endedAt:
+              $ref: '#/components/schemas/Timestamp'
+            error:
+              type: string
+              description: Why the operation failed, when it did.
+            errorAction:
+              $ref: '#/components/schemas/GitSyncOperationErrorAction'
+          required:
+          - state
+          - direction
+          - startedAt
+        operationTimeout:
+          type: integer
+          description: How long an operation is allowed to run before it is terminated (in milliseconds).
         updatedAt:
+          description: When the Git provider details were last updated
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - installationId
+      - installationProvider
+      - installationStatus
+    SiteSpace:
+      type: object
+      properties:
+        object:
           type: string
-          format: date-time
-        deletedAt:
+          description: The object type, which is always "site-space"
+          enum:
+          - site-space
+        id:
           type: string
-          format: date-time
-          description: The timestamp when the space was deleted, if applicable.
+          description: Unique identifier of the site-space
+        path:
+          $ref: '#/components/schemas/SiteSpacePath'
+        section:
+          type: string
+          description: ID of the section the space belongs to in the site
+        space:
+          $ref: '#/components/schemas/Space'
+        title:
+          type: string
+        localizedTitle:
+          $ref: '#/components/schemas/LocalizedString128'
+        default:
+          type: boolean
+          description: Whether this is the default space for the site
+        condition:
+          description: Conditional expression used to evaluate whether the site space should be shown to the site's visitor.
+          $ref: '#/components/schemas/Expression'
+        pageId:
+          oneOf:
+          - type: string
+          - type: 'null'
+          description: Custom home page within the space, rendered at the site space's path root instead of the space's default landing page.
+        draft:
+          type: boolean
+          description: Whether the site space is draft and not live.
+        hasAdvancedCustomizationFeature:
+          type: boolean
+          description: Whether the space has advanced customization feature enabled
         urls:
           type: object
+          description: URLs associated with the object
           properties:
-            app:
-              type: string
-              format: uri
             published:
               type: string
+              description: URL of the published version of the site-space. Only defined when site is published.
               format: uri
+        hidden:
+          type: boolean
+          description: Whether the site space is hidden. If true, the site space will not be shown in the site's navigation.
+      required:
+      - object
+      - id
+      - space
+      - title
+      - path
+      - draft
+      - urls
+    GitSyncOperationState:
+      type: string
+      description: '* `running`: The operation is still running
+
+        * `failure`: The operation failed
+
+        * `success`: The operation was successful
+
+        * `timeout`: The operation timed out
+
+        '
+      enum:
+      - running
+      - failure
+      - success
+      - timeout
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
+        page:
+          type: string
+          description: ID of the page to import in
+      required:
+      - space
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    OpenAPISpecVisibility:
+      type: string
+      description: 'The visibility setting of the OpenAPI spec.
+
+        * `private`: The spec is not publicly available.
+
+        * `public`: The spec is available to anyone with a public link.
+
+        '
+      enum:
+      - private
+      - public
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    MergeRule:
+      oneOf:
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_one_of_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - allow_bypass
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_at_least_one_review
+            - require_at_least_one_approved_review
+            - require_all_reviews_approved
+            - require_agent_review
+            - require_up_to_date_change_request
+            - require_change_request_subject
+            - require_change_request_description
+            - require_author_to_merge
+        required:
+        - rule
+      - type: object
+        description: The merge rule is written in the advanced custom expression syntax.
+        properties:
+          rule:
+            type: string
+            enum:
+            - custom
+          expression:
+            $ref: '#/components/schemas/Expression'
+          message:
+            type: string
+            description: Optional message to display when the expression evaluates to false.
+        required:
+        - rule
+        - expression
+    SpacePointer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+          description: Unique identifier for the space
+      required:
+      - type
+      - space
+    ContentRefUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - user
+        user:
+          type: string
+      required:
+      - kind
+      - user
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    VisitorAuthCustomBackend:
+      type: object
+      title: Custom backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Custom backend for authenticated access
+          enum:
+          - custom
+      required:
+      - backend
+    ContentRefAnchor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - anchor
+        anchor:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+        page:
+          description: ID of the page the anchor is in. The anchor is considered as in the current page if none is provided.
+          type: string
+      required:
+      - kind
+      - anchor
+    Timestamp:
+      type: string
+      format: date-time
+    ContentVisibility:
+      type: string
+      description: "* `public`: Anyone can access the content, and the content is indexed by search engines.\n* `unlisted`: Anyone can access the content, and the content is not indexed by search engines\n* `share-link`: Anyone with a secret token in the url can access the content.\n* `visitor-auth`: Anyone authenticated through a JWT token can access the content.\n* `in-collection`: Anyone who can access the parent collection can access the content.\n  Only available for spaces in a collection.\n* `private`: Authorized members can access the content.\n"
+      enum:
+      - public
+      - unlisted
+      - share-link
+      - visitor-auth
+      - in-collection
+      - private
+    ContentRefFile:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - file
+        file:
+          type: string
+        space:
+          description: ID of the space the file is in. The file is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - file
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    TranslationLanguage:
+      type: string
+      enum:
+      - en
+      - fr
+      - de
+      - es
+      - it
+      - pt
+      - pt-br
+      - ru
+      - ja
+      - zh
+      - zh-tw
+      - yue
+      - ko
+      - ar
+      - hi
+      - nl
+      - pl
+      - tr
+      - sv
+      - 'no'
+      - da
+      - fi
+      - el
+      - cs
+      - hu
+      - ro
+      - th
+      - vi
+      - id
+      - ms
+      - he
+      - uk
+      - sk
+      - bg
+      - hr
+      - lt
+      - lv
+      - et
+      - sl
+      - fr-ca
+      - es-mx
+      - es-419
+    GitSyncOperationDirection:
+      type: string
+      enum:
+      - export
+      - import
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    ComputedContentSourceIntegration:
+      type: object
+      description: Parameters for a computed content managed by an integration
+      properties:
+        type:
+          type: string
+          description: Type of the computed source
+          pattern: ^integration:[^:]+:[^:]+$
+          x-typescript: '`integration:${string}:${string}`'
+        props:
+          description: Properties to be passed to the computation
+          $ref: '#/components/schemas/PlainObject'
+        dependencies:
+          type: object
+          description: 'Dependencies the computation depends on.
+
+            The state of the dependencies will be passed to the computation.
+
+            When the dependency''s targets are updated, the computation will be updated.
+
+            '
+          additionalProperties:
+            anyOf:
+            - $ref: '#/components/schemas/ComputedContentDependency'
+            - $ref: '#/components/schemas/ComputedContentDependencyResolved'
+      required:
+      - type
+      - props
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    SiteSpacePath:
+      type: string
+      description: Path to the space on the site
+      minLength: 1
+      maxLength: 100
+    ContentRefReusableContent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - reusable-content
+        reusableContent:
+          type: string
+        space:
+          type: string
+          description: The space in which the reusable content is defined. If undefined, the reusable content is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - reusableContent
+    ComputedContentDependencyResolved:
+      description: Dependency for a computation, with its resolved value.
+      oneOf:
+      - $ref: '#/components/schemas/ComputedContentDependencySpace'
+      - $ref: '#/components/schemas/ComputedContentDependencyOpenAPI'
+      - $ref: '#/components/schemas/ComputedContentDependencyTranslation'
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
+    ComputedContentDependencyOpenAPI:
+      type: object
+      properties:
+        ref:
+          $ref: '#/components/schemas/ContentRefOpenAPI'
+        value:
+          type:
+          - object
+          - 'null'
+          description: See `OpenAPI` schema component.
+          properties:
+            object:
+              type: string
+              enum:
+              - openapi-spec
+            id:
+              type: string
+            slug:
+              type: string
+            lastVersion:
+              type: string
+            visibility:
+              $ref: '#/components/schemas/OpenAPISpecVisibility'
+          required:
+          - object
+          - id
+          - slug
+      required:
+      - ref
+      - value
+    MergeRulesStandaloneConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationRules'
+      - $ref: '#/components/schemas/MergeRulesConfigurationNone'
+    ContentPosition:
+      type: object
+      description: Position at which to insert an item
+      properties:
+        before:
+          oneOf:
+          - $ref: '#/components/schemas/SpacePointer'
+          - $ref: '#/components/schemas/CollectionPointer'
+        after:
+          oneOf:
+          - $ref: '#/components/schemas/SpacePointer'
+          - $ref: '#/components/schemas/CollectionPointer'
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    ComputedContentSourceRevisionTranslation:
+      type: object
+      description: Parameters for a translation computed content source
+      properties:
+        type:
+          type: string
+          enum:
+          - builtin:translation
+        props:
+          type: object
+          additionalProperties: false
+          properties: {}
+        dependencies:
+          type: object
+          required:
+          - translation
+          properties:
+            translation:
+              oneOf:
+              - type: object
+                additionalProperties: false
+                required:
+                - ref
+                properties:
+                  ref:
+                    $ref: '#/components/schemas/TranslationRef'
+              - $ref: '#/components/schemas/ComputedContentDependencyTranslation'
+      required:
+      - type
+      - props
+      - dependencies
+    ComputedContentSourceOpenAPIBase:
+      type: object
+      description: Generic parameters from an OpenAPI computed content source
+      properties:
+        type:
+          type: string
+          enum:
+          - builtin:openapi
+        dependencies:
+          type: object
+          required:
+          - spec
+          properties:
+            spec:
+              oneOf:
+              - type: object
+                additionalProperties: false
+                required:
+                - ref
+                properties:
+                  ref:
+                    $ref: '#/components/schemas/ContentRefOpenAPI'
+              - $ref: '#/components/schemas/ComputedContentDependencyOpenAPI'
+      required:
+      - type
+      - dependencies
+    Emoji:
+      type: string
+      maxLength: 50
+      format: emoji
+      description: Unicode codepoint or character of the emoji
+      example: 🎉
+    SpaceTitle:
+      type: string
+      description: Title of the space
+      maxLength: 50
+    LocalizedString128:
+      type: object
+      description: Localized string value with a 128 character limit, keyed by locale. Contains overrides for non-default languages only.
+      additionalProperties:
+        type: string
+        maxLength: 128
+      propertyNames:
+        $ref: '#/components/schemas/TranslationLanguage'
+    MergeRulesConfigurationNone:
+      type: object
+      description: The merge rules are disabled, change requests can be merged without review.
+      properties:
+        type:
+          type: string
+          enum:
+          - none
+      required:
+      - type
+    SpaceEditMode:
+      type: string
+      description: 'Determines how a Space can be edited.
+
+        * `live`: Users can directly edit the space
+
+        * `locked`: All edits are locked for this space.
+
+        '
+      enum:
+      - live
+      - locked
+    TranslationRef:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - translation
+        translation:
+          type: string
+          description: ID of the translation sync
+      required:
+      - kind
+      - translation
+    SpaceTemplateParams:
+      type: object
+      description: Parameters for a space template
+      properties:
+        contentRefs:
+          type: object
+          additionalProperties:
+            type: object
+            $ref: '#/components/schemas/ContentRef'
+  parameters:
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    siteSpaceId:
+      name: siteSpaceId
+      in: path
+      required: true
+      description: The unique id of the site-space relationship
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    siteShareKey:
+      name: shareKey
+      in: query
+      description: For sites published via share-links, the share key is useful to resolve published URLs.
+      schema:
+        type: string
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    ConflictError:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 409
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

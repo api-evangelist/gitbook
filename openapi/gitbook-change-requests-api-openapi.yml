@@ -1,291 +1,4059 @@
 openapi: 3.2.0
 info:
   title: GitBook Change Requests API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
-- name: Change Requests
-  description: Create, list, review, merge, and update change requests for collaborative editing.
+- name: change-requests
+  x-page-icon: code-pull-request
+  x-page-title: Change requests
+  x-page-description: Review and collaborate on proposed documentation changes before merging.
+  description: 'This API helps you keep your space clean by letting contributors propose changes, review them, and then merge or discard as needed.
+
+
+    {% openapi-schemas spec="gitbook" schemas="ChangeRequest" grouped="false" %}
+
+    The ChangeRequest object
+
+    {% endopenapi-schemas %}'
 paths:
   /spaces/{spaceId}/change-requests:
-    get:
-      operationId: listChangeRequests
-      summary: GitBook List change requests
-      description: Returns the list of change requests for a space.
+    post:
+      operationId: createChangeRequest
+      summary: Create a new change request in a space
+      description: Creates a new change request, which is a draft working copy of the space's content — similar to a Git branch or pull request. Use this before making content edits to avoid modifying the live published content directly. Optionally supply a subject and a template to pre-populate the change request with content. Once created, use the change-request content endpoints to read and modify pages within the draft, then merge it when ready. Pass `siteFindingIds` to link the documentation findings this change request fixes. Outbound broken links are resolved by the outbound checker, rather than by merging.
+      x-gitbook-mcp:
+        curatedBy: create_change_request
       tags:
-      - Change Requests
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:write
       parameters:
       - $ref: '#/components/parameters/spaceId'
-      - $ref: '#/components/parameters/pageParam'
-      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '201':
+          description: Change Request Created
+          headers:
+            Location:
+              description: API URL for the newly created change request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  description: Subject of the change request
+                template:
+                  $ref: '#/components/schemas/ApplySpaceTemplate'
+                  description: Template to apply to the change request
+                description:
+                  $ref: '#/components/schemas/JSONDocument'
+                  description: Description of the change request, explaining what it changes and why, for whoever reviews it. Only paragraphs and lists are kept; other blocks are stripped along with their text.
+                siteFindingId:
+                  type: string
+                  deprecated: true
+                  description: The site finding this change request fixes. Use `siteFindingIds` instead. The finding's site must contain this space.
+                siteFindingIds:
+                  type: array
+                  maxItems: 25
+                  items:
+                    type: string
+                  description: Site findings this change request fixes. Each finding's site must contain this space, and the caller must have edit permission on each site. Takes precedence over `siteFindingId` when both are supplied.
+              additionalProperties: true
+    get:
+      operationId: listChangeRequestsForSpace
+      summary: List all change requests for a space
+      description: Returns a paginated list of change requests for the given space. Use this to discover existing change requests before creating a new one, or to find change requests assigned to a specific user for review.
+      x-gitbook-mcp: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/spaceId'
       - name: status
         in: query
-        description: Filter by change request status.
+        required: false
+        schema:
+          $ref: '#/components/schemas/ChangeRequestStatus'
+          default: open
+        description: If defined, only change requests matching this status will be returned.
+      - name: creator
+        in: query
+        required: false
         schema:
           type: string
-          enum:
-          - open
-          - merged
-          - closed
+        description: If defined, only change requests created by this user will be returned.
+      - name: contributor
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests with contributions from this user will be returned.
+      - name: requestedReviewer
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests with a requested reviewer for this user will be returned.
+      - name: topic
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests linked to this site topic will be returned.
+      - name: orderBy
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ChangeRequestOrderBy'
       responses:
         '200':
-          description: A list of change requests.
+          description: List of the space's change requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChangeRequest'
+  /spaces/{spaceId}/change-requests/{changeRequestId}:
+    get:
+      operationId: getChangeRequestById
+      summary: Get a change request by its ID
+      description: Retrieves the full details of a single change request, including its status, subject, description, and metadata. Use this to check the current state of a change request before deciding to merge, update, or request a review.
+      x-gitbook-mcp: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: The matching change request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '404':
+          description: The change request could not be found.
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateChangeRequestById
+      summary: Update a change request's subject, description, or status
+      description: Updates the metadata of a change request. Use this to rename a change request, add context before requesting a review, or change the workflow status without merging. To update page content within the change request, use the content endpoint instead. Set `siteFindingIds` to replace the documentation findings linked to the change request. Outbound broken links are resolved by the outbound checker, rather than by merging.
+      x-gitbook-mcp: true
+      x-gitbook-return-preference: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      - $ref: '#/components/parameters/returnPreference'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  $ref: '#/components/schemas/ChangeRequestSubject'
+                description:
+                  $ref: '#/components/schemas/JSONDocument'
+                links:
+                  type: array
+                  description: External links associated with the change request.
+                  items:
+                    $ref: '#/components/schemas/ChangeRequestLinkInput'
+                  maxItems: 10
+                status:
+                  type: string
+                  enum:
+                  - draft
+                  - open
+                  - archived
+                siteFindingId:
+                  deprecated: true
+                  type:
+                  - string
+                  - 'null'
+                  description: The site finding this change request fixes. Use `siteFindingIds` instead. The finding's site must contain this space. Replaces the whole set of linked findings with this finding. Pass null to unlink all findings.
+                siteFindingIds:
+                  type:
+                  - array
+                  - 'null'
+                  maxItems: 25
+                  items:
+                    type: string
+                  description: Replaces the linked site findings. Each finding's site must contain this space, and the caller must have edit permission on each site. Pass null or an empty list to unlink all findings. Omit to keep the current links. Takes precedence over `siteFindingId` when both are supplied.
+      responses:
+        '200':
+          description: The change request has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeRequest'
+        '204':
+          description: Change request updated without returning its representation
+          headers:
+            Preference-Applied:
+              $ref: '#/components/headers/returnPreferenceApplied'
+  /spaces/{spaceId}/change-requests/{changeRequestId}/merge:
+    post:
+      operationId: mergeChangeRequest
+      summary: Merge a change request into the space's live content
+      description: Merges the change request's draft content into the space's primary (published) content, making all changes live. If the result is "conflicts", the merge was still applied but the space may need manual conflict resolution. Consider running updateChangeRequest first to sync with the latest live content and reduce conflicts.
+      x-gitbook-mcp:
+        destructive: true
+        curatedBy: submit_or_merge_change_request
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - change-request:merge
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: OK
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  revision:
+                    type: string
+                    description: ID of the resulting revision
+                  result:
+                    type: string
+                    enum:
+                    - merge
+                    - conflicts
+                required:
+                - revision
+                - result
+  /spaces/{spaceId}/change-requests/{changeRequestId}/update:
+    post:
+      operationId: updateChangeRequest
+      summary: Sync a change request with the latest live space content
+      description: Rebases the change request onto the latest primary revision of the space, pulling in any changes that were merged to the live space since this change request was created. Run this before merging to minimise conflicts, especially if the change request has been open for a while.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  revision:
+                    type: string
+                    description: ID of the resulting revision
+                  result:
+                    type: string
+                    enum:
+                    - update
+                    - conflicts
+                required:
+                - revision
+                - result
+  /spaces/{spaceId}/change-requests/{changeRequestId}/pdf:
+    get:
+      operationId: getChangeRequestPDF
+      summary: Get a temporary URL to download a change request's content as PDF
+      description: Generates a temporary URL (valid for 1 hour) to download the change request's draft content as a PDF. Optionally scope the export to a single page using the page and only parameters. Use this to share or archive the draft content before merging.
+      x-gitbook-mcp: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      - in: query
+        name: only
+        description: Generate a PDF only for the provided page.
+        schema:
+          type: boolean
+      - in: query
+        name: page
+        description: ID of a specific page to generate a PDF for.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: URL of the PDF
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    description: Temporary URL to print the content. The URL will work for 1h.
+                    $ref: '#/components/schemas/URL'
+                required:
+                - url
+  /orgs/{organizationId}/change-requests:
+    get:
+      operationId: listChangeRequestsForOrganization
+      summary: List all change requests across an entire organization
+      description: Returns a paginated list of change requests across all spaces in the organization. Use this for an organization-wide view of open drafts — for example, to find all change requests needing a specific reviewer's attention. For a single space's change requests, use the space-scoped endpoint instead.
+      x-gitbook-mcp: true
+      tags:
+      - change-requests
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/organizationId'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: array
+          description: If defined, only change requests matching the statuses will be returned.
+          items:
+            $ref: '#/components/schemas/ChangeRequestStatus'
+          default:
+          - open
+      - name: creator
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests created by this user will be returned.
+      - name: contributor
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests with contributions from this user will be returned.
+      - name: requestedReviewer
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests with a requested reviewer for this user will be returned.
+      - name: site
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests linked to this site will be returned.
+      - name: space
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests from this space will be returned.
+      - name: topic
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests linked to this site topic will be returned.
+      - name: styleguideRun
+        in: query
+        required: false
+        schema:
+          type: string
+        description: If defined, only change requests opened by this style guide check run will be returned.
+      - name: finding
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - none
+          - all
+        description: Controls whether change requests from triage are included. Pass `none` to exclude change requests from triage, or `all` to include them. Default is `none`.
+      - name: orderBy
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/ChangeRequestOrderBy'
+      responses:
+        '200':
+          description: List of the organization's change requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChangeRequest'
+components:
+  schemas:
+    ChangeRequestChangeCounts:
+      type: object
+      description: Exact semantic entity and page-document block counts for a change request at its current head and base revisions.
+      properties:
+        pages:
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        library:
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        blocks:
+          description: Nested user-visible page-document block counts. Absent when `blocksOmittedReason` is set.
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        blocksOmittedReason:
+          type: string
+          enum:
+          - too-many-pages
+          - too-many-blocks
+          - timeout
+          description: 'Why `blocks` is absent: too many pages changed (`too-many-pages`), the changed pages hold too many blocks to compare within the counting budget (`too-many-blocks`; this is not a count of changed blocks), or counting ran out of time (`timeout`). Page and library counts are still exact.'
+      required:
+      - pages
+      - library
+    DocumentBlockDivider:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - divider
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - isVoid
+      - data
+    DocumentBlockIf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - if
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentRefPage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - page
+        page:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - page
+    DocumentBlockDrawing:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - drawing
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
                   items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    CardsImageObjectFit:
+      type: string
+      description: Object fit for image display in card views
+      enum:
+      - contain
+      - fill
+      - cover
+    DocumentBlocksEssentials:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+    DocumentTableDefinitionCheckbox:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - checkbox
+        required:
+        - type
+    DocumentInlineExpression:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - expression
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionUsers:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - users
+          multiple:
+            type: boolean
+        required:
+        - type
+        - multiple
+    DocumentBlockStepper:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockStepperStep'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    ContentRef:
+      description: A relative reference to content in GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - $ref: '#/components/schemas/ContentRefPage'
+      - $ref: '#/components/schemas/ContentRefAnchor'
+      - $ref: '#/components/schemas/ContentRefUser'
+      - $ref: '#/components/schemas/ContentRefCollection'
+      - $ref: '#/components/schemas/ContentRefSpace'
+      - $ref: '#/components/schemas/ContentRefReusableContent'
+      - $ref: '#/components/schemas/ContentRefTag'
+      - $ref: '#/components/schemas/ContentRefOpenAPI'
+    DocumentText:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - text
+        key:
+          type: string
+        leaves:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextLeaf'
+      required:
+      - object
+      - leaves
+    DocumentMarkBold:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - bold
+      required:
+      - object
+      - type
+    DocumentBlockHint:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - hint
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            style:
+              type: string
+              enum:
+              - info
+              - warning
+              - danger
+              - success
+            icon:
+              $ref: '#/components/schemas/Icon'
+          required:
+          - style
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    ContentRefURL:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - url
+        url:
+          type: string
+      required:
+      - kind
+      - url
+    DocumentInlineIcon:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - icon
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+            color:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - icon
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionSelect:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - select
+          multiple:
+            type: boolean
+          options:
+            type: array
+            items:
+              $ref: '#/components/schemas/DocumentTableSelectOption'
+        required:
+        - type
+        - multiple
+        - options
+    DocumentBlockFile:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - file
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockIntegration:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - integration
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            integration:
+              type: string
+              description: Name of the integration
+            block:
+              type: string
+              description: ID of the block in the integration
+            props:
+              description: Properties passed to the block during rendering
+              $ref: '#/components/schemas/PlainObject'
+            action:
+              $ref: '#/components/schemas/ContentKitAction'
+            url:
+              type: string
+              description: 'URL associated with the content represented by the block.
+
+                This property is set when creating a block from a URL (unfurl) to ensure
+
+                we can convert the block back to an embed.
+
+                '
+            fullWidth:
+              type: boolean
+          required:
+          - integration
+          - block
+          - props
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              type: string
+              description: A content token that can be used to authenticate requests for cross-space integration blocks.
+            spaceId:
+              type: string
+              description: ID of the space the integration block originates from
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    DocumentBlock:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockListItem'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockImage'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockCodeLine'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTabsItem'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockStepperStep'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockColumn'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+      - $ref: '#/components/schemas/DocumentBlockUpdate'
+    DocumentInlineAnnotation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - annotation
+        key:
+          type: string
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - annotation-body
+                nodes:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                    - $ref: '#/components/schemas/DocumentBlockCode'
+                  minItems: 1
+              required:
+              - nodes
+              - type
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - fragments
+      - isVoid
+      - nodes
+    DocumentBlocksTopLevels:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+    DocumentBlockEmbed:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - embed
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            url:
+              type: string
+            fullWidth:
+              type: boolean
+          required:
+          - url
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockReusableContent:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - reusable-content
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRefReusableContent'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the reusable content from the API.
+              type: string
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionFiles:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - files
+        required:
+        - type
+    DocumentMarkSubscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - subscript
+      required:
+      - object
+      - type
+    ContentRefTag:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - tag
+        tag:
+          type: string
+          description: The slug of the tag, also used as the ID, and references the tags defined on a revision.
+        space:
+          type: string
+          description: The space in which the tag is defined. If undefined, the tag is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - tag
+    OpenAPIWebhookPointer:
+      type: object
+      description: Pointer to a webhook in the OpenAPI spec.
+      properties:
+        name:
+          type: string
+          description: Name of the webhook in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the webhook in the OpenAPI spec.
+      required:
+      - name
+      - method
+    DocumentBlockOpenAPI:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - swagger
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                oneOf:
+                - $ref: '#/components/schemas/ContentRefFile'
+                - $ref: '#/components/schemas/ContentRefURL'
+              expanded:
+                type: boolean
+                description: If true, the block is opened by default.
+              fullWidth:
+                type: boolean
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ContentRefCollection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - collection
+        collection:
+          type: string
+      required:
+      - kind
+      - collection
+    DocumentTableDefinitionContentRef:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - content-ref
+        required:
+        - type
+    DocumentBlockQuote:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - blockquote
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    ChangeRequestChangeCountsByType:
+      type: object
+      description: Counts of entities grouped by how they changed relative to the change request base.
+      properties:
+        added:
+          type: integer
+          minimum: 0
+        modified:
+          type: integer
+          minimum: 0
+        deleted:
+          type: integer
+          minimum: 0
+      required:
+      - added
+      - modified
+      - deleted
+    ApplySpaceTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the template to use for the space
+        params:
+          $ref: '#/components/schemas/SpaceTemplateParams'
+      required:
+      - id
+    ChangeRequestLinks:
+      type: array
+      description: External links associated with the change request.
+      items:
+        $ref: '#/components/schemas/ChangeRequestLink'
+      maxItems: 10
+    DocumentBlockTable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - table
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            view:
+              oneOf:
+              - $ref: '#/components/schemas/DocumentTableViewGrid'
+              - $ref: '#/components/schemas/DocumentTableViewCards'
+            records:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableRecord'
+            definition:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableDefinition'
+            cellMerges:
+              type: array
+              description: Positional table cell merge ranges. The current document model retains only non-overlapping horizontal or vertical merges between adjacent Text or Number body cells. Anchors and spans are resolved against the table's current sorted record order and visible column order.
+              items:
+                $ref: '#/components/schemas/DocumentTableCellMerge'
+            fullWidth:
+              type: boolean
+              description: Whether to render the block as a full width one
+            search:
+              type: boolean
+              description: Whether to show the search bar on the table. When unset, search is shown automatically on grid tables once they have enough rows.
+          required:
+          - view
+          - records
+          - definition
+        fragments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFragment'
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+      - fragments
+    DocumentAction:
+      description: Action to perform when an inline button is clicked.
+      type: object
+      oneOf:
+      - type: object
+        description: Open a search input, optionally prefilled with a search query.
+        properties:
+          action:
+            type: string
+            enum:
+            - search
+          query:
+            type: string
+            description: The search query to prefill.
+          scope:
+            type: string
+            description: 'Where to search. `site` searches the whole site; `space` limits the search to the space the visitor is reading.
+
+              '
+            enum:
+            - site
+            - space
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open an AI input, optionally prefilled with a question.
+        properties:
+          action:
+            type: string
+            enum:
+            - ask
+          query:
+            type: string
+            description: The question to prefill.
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open a selection input for the option identified by its slug.
+        properties:
+          action:
+            type: string
+            enum:
+            - select
+          slug:
+            type: string
+            description: The slug of the option to select.
+        required:
+        - action
+        - slug
+        additionalProperties: false
+    DocumentBlockTabs:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockTabsItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentBlockParagraph:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - paragraph
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentInlineEmoji:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - emoji
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+          required:
+          - code
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    DocumentMarkKeyboard:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - keyboard
+      required:
+      - object
+      - type
+    DocumentTableSelectOption:
+      type: object
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+      required:
+      - value
+      - label
+      - color
+    DocumentTableCellSpan:
+      description: Number of rows or columns covered by a table cell merge
+      type: integer
+      minimum: 1
+      maximum: 50
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
+        page:
+          type: string
+          description: ID of the page to import in
+      required:
+      - space
+    DocumentTableCellMerge:
+      description: Positional table cell merge range. The anchor and spans are resolved against the current sorted record order and visible column order. The current document model applies only non-overlapping horizontal or vertical merges of adjacent Text or Number body cells; unsupported ranges are removed during normalization.
+      type: object
+      properties:
+        anchor:
+          type: object
+          description: Cell at the top-left of the merged range
+          properties:
+            record:
+              type: string
+              description: ID of the anchor record
+            column:
+              type: string
+              description: ID of the anchor column
+          required:
+          - record
+          - column
+        rowSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+        colSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+      required:
+      - anchor
+      - rowSpan
+      - colSpan
+    ChangeRequestLinkInput:
+      type: object
+      description: External link associated with a change request.
+      properties:
+        id:
+          type: string
+          description: The ID of an existing link, as served on the change request. Pass it back to update that link, or omit it to add a new one.
+        ref:
+          $ref: '#/components/schemas/ContentRefURL'
+        title:
+          $ref: '#/components/schemas/ChangeRequestLinkTitle'
+      required:
+      - ref
+    DocumentBlockListUnordered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-unordered
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        data:
+          type: object
+          additionalProperties: false
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentBlockHeading:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - heading-1
+          - heading-2
+          - heading-3
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[-a-z0-9.+_]+$
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    OpenAPIOperationPointer:
+      type: object
+      description: Pointer to an operation in the OpenAPI spec.
+      properties:
+        path:
+          type: string
+          description: Path of the operation in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the operation in the OpenAPI spec.
+      required:
+      - path
+      - method
+    DocumentInlineMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ChangeRequestOrderBy:
+      type: string
+      enum:
+      - updatedAt
+      - createdAt
+      default: updatedAt
+      description: The field to sort change requests by. Defaults to 'updatedAt'.
+    DocumentBlockOpenAPISchemas:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-schemas
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPISchemasPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+            required:
+            - ref
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    DocumentTableDefinitionRating:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - rating
+          max:
+            type: number
+        required:
+        - type
+        - max
+    DocumentTextLeaf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - leaf
+        text:
+          type: string
+        marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextMark'
+      required:
+      - object
+      - text
+      - marks
+    DocumentMarkStrikethrough:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - strikethrough
+      required:
+      - object
+      - type
+    ChangeRequestLinkExpanded:
+      description: External ticket data resolved for this link by a configured connector.
+      oneOf:
+      - type: object
+        description: An external ticket linked to the change request.
+        properties:
+          kind:
+            type: string
+            enum:
+            - external-ticket
+          provider:
+            type: string
+            enum:
+            - jira
+            - linear
+          state:
+            type: string
+            enum:
+            - connected
+          key:
+            type: string
+            description: The ticket's provider-specific key.
+          url:
+            type: string
+            format: uri
+            description: URL to open the ticket.
+          status:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required:
+            - id
+            - name
+          summary:
+            type: string
+            description: The ticket's summary.
+        required:
+        - kind
+        - provider
+        - state
+        - key
+        - url
+        - status
+        - summary
+      - type: object
+        description: An external ticket whose current data could not be loaded.
+        properties:
+          kind:
+            type: string
+            enum:
+            - external-ticket
+          provider:
+            type: string
+            enum:
+            - jira
+            - linear
+          state:
+            type: string
+            enum:
+            - error
+        required:
+        - kind
+        - provider
+        - state
+    DocumentBlockPrompt:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - prompt
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            description:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            openInAIProviders:
+              type: boolean
+            defaultExpanded:
+              type: string
+              default: hidden
+              description: Controls how much of the prompt content is visible by default.
+              enum:
+              - hidden
+              - partial
+              - full
+          required:
+          - description
+          additionalProperties: false
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockCode'
+          minItems: 1
+          maxItems: 1
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentBlockExpandable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - expandable
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            defaultExpanded:
+              type: boolean
+          additionalProperties: false
+        fragments:
+          type: array
+          items:
+            oneOf:
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-title
+                  type:
+                    type: string
+                    enum:
+                    - expandable-title
+                  nodes:
                     type: array
                     items:
-                      $ref: '#/components/schemas/ChangeRequest'
-                  next:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    post:
-      operationId: createChangeRequest
-      summary: GitBook Create a change request
-      description: Creates a new change request for a space.
-      tags:
-      - Change Requests
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
+                      $ref: '#/components/schemas/DocumentBlockParagraph'
+                    minItems: 1
+                    maxItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-body
+                  type:
+                    type: string
+                    enum:
+                    - expandable-body
+                  nodes:
+                    type: array
+                    items:
+                      oneOf:
+                      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                      - $ref: '#/components/schemas/DocumentBlockEmbed'
+                      - $ref: '#/components/schemas/DocumentBlockFile'
+                      - $ref: '#/components/schemas/DocumentBlockImages'
+                      - $ref: '#/components/schemas/DocumentBlockCode'
+                      - $ref: '#/components/schemas/DocumentBlockTable'
+                      - $ref: '#/components/schemas/DocumentBlockHint'
+                      - $ref: '#/components/schemas/DocumentBlockPrompt'
+                      - $ref: '#/components/schemas/DocumentBlockQuote'
+                      - $ref: '#/components/schemas/DocumentBlockIf'
+                      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+                      - $ref: '#/components/schemas/DocumentBlockIntegration'
+                      - $ref: '#/components/schemas/DocumentBlockStepper'
+                    minItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - isVoid
+      - fragments
+      - data
+    Icon:
+      type: string
+      maxLength: 50
+      format: icon
+      description: Name of the icon
+      example: gear
+    DocumentTableDefinition:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionText'
+      - $ref: '#/components/schemas/DocumentTableDefinitionNumber'
+      - $ref: '#/components/schemas/DocumentTableDefinitionCheckbox'
+      - $ref: '#/components/schemas/DocumentTableDefinitionFiles'
+      - $ref: '#/components/schemas/DocumentTableDefinitionUsers'
+      - $ref: '#/components/schemas/DocumentTableDefinitionRating'
+      - $ref: '#/components/schemas/DocumentTableDefinitionSelect'
+      - $ref: '#/components/schemas/DocumentTableDefinitionContentRef'
+      - $ref: '#/components/schemas/DocumentTableDefinitionImage'
+    ContentRefUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - user
+        user:
+          type: string
+      required:
+      - kind
+      - user
+    DocumentBlockOpenAPIWebhook:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-webhook
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIWebhookPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentInlineMention:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - mention
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentMarkSuperscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - superscript
+      required:
+      - object
+      - type
+    DocumentBlockUpdates:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - updates
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockUpdate'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            format:
+              type: string
+              enum:
+              - numeric
+              - full
+              - short
+              default: full
+          required:
+          - format
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentKitDefaultAction:
+      oneOf:
+      - type: object
+        description: Action to open an overlay modal defined by "componentId".
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.open'
+          componentId:
+            type: string
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - componentId
+        - props
+      - type: object
+        description: Action when a modal overlay is closed, with a return value to the higher level component in the stack. This action will be triggered on the parent component instance.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.close'
+          returnValue:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - returnValue
+      - type: object
+        description: Action to open an url.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.url.open'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action when a link is being unfurled into a block.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@link.unfurl'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action to update the properties stored in the related node.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@editor.node.updateProps'
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - props
+    DocumentBlockCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            syntax:
+              type: string
+            title:
+              type: string
+            overflow:
+              type: string
+              default: scroll
+              enum:
+              - scroll
+              - wrap
+            lineNumbers:
+              type: boolean
+            fullWidth:
+              type: boolean
+            expandable:
+              type: boolean
+            collapsedLineCount:
+              type: integer
+              description: Number of lines rendered in a code block when it is collapsed
+              minimum: 1
+              default: 10
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockCodeLine'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentInlineImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            caption:
+              type: string
+            alt:
+              type: string
+            size:
+              type: string
+              enum:
+              - original
+              - line
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionNumber:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - number
+        required:
+        - type
+    ContentRefAnchor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - anchor
+        anchor:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+        page:
+          description: ID of the page the anchor is in. The anchor is considered as in the current page if none is provided.
+          type: string
+      required:
+      - kind
+      - anchor
+    DocumentInlineButton:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - button
+        key:
+          type: string
+        data:
+          allOf:
+          - type: object
+            properties:
+              label:
+                type: string
+              kind:
+                type: string
+                enum:
+                - primary
+                - secondary
+              size:
+                type: string
+                enum:
+                - small
+                - medium
+                - large
+              icon:
+                $ref: '#/components/schemas/Icon'
+            required:
+            - label
+            - kind
+          - oneOf:
+            - type: object
+              properties:
+                ref:
+                  $ref: '#/components/schemas/ContentRef'
               required:
-              - subject
+              - ref
+            - type: object
               properties:
-                subject:
-                  type: string
-                  description: The title/subject of the change request.
-                description:
-                  type: string
-                  description: A description of the change request.
-      responses:
-        '201':
-          description: The newly created change request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChangeRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /spaces/{spaceId}/change-requests/{changeRequestId}:
-    get:
-      operationId: getChangeRequest
-      summary: GitBook Get a change request
-      description: Returns a change request by its ID.
-      tags:
-      - Change Requests
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      - $ref: '#/components/parameters/changeRequestId'
-      responses:
-        '200':
-          description: The requested change request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChangeRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    patch:
-      operationId: updateChangeRequest
-      summary: GitBook Update a change request
-      description: Updates a change request's subject or description.
-      tags:
-      - Change Requests
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      - $ref: '#/components/parameters/changeRequestId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
+                action:
+                  $ref: '#/components/schemas/DocumentAction'
+              required:
+              - action
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    Timestamp:
+      type: string
+      format: date-time
+    DocumentTableDefinitionText:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          textAlignment:
+            type: string
+            enum:
+            - center
+            - right
+            - left
+          verticalAlignment:
+            $ref: '#/components/schemas/VerticalAlignment'
+        required:
+        - type
+        - textAlignment
+    DocumentBlockCodeLine:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code-line
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineAnnotation'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+        data:
+          type: object
+          properties:
+            highlighted:
+              type: boolean
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ChangeRequestStatus:
+      type: string
+      enum:
+      - draft
+      - open
+      - archived
+      - merged
+    ContentKitAction:
+      anyOf:
+      - type: object
+        description: Custom action to re-render the block.
+        properties:
+          action:
+            type: string
+        additionalProperties: true
+        required:
+        - action
+      - $ref: '#/components/schemas/ContentKitDefaultAction'
+    JSONDocument:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - document
+        data:
+          type: object
+          properties:
+            schemaVersion:
+              description: The schema version of the document. If undefined, the document is considered to be of the latest schema version.
+              type: integer
+          additionalProperties: true
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the content referenced in this document from the API.
+              type: string
+      required:
+      - object
+      - data
+      - nodes
+      example:
+        object: document
+        data: {}
+        nodes:
+        - object: block
+          type: paragraph
+          data: {}
+          nodes:
+          - object: text
+            leaves:
+            - object: leaf
+              text: Hello world
+              marks: []
+    DocumentBlockUpdate:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - update
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            date:
+              type: string
+              description: Date of the update. Accepts a YYYY-MM-DD date or a timestamp. Timestamps are normalized to their UTC calendar date; responses use YYYY-MM-DD.
+              oneOf:
+              - type: string
+                format: date
+              - $ref: '#/components/schemas/Timestamp'
+            tags:
+              type: array
+              description: Array of tags. Each tag is id'ed by its slug.
+              items:
+                $ref: '#/components/schemas/ContentRefTag'
+          required:
+          - date
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockImages:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - images
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            align:
+              type: string
+              enum:
+              - center
+              - left
+              - right
+            fullWidth:
+              type: boolean
+            withFrame:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockImage'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    TextAlignment:
+      type: string
+      enum:
+      - start
+      - center
+      - end
+    ContentRefFile:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - file
+        file:
+          type: string
+        space:
+          description: ID of the space the file is in. The file is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - file
+    DocumentBlockListTasks:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-tasks
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    OpenAPISchemasPointer:
+      type: object
+      description: Pointer to schemas in the OpenAPI spec.
+      properties:
+        grouped:
+          type: boolean
+          description: Whether the schemas are grouped or not.
+          default: true
+        schemas:
+          type: array
+          description: List of schemas name from the OpenAPI spec.
+          items:
+            type: string
+        title:
+          type: string
+          description: Custom title for the schemas block. When not provided, defaults to "The <SchemaName> object".
+      required:
+      - schemas
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    DocumentBlockColumns:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - columns
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockColumn'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    DocumentMarkCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - code
+      required:
+      - object
+      - type
+    VerticalAlignment:
+      type: string
+      enum:
+      - top
+      - middle
+      - bottom
+    DocumentTableImageRecord:
+      description: A table record value for image columns, supporting both direct ContentRefs and the additional format with record-level settings.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - type: object
+        properties:
+          ref:
+            oneOf:
+            - $ref: '#/components/schemas/ContentRefFile'
+            - $ref: '#/components/schemas/ContentRefURL'
+          objectFit:
+            $ref: '#/components/schemas/CardsImageObjectFit'
+          alt:
+            type: string
+            description: Alternative text for the cover image
+        required:
+        - ref
+    DocumentBlockStepperStep:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper-step
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            width:
+              $ref: '#/components/schemas/Length'
+            height:
+              $ref: '#/components/schemas/Length'
+            alt:
+              type: string
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
               properties:
-                subject:
+                fragment:
                   type: string
-                  description: The title/subject of the change request.
-                description:
-                  type: string
-                  description: A description of the change request.
-      responses:
-        '200':
-          description: The updated change request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChangeRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-  /spaces/{spaceId}/change-requests/{changeRequestId}/merge:
-    post:
-      operationId: mergeChangeRequest
-      summary: GitBook Merge a change request
-      description: Merges a change request into the main content of the space.
-      tags:
-      - Change Requests
-      parameters:
-      - $ref: '#/components/parameters/spaceId'
-      - $ref: '#/components/parameters/changeRequestId'
-      responses:
-        '200':
-          description: The merged change request.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ChangeRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-components:
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - fragments
+      - isVoid
+    DocumentTableViewCards:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - cards
+        cardSize:
+          type: string
+          description: Size of the cards. It indicates how many columns will be used
+          enum:
+          - medium
+          - large
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        targetDefinition:
+          type: string
+          description: Definition ID to use as a target link for the card
+        coverDefinition:
+          type: string
+          description: Definition ID to use as a cover image
+        coverDefinitionDark:
+          type: string
+          description: Definition ID to use as a dark mode cover image
+        hideColumnTitle:
+          type: boolean
+          description: Should we display the column title or not
+        wrap:
+          type: boolean
+          description: Whether the cards wrap onto multiple rows (true, the default) or are laid out in a single horizontally-scrolling carousel row (false).
+      required:
+      - type
+      - columns
+      - cardSize
+    ChangeRequestSubject:
+      type: string
+      description: Subject of the change request
+      minLength: 0
+      maxLength: 100
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    ContentRefReusableContent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - reusable-content
+        reusableContent:
+          type: string
+        space:
+          type: string
+          description: The space in which the reusable content is defined. If undefined, the reusable content is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - reusableContent
+    DocumentTableDefinitionBase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          description: Title for the column
+      required:
+      - id
+      - title
+    ChangeRequestLinkTitle:
+      type: string
+      description: Optional title to display for the link.
+      maxLength: 128
+    DocumentBlockTabsItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        data:
+          type: object
+          properties:
+            title:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            slug:
+              description: Stable identifier for this tab's selection, shared with every tab and button targeting the same slug. It is slugified before matching, so casing and spacing need not be exact. Omit it — or send an empty value, which counts as omitted — to derive one from the title, which is what makes same-named tabs across a site select together. A value that slugifies to nothing, such as emoji alone, also falls back to the title.
+              type: string
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockColumn:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - column
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            width:
+              $ref: '#/components/schemas/Length'
+            verticalAlignment:
+              $ref: '#/components/schemas/VerticalAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
+    DocumentTextMark:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentMarkBold'
+      - $ref: '#/components/schemas/DocumentMarkItalic'
+      - $ref: '#/components/schemas/DocumentMarkCode'
+      - $ref: '#/components/schemas/DocumentMarkKeyboard'
+      - $ref: '#/components/schemas/DocumentMarkStrikethrough'
+      - $ref: '#/components/schemas/DocumentMarkColor'
+      - $ref: '#/components/schemas/DocumentMarkSuperscript'
+      - $ref: '#/components/schemas/DocumentMarkSubscript'
+    DocumentTableViewGrid:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - grid
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        columnWidths:
+          type: object
+          description: Percent width of each column
+          additionalProperties:
+            type: number
+        hideHeader:
+          type: boolean
+          description: Should we display the header with column titles
+        stickyHeader:
+          type: boolean
+          description: Should we keep the table header sticky while the page scrolls
+        stickyFirstColumn:
+          type: boolean
+          description: Should we keep the first visible table column sticky while horizontally scrolling
+        useNewSizing:
+          type: boolean
+          description: 'Tables in GitBook originally used a scaled width approach i.e. the width defined
+
+            in columnWidths would be scaled to ensure a 100% width table.
+
+
+            We later changed this to treat the widths in columnWidths as exact values - they are
+
+            never scaled. A columnWidth of 50 is rendered as 50px.
+
+
+            In order to maintain backwards compatibility, we track whether or not we
+
+            use the new system here.
+
+
+            All new tables should have this value set to true, older tables will have it set
+
+            to undefined.
+
+            '
+      required:
+      - type
+      - columns
+      - hideHeader
+    DocumentMarkColor:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - color
+        data:
+          type: object
+          properties:
+            text:
+              $ref: '#/components/schemas/DocumentTextColor'
+            background:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - text
+          - background
+      required:
+      - object
+      - type
+      - data
+    DocumentTableRecord:
+      type: object
+      properties:
+        orderIndex:
+          type: string
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: number
+            - type:
+              - string
+              - 'null'
+            - type: boolean
+            - type: array
+              items:
+                type: string
+            - $ref: '#/components/schemas/ContentRef'
+            - $ref: '#/components/schemas/DocumentTableImageRecord'
+      required:
+      - orderIndex
+      - values
+    DocumentBlockOpenAPIOperation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-operation
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    DocumentInline:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentInlineLink'
+      - $ref: '#/components/schemas/DocumentInlineEmoji'
+      - $ref: '#/components/schemas/DocumentInlineIcon'
+      - $ref: '#/components/schemas/DocumentInlineExpression'
+      - $ref: '#/components/schemas/DocumentInlineMath'
+      - $ref: '#/components/schemas/DocumentInlineImage'
+      - $ref: '#/components/schemas/DocumentInlineAnnotation'
+      - $ref: '#/components/schemas/DocumentInlineMention'
+      - $ref: '#/components/schemas/DocumentInlineButton'
+    DocumentBlockMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ChangeRequest:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "change-request"
+          enum:
+          - change-request
+        id:
+          type: string
+          description: Unique identifier for the change request
+        number:
+          type: number
+          description: Incremental identifier of the change request
+        status:
+          $ref: '#/components/schemas/ChangeRequestStatus'
+        subject:
+          $ref: '#/components/schemas/ChangeRequestSubject'
+        description:
+          $ref: '#/components/schemas/JSONDocument'
+        createdBy:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        mergedBy:
+          $ref: '#/components/schemas/User'
+          description: User who merged the change request. Only present when the change request has been merged.
+        mergedAt:
+          $ref: '#/components/schemas/Timestamp'
+          description: Date at which the change request was merged. Only present when the change request has been merged.
+        space:
+          type: string
+          description: ID of the space in which the change request was created.
+        revision:
+          type: string
+          description: ID of the active revision in the change request.
+        revisionInitial:
+          type: string
+          description: ID of the initial revision in the space from which the change request was created.
+        revisionMergedAncestor:
+          type: string
+          description: ID of the latest revision when updating from main space content.
+        revisionMerged:
+          type: string
+          description: When merged, ID of the revision resulting from the merge.
+        comments:
+          type: number
+          description: Count of opened comments on the change request.
+        changeCounts:
+          description: Change counts computed when the change request gets a new revision, for its current head and base revisions. Merged change requests keep their last computed counts. Absent until computed.
+          $ref: '#/components/schemas/ChangeRequestChangeCounts'
+        siteTopic:
+          type: object
+          description: Site topic the change request was created from, when it came from one.
+          properties:
+            site:
+              type: string
+              description: ID of the site associated with the change request.
+            topic:
+              type: string
+              description: ID of the site topic associated with the change request.
+            finding:
+              type: string
+              deprecated: true
+              description: 'ID of the site finding the change request fixes. Use `siteFindings` instead: a change request can fix a finding without belonging to a topic, and this field is absent in that case.'
+          required:
+          - site
+          - topic
+        siteFinding:
+          deprecated: true
+          type: object
+          description: First linked site finding. Use `siteFindings` to read all linked findings.
+          properties:
+            site:
+              type: string
+              description: ID of the site the finding belongs to.
+            finding:
+              type: string
+              description: ID of the site finding the change request fixes.
+          required:
+          - site
+          - finding
+        siteFindings:
+          type: array
+          description: Site findings linked to the change request, in link order. Absent when none are linked. Merging resolves findings once every linked change request is merged, except outbound broken links, which are resolved by the outbound checker.
+          items:
+            type: object
+            properties:
+              site:
+                type: string
+                description: ID of the site the finding belongs to.
+              finding:
+                type: string
+                description: ID of the site finding the change request fixes.
+            required:
+            - site
+            - finding
+        styleguide:
+          type: object
+          description: 'Style guide check that opened the change request, when it came from one. A check can be run again on the change request already open on a space, rather than opening a second one, so several checks can share a change request.
+
+            '
+          properties:
+            site:
+              type: string
+              description: ID of the site the style guide belongs to.
+            run:
+              type: string
+              description: ID of the style guide check run that opened the change request.
+            changedPages:
+              type: number
+              description: 'Number of pages the check changed, recorded when it finished. Absent while it is still running, or when it never completed.
+
+                '
+            checkedAt:
+              $ref: '#/components/schemas/Timestamp'
+              description: 'When the most recent style guide check on the change request finished. Later edits from anyone else do not move it. Absent while the first one is still running.
+
+                '
+          required:
+          - site
+          - run
+        outdated:
+          type: boolean
+          description: If true, the change request is not up-to-date with latest changes in the main content.
+        imports:
+          description: 'Import runs targeting this change request, still running or ended recently, most recent first. Only returned when fetching a single change request.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentImportRun'
+        links:
+          $ref: '#/components/schemas/ChangeRequestLinks'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            app:
+              type: string
+              description: URL of the space in the application
+              format: uri
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - app
+          - location
+      required:
+      - object
+      - id
+      - number
+      - status
+      - subject
+      - createdBy
+      - createdAt
+      - updatedAt
+      - space
+      - revision
+      - revisionInitial
+      - comments
+      - outdated
+      - urls
+    DocumentMarkItalic:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - italic
+      required:
+      - object
+      - type
+    DocumentBlockContentRef:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - content-ref
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockListItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            checked:
+              type: boolean
+      required:
+      - object
+      - type
+      - nodes
+    DocumentTableDefinitionImage:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - image
+        required:
+        - type
+    Length:
+      oneOf:
+      - type: number
+      - type: object
+        properties:
+          unit:
+            type: string
+          value:
+            type: number
+        required:
+        - unit
+        - value
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    DocumentTextColor:
+      type: string
+      description: 'Allowed color tokens for color marks (text and background; background reuses this enum). Named colors are fixed palette keys. `$*` tokens are semantic: resolved from the published sites customization when rendering; authors may still persist them in content when valid.
+
+        '
+      enum:
+      - default
+      - green
+      - blue
+      - red
+      - orange
+      - yellow
+      - purple
+      - pink
+      - violet
+      - cyan
+      - $primary
+      - $info
+      - $success
+      - $warning
+      - $danger
+      - $tint
+    ChangeRequestLink:
+      allOf:
+      - $ref: '#/components/schemas/ChangeRequestLinkInput'
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the link.
+          isSyncing:
+            type: boolean
+            readOnly: true
+            description: Whether this link owns synchronization with the external issue. Other links are references only.
+          expanded:
+            $ref: '#/components/schemas/ChangeRequestLinkExpanded'
+            readOnly: true
+        required:
+        - id
+        - isSyncing
+    DocumentBlockListOrdered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-ordered
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            start:
+              type: number
+              description: An integer to start counting from for the list items.
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentInlineLink:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - link
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineImage'
+            - $ref: '#/components/schemas/DocumentInlineMath'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+            - $ref: '#/components/schemas/DocumentInlineMention'
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentFragment:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - fragment
+        key:
+          type: string
+        fragment:
+          type: string
+        type:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlock'
+      required:
+      - object
+      - nodes
+    SpaceTemplateParams:
+      type: object
+      description: Parameters for a space template
+      properties:
+        contentRefs:
+          type: object
+          additionalProperties:
+            type: object
+            $ref: '#/components/schemas/ContentRef'
   parameters:
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
+    returnPreference:
+      in: header
+      name: prefer
+      description: Control whether a successful response includes the updated resource representation.
+      required: false
       schema:
-        type: integer
-        default: 20
-        maximum: 100
+        type: string
+        enum:
+        - return=minimal
+        - return=representation
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
     changeRequestId:
       name: changeRequestId
       in: path
       required: true
-      description: The unique identifier of the change request.
+      description: The unique ID of the change request or its number identifier in the space
       schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
+        $ref: '#/components/schemas/EntityId'
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
       schema:
-        type: string
+        $ref: '#/components/schemas/EntityId'
     spaceId:
       name: spaceId
       in: path
       required: true
-      description: The unique identifier of the space.
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  headers:
+    returnPreferenceApplied:
+      description: Confirms that the requested minimal response preference was applied.
       schema:
         type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  schemas:
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the user.
-        displayName:
-          type: string
-          description: The display name of the user.
-        email:
-          type: string
-          format: email
-          description: The email address of the user.
-        photoURL:
-          type: string
-          format: uri
-          description: URL to the user's profile photo.
-        urls:
-          type: object
-          properties:
-            app:
-              type: string
-              format: uri
-    ChangeRequest:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the change request.
-        number:
-          type: integer
-          description: The sequential number of the change request.
-        subject:
-          type: string
-          description: The title/subject of the change request.
-        description:
-          type: string
-          description: A description of the change request.
-        status:
-          type: string
-          enum:
-          - open
-          - merged
-          - closed
-          description: The current status of the change request.
-        createdBy:
-          $ref: '#/components/schemas/User'
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        mergedAt:
-          type: string
-          format: date-time
+        enum:
+        - return=minimal
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

@@ -1,149 +1,263 @@
 openapi: 3.2.0
 info:
   title: GitBook Custom Hostnames API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
-- name: Custom Hostnames
-  description: Configure custom hostnames for docs sites.
+- name: custom-hostnames
+  x-page-icon: server
+  x-page-title: Custom hostnames
+  x-page-description: Serve your GitBook content from fully branded, custom hostnames.
+  description: 'Extend your brand identity by mapping personalized domain names to your docs. This can help unify your documentation site with your existing company properties.
+
+
+    {% openapi-schemas spec="gitbook" schemas="CustomHostname" grouped="false" %}
+
+    The CustomHostname object
+
+    {% endopenapi-schemas %}'
 paths:
-  /orgs/{organizationId}/sites/{siteId}/custom-hostname:
+  /custom-hostnames/{hostname}:
     get:
       operationId: getCustomHostname
-      summary: GitBook Get custom hostname
-      description: Returns the custom hostname configured for a docs site.
+      summary: Get a custom hostname
       tags:
-      - Custom Hostnames
+      - custom-hostnames
+      security:
+      - user-internal: []
+      - user-staff: []
       parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/hostname'
       responses:
         '200':
-          description: The custom hostname configuration.
+          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  hostname:
-                    type: string
-                    description: The custom hostname.
-                  status:
-                    type: string
-                    description: The verification status.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    put:
-      operationId: setCustomHostname
-      summary: GitBook Set custom hostname
-      description: Configures a custom hostname for a docs site.
+                $ref: '#/components/schemas/CustomHostname'
+    patch:
+      operationId: dnsRevalidateCustomHostname
+      summary: Revalidate a custom hostname DNS
+      description: Revalidate DNS records and status.
       tags:
-      - Custom Hostnames
+      - custom-hostnames
+      security:
+      - user-internal: []
       parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/siteId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - hostname
-              properties:
-                hostname:
-                  type: string
-                  description: The custom hostname to set.
-      responses:
-        '200':
-          description: The custom hostname was configured.
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  hostname:
-                    type: string
-                  status:
-                    type: string
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    delete:
-      operationId: removeCustomHostname
-      summary: GitBook Remove custom hostname
-      description: Removes the custom hostname from a docs site.
-      tags:
-      - Custom Hostnames
-      parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/hostname'
       responses:
         '204':
-          description: Custom hostname removed.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+          description: DNS validation has been retriggered
+        '400':
+          description: The current custom hostname is inactive and cannot be revalidated
+          $ref: '#/components/responses/ConflictError'
+        '409':
+          description: The current custom hostname status does not allow DNS revalidation
+          $ref: '#/components/responses/ConflictError'
+    delete:
+      operationId: removeCustomHostname
+      summary: Remove a custom hostname
+      description: The custom hostname will continue to point to the content or organization unless it is used for another one.
+      tags:
+      - custom-hostnames
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/hostname'
+      responses:
+        '204':
+          description: Custom hostname did not exist
+        '205':
+          description: Custom hostname has been removed
 components:
-  parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
-    siteId:
-      name: siteId
-      in: path
-      required: true
-      description: The unique identifier of the docs site.
-      schema:
-        type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    Error:
+    CustomHostname:
       type: object
       properties:
-        error:
+        object:
+          type: string
+          enum:
+          - custom-hostname
+        hostname:
+          $ref: '#/components/schemas/SiteHostname'
+        target:
+          oneOf:
+          - $ref: '#/components/schemas/OrganizationPointer'
+          - $ref: '#/components/schemas/SitePointer'
+        isActive:
+          type: boolean
+        status:
+          $ref: '#/components/schemas/CustomHostnameStatus'
+        urls:
           type: object
+          description: URLs associated with the object
           properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
+            location:
               type: string
-              description: A description of the error.
+              description: URL of the custom hostname in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - hostname
+      - target
+      - isActive
+      - urls
+    CustomHostnameErrorStatus:
+      type: string
+      enum:
+      - invalid_domain
+      - internal_error
+    CustomHostnameSslStatus:
+      type: string
+      enum:
+      - live
+      - ssl_unknown
+      - ssl_pending
+      - ssl_failed
+      - ssl_retry_expired
+    OrganizationPointer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - organization
+        organization:
+          type: string
+          description: Unique identifier for the organization
+      required:
+      - type
+      - organization
+    SiteHostname:
+      type: string
+      description: Custom hostname for the site, for e.g. docs.mycompany.com
+      pattern: ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?[.]){2,}[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$
+      maxLength: 512
+    CustomHostnameDnsStatus:
+      type: string
+      enum:
+      - dns_passed
+      - dns_wrong_cname
+      - dns_no_cname
+      - dns_cloudflare_proxied
+      - dns_wrong_caa
+    CustomHostnameStatus:
+      type: string
+      oneOf:
+      - $ref: '#/components/schemas/CustomHostnameDnsStatus'
+      - $ref: '#/components/schemas/CustomHostnameSslStatus'
+      - $ref: '#/components/schemas/CustomHostnameErrorStatus'
+    SitePointer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - site
+        site:
+          type: string
+          description: Unique identifier for the site
+      required:
+      - type
+      - site
+  responses:
+    ConflictError:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 409
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    hostname:
+      name: hostname
+      in: path
+      required: true
+      description: The custom hostname, for example "docs.gitbook.com"
+      schema:
+        type: string
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

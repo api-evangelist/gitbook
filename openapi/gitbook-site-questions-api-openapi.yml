@@ -1,0 +1,5189 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Questions API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-questions
+  x-page-title: Site questions
+  x-page-description: Review questions, answers, and sources generated for a docs site.
+  x-parent: sites
+  description: 'Inspect the canonical questions asked on your site, the generated answers linked to each question, and the sources used for each answer.
+
+
+    {% openapi-schemas spec="gitbook" schemas="SiteQuestion,SiteQuestionAnswer,SiteQuestionAnswerWithResponse,SiteQuestionAnswerSource" grouped="false" %}
+
+    The Site Questions objects
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/sites/{siteId}/questions:
+    get:
+      operationId: listSiteQuestions
+      summary: List the questions visitors asked a site's Ask AI assistant
+      description: Returns a paginated list of the questions visitors asked a site's Ask AI assistant, each with usage stats. Use it to discover what users are looking for and where the documentation has gaps.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: from
+        in: query
+        description: Filter stats to answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter stats to answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: type
+        in: query
+        description: Filter questions by question type.
+        schema:
+          $ref: '#/components/schemas/SiteQuestionType'
+      - name: relevance
+        in: query
+        description: Filter questions by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter questions by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: answered
+        in: query
+        description: Filter questions by answer resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      - name: topic
+        in: query
+        description: Filter questions by associated site topic IDs.
+        schema:
+          type: array
+          items:
+            type: string
+      - $ref: '#/components/parameters/listOrder'
+      - name: sort
+        in: query
+        description: Sort questions by latest ask activity, answered rate, or positive feedback rate. If omitted, ordering stays on canonical question creation date to preserve current behavior.
+        schema:
+          type: string
+          enum:
+          - askedAt
+          - stats.answered
+          - stats.feedback
+          - stats.answers
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteQuestion'
+  /orgs/{organizationId}/sites/{siteId}/questions/{siteQuestionId}:
+    get:
+      operationId: getSiteQuestionById
+      summary: Get a single Ask AI question by ID
+      description: Retrieves one question asked to a site's Ask AI assistant, including its canonical text and aggregate stats. Use it to inspect a specific question discovered via listSiteQuestions.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteQuestionId'
+      - name: from
+        in: query
+        description: Filter stats to answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter stats to answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: relevance
+        in: query
+        description: Filter stats by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter stats by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: answered
+        in: query
+        description: Filter stats by answer resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteQuestion'
+  /orgs/{organizationId}/sites/{siteId}/questions/{siteQuestionId}/sources:
+    get:
+      operationId: listSiteQuestionSources
+      summary: List the documentation sources used to answer a question
+      description: Returns the documentation pages the Ask AI assistant used to answer a given question. Use it to see which content grounded the AI's responses to that question.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteQuestionId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: from
+        in: query
+        description: Filter sources to answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter sources to answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: relevance
+        in: query
+        description: Filter answer sources by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter answer sources by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: answered
+        in: query
+        description: Filter answer sources by answer resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteQuestionAnswerSource'
+  /orgs/{organizationId}/sites/{siteId}/question-stats:
+    get:
+      operationId: getSiteQuestionStats
+      summary: Get aggregate Ask AI question statistics for a site
+      description: Returns aggregate statistics about the questions visitors asked a site's Ask AI assistant over a time range, optionally filtered by topic, relevance, or channel. Use it for a high-level view of AI-assistant usage before drilling into individual questions.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: from
+        in: query
+        description: Filter stats to answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter stats to answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: topic
+        in: query
+        description: Filter stats by associated site topic IDs.
+        schema:
+          type: array
+          items:
+            type: string
+      - name: relevance
+        in: query
+        description: Filter stats by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter stats by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: answered
+        in: query
+        description: Filter stats by answer resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteQuestionStats'
+  /orgs/{organizationId}/sites/{siteId}/answers:
+    get:
+      operationId: listSiteQuestionAnswers
+      summary: List the answers a site's Ask AI assistant generated
+      description: Returns a paginated list of individual Ask AI answers generated for a site. Each is the assistant's response to a specific asked question, with the raw question text, channel, and feedback. Use it to review answer quality and what users asked across the site.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: question
+        in: query
+        description: Filter answers to a specific site question ID.
+        schema:
+          type: string
+      - name: from
+        in: query
+        description: Filter answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: language
+        in: query
+        description: Filter answers by ISO language code.
+        schema:
+          type: string
+      - name: answered
+        in: query
+        description: Filter answers by answered resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      - name: helpfulness
+        in: query
+        description: Filter answers by answered helpfulness.
+        schema:
+          $ref: '#/components/schemas/SiteQuestionAnswerHelpfulness'
+      - name: relevance
+        in: query
+        description: Filter answers by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter answers by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: question.type
+        in: query
+        description: Filter answers by question type.
+        schema:
+          $ref: '#/components/schemas/SiteQuestionType'
+      - name: topic
+        in: query
+        description: Filter answers by associated site topic ID.
+        schema:
+          type: string
+      - name: thread
+        in: query
+        description: Filter answers by thread root answer ID. Includes the root answer itself.
+        schema:
+          type: string
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteQuestionAnswer'
+  /orgs/{organizationId}/sites/{siteId}/answers/{siteQuestionAnswerId}:
+    get:
+      operationId: getSiteQuestionAnswerById
+      summary: Get a single Ask AI answer by ID
+      description: Retrieves one Ask AI answer, including the question that prompted it, the response, and its feedback. Use it to inspect a specific answer discovered via listSiteQuestionAnswers.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteQuestionAnswerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteQuestionAnswerWithResponse'
+  /orgs/{organizationId}/sites/{siteId}/answers/{siteQuestionAnswerId}/thread:
+    get:
+      operationId: getSiteQuestionAnswerThreadById
+      summary: Get the conversation thread for an Ask AI answer
+      description: 'Returns the full conversation thread for a given Ask AI answer: the sequence of follow-up questions and responses in that exchange.'
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteQuestionAnswerId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SiteQuestionAnswerWithResponse'
+  /orgs/{organizationId}/sites/{siteId}/answers/{siteQuestionAnswerId}/sources:
+    get:
+      operationId: listSiteQuestionAnswerSources
+      summary: List the documentation sources cited for an answer
+      description: Returns the documentation pages the Ask AI assistant cited to produce a given answer. Use it to see exactly which content grounded that specific answer.
+      x-gitbook-mcp: true
+      tags:
+      - site-questions
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteQuestionAnswerId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteQuestionAnswerSource'
+components:
+  schemas:
+    AIToolCallCheckContentImport:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - checkContentImport
+        runId:
+          type: string
+          description: The ID of the import run.
+        status:
+          type: string
+          description: Status of the import when it was checked.
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        importedPages:
+          type: number
+          description: Number of pages imported when the import was checked.
+        totalPages:
+          type: number
+          description: Number of pages the import has discovered so far.
+      required:
+      - tool
+      - runId
+      - status
+      - importedPages
+      - totalPages
+    AIToolCallSearchResultPage:
+      type: object
+      title: Page result
+      description: Result of a search matching a page.
+      properties:
+        type:
+          type: string
+          enum:
+          - page
+        spaceId:
+          type: string
+          description: The ID of the space
+        pageId:
+          type: string
+          description: The ID of the page
+        revisionId:
+          type: string
+          description: The revision ID of the result
+        path:
+          type: string
+          description: The path of the page within its space, as the published site serves it.
+        anchor:
+          type: string
+          description: The anchor of the result
+        title:
+          type: string
+          description: The title of the result
+        description:
+          type: string
+          description: The description of the result
+      required:
+      - type
+      - spaceId
+      - pageId
+      - revisionId
+      - title
+    AIToolCallStartContentImport:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - startContentImport
+        spaceId:
+          type: string
+          description: The ID of the space the content is imported into.
+        changeRequestId:
+          type: string
+          description: The ID of the change request the content is imported into.
+        runId:
+          type: string
+          description: The ID of the import run.
+        url:
+          type: string
+          description: The URL the content is imported from, when importing a website.
+        files:
+          type: array
+          description: Names of the attached files the content is imported from, when importing files.
+          items:
+            type: string
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+      - runId
+    DocumentBlockDivider:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - divider
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - isVoid
+      - data
+    SiteConfigurableChannelType:
+      type: string
+      enum:
+      - builtin:slack
+      - builtin:discord
+      - builtin:github
+      - builtin:linear
+    SiteQuestionAnswerRelevance:
+      type: string
+      description: Relevance classification of the user question.
+      enum:
+      - relevant
+      - spam
+      - off-topic
+      - unclear
+    DocumentBlockIf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - if
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentRefPage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - page
+        page:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - page
+    DocumentBlockDrawing:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - drawing
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionStatsFeedback:
+      type: object
+      description: Aggregated feedback for answers linked to a site question.
+      properties:
+        positive:
+          type: number
+          description: Count of answers with positive feedback.
+        negative:
+          type: number
+          description: Count of answers with negative feedback.
+        unrated:
+          type: number
+          description: Count of answers without feedback.
+      required:
+      - positive
+      - negative
+      - unrated
+    CardsImageObjectFit:
+      type: string
+      description: Object fit for image display in card views
+      enum:
+      - contain
+      - fill
+      - cover
+    DocumentBlocksEssentials:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+    DocumentTableDefinitionCheckbox:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - checkbox
+        required:
+        - type
+    DocumentFragment:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - fragment
+        key:
+          type: string
+        fragment:
+          type: string
+        type:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlock'
+      required:
+      - object
+      - nodes
+    DocumentInlineExpression:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - expression
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionType:
+      type: string
+      description: Type classification of the user question.
+      enum:
+      - exploring
+      - how-to
+      - troubleshooting
+      - reference
+      - unknown
+    DocumentTableDefinitionUsers:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - users
+          multiple:
+            type: boolean
+        required:
+        - type
+        - multiple
+    DocumentBlockStepper:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockStepperStep'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    ContentRef:
+      description: A relative reference to content in GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - $ref: '#/components/schemas/ContentRefPage'
+      - $ref: '#/components/schemas/ContentRefAnchor'
+      - $ref: '#/components/schemas/ContentRefUser'
+      - $ref: '#/components/schemas/ContentRefCollection'
+      - $ref: '#/components/schemas/ContentRefSpace'
+      - $ref: '#/components/schemas/ContentRefReusableContent'
+      - $ref: '#/components/schemas/ContentRefTag'
+      - $ref: '#/components/schemas/ContentRefOpenAPI'
+    DocumentText:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - text
+        key:
+          type: string
+        leaves:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextLeaf'
+      required:
+      - object
+      - leaves
+    AIToolCallArchiveChangeRequest:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - archiveChangeRequest
+        spaceId:
+          type: string
+          description: The ID of the space the change request belongs to.
+        changeRequestId:
+          type: string
+          description: The ID of the change request.
+        reason:
+          type: string
+          description: Why the agent gave up on implementing the change request.
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+      - reason
+    DocumentMarkBold:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - bold
+      required:
+      - object
+      - type
+    DocumentBlockHint:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - hint
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            style:
+              type: string
+              enum:
+              - info
+              - warning
+              - danger
+              - success
+            icon:
+              $ref: '#/components/schemas/Icon'
+          required:
+          - style
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    ContentRefURL:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - url
+        url:
+          type: string
+      required:
+      - kind
+      - url
+    DocumentInlineIcon:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - icon
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+            color:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - icon
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    Timerange:
+      type: object
+      properties:
+        start:
+          $ref: '#/components/schemas/Timestamp'
+        end:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - start
+      - end
+    DocumentTableDefinitionSelect:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - select
+          multiple:
+            type: boolean
+          options:
+            type: array
+            items:
+              $ref: '#/components/schemas/DocumentTableSelectOption'
+        required:
+        - type
+        - multiple
+        - options
+    AIMessageStepPhase:
+      type: string
+      description: The phase of a step in a message from the AI agent.
+      enum:
+      - commentary
+      - final_answer
+    SiteChannelType:
+      oneOf:
+      - $ref: '#/components/schemas/SiteCoreChannelType'
+      - $ref: '#/components/schemas/SiteConfigurableChannelType'
+    AIToolCallRenamePage:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - renamePage
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the page rename in the current conversation.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        changeRequestId:
+          type: string
+          description: 'The ID of the change request the edit was made in. Absent when the space itself was edited, through its unlocked live edits.
+
+            '
+        title:
+          type: string
+          description: The new title of the page.
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - page
+      - title
+    AIToolCallSetChangeRequestDetails:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - setChangeRequestDetails
+        spaceId:
+          type: string
+          description: The ID of the space the change request belongs to.
+        changeRequestId:
+          type: string
+          description: The ID of the change request.
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+    DocumentBlockFile:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - file
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    AIToolCallGetReusableContents:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getReusableContents
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The revision ID of the space.
+      required:
+      - tool
+      - spaceId
+      - revisionId
+    DocumentBlockIntegration:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - integration
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            integration:
+              type: string
+              description: Name of the integration
+            block:
+              type: string
+              description: ID of the block in the integration
+            props:
+              description: Properties passed to the block during rendering
+              $ref: '#/components/schemas/PlainObject'
+            action:
+              $ref: '#/components/schemas/ContentKitAction'
+            url:
+              type: string
+              description: 'URL associated with the content represented by the block.
+
+                This property is set when creating a block from a URL (unfurl) to ensure
+
+                we can convert the block back to an embed.
+
+                '
+            fullWidth:
+              type: boolean
+          required:
+          - integration
+          - block
+          - props
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              type: string
+              description: A content token that can be used to authenticate requests for cross-space integration blocks.
+            spaceId:
+              type: string
+              description: ID of the space the integration block originates from
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    SiteQuestionStatsTypes:
+      type: object
+      properties:
+        exploring:
+          type: number
+        how-to:
+          type: number
+        troubleshooting:
+          type: number
+        reference:
+          type: number
+        unknown:
+          type: number
+      required:
+      - exploring
+      - how-to
+      - troubleshooting
+      - reference
+      - unknown
+    DocumentBlock:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockListItem'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockImage'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockCodeLine'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTabsItem'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockStepperStep'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockColumn'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+      - $ref: '#/components/schemas/DocumentBlockUpdate'
+    DocumentInlineAnnotation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - annotation
+        key:
+          type: string
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - annotation-body
+                nodes:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                    - $ref: '#/components/schemas/DocumentBlockCode'
+                  minItems: 1
+              required:
+              - nodes
+              - type
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - fragments
+      - isVoid
+      - nodes
+    AIToolCallSearchResultRecord:
+      type: object
+      title: Site context record result
+      description: Result of a search matching a site context record.
+      properties:
+        type:
+          type: string
+          enum:
+          - record
+        siteId:
+          type: string
+          description: The ID of the site owning the context record
+        recordId:
+          type: string
+          description: The ID of the context record
+        title:
+          type: string
+          description: The title of the record
+        description:
+          type: string
+          description: The description of the record
+        url:
+          type: string
+          format: uri
+          description: URL of the record in its original source
+      required:
+      - type
+      - siteId
+      - recordId
+      - title
+    DocumentBlocksTopLevels:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+    DocumentBlockEmbed:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - embed
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            url:
+              type: string
+            fullWidth:
+              type: boolean
+          required:
+          - url
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    AIToolCallGetPageDiff:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getPageDiff
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+      required:
+      - tool
+      - spaceId
+      - page
+    DocumentBlockReusableContent:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - reusable-content
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRefReusableContent'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the reusable content from the API.
+              type: string
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    AIAttachmentFile:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - file
+        url:
+          $ref: '#/components/schemas/URL'
+        filename:
+          type: string
+          description: Name of the file.
+        contentType:
+          type: string
+          description: MIME type of the file. Must be a file type supported by the underlying model (see the OpenAI file-inputs documentation).
+      required:
+      - type
+      - url
+      - filename
+      - contentType
+    DocumentTableDefinitionFiles:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - files
+        required:
+        - type
+    DocumentMarkSubscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - subscript
+      required:
+      - object
+      - type
+    AIToolCallSearchResult:
+      description: Result of a search
+      oneOf:
+      - $ref: '#/components/schemas/AIToolCallSearchResultPage'
+      - $ref: '#/components/schemas/AIToolCallSearchResultRecord'
+      discriminator:
+        propertyName: type
+    ContentRefTag:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - tag
+        tag:
+          type: string
+          description: The slug of the tag, also used as the ID, and references the tags defined on a revision.
+        space:
+          type: string
+          description: The space in which the tag is defined. If undefined, the tag is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - tag
+    AIToolCallDeletePage:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - deletePage
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the page deletion in the current conversation.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        changeRequestId:
+          type: string
+          description: 'The ID of the change request the edit was made in. Absent when the space itself was edited, through its unlocked live edits.
+
+            '
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - page
+    OpenAPIWebhookPointer:
+      type: object
+      description: Pointer to a webhook in the OpenAPI spec.
+      properties:
+        name:
+          type: string
+          description: Name of the webhook in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the webhook in the OpenAPI spec.
+      required:
+      - name
+      - method
+    DocumentBlockOpenAPI:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - swagger
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                oneOf:
+                - $ref: '#/components/schemas/ContentRefFile'
+                - $ref: '#/components/schemas/ContentRefURL'
+              expanded:
+                type: boolean
+                description: If true, the block is opened by default.
+              fullWidth:
+                type: boolean
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionStatsChannels:
+      type: object
+      description: Count of answers by site channel ID.
+      additionalProperties:
+        type: number
+    ContentRefCollection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - collection
+        collection:
+          type: string
+      required:
+      - kind
+      - collection
+    AIToolCallGetVariables:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getVariables
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The revision ID of the space.
+      required:
+      - tool
+      - spaceId
+      - revisionId
+    DocumentTableDefinitionContentRef:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - content-ref
+        required:
+        - type
+    DocumentBlockQuote:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - blockquote
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    SiteInsightsSession:
+      type: object
+      description: Identifiers for a GitBook site session, used for analytics and adaptive content.
+      properties:
+        visitorId:
+          type: string
+          description: GitBook's unique identifier of the visitor.
+        sessionId:
+          type: string
+          description: GitBook's unique identifier of the visitor's session.
+      required:
+      - visitorId
+      - sessionId
+    ContextConnector:
+      oneOf:
+      - type: string
+        description: Integration source
+        pattern: ^integration:[^:]+$
+        x-typescript: '`integration:${string}`'
+      - type: string
+        description: Builtin sources
+        enum:
+        - builtin:email
+        - builtin:api
+        - builtin:website
+        - builtin:youtube
+        - builtin:github-discussions
+        - builtin:github-issues
+        - builtin:intercom
+        - builtin:front
+        - builtin:zendesk
+        - builtin:zoho-desk
+        - builtin:freshdesk
+        - builtin:pylon
+        - builtin:hubspot
+        - builtin:linear
+        - builtin:jira
+    AIToolCallOther:
+      type: object
+      description: Any tool call that is unknown by GitBook
+      properties:
+        tool:
+          type: string
+          enum:
+          - other
+        summary:
+          $ref: '#/components/schemas/AIToolCallOtherSummary'
+      required:
+      - tool
+      - summary
+    SiteQuestionAnswerSource:
+      oneOf:
+      - $ref: '#/components/schemas/SiteQuestionAnswerSourcePage'
+      - $ref: '#/components/schemas/SiteQuestionAnswerSourceRecord'
+      discriminator:
+        propertyName: type
+    AIToolCallCreateChangeRequest:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - createChangeRequest
+        spaceId:
+          type: string
+          description: The ID of the space the change request belongs to.
+        action:
+          type: string
+          enum:
+          - create
+          - update
+        changeRequest:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique identifier of the change request.
+            number:
+              type: number
+              description: Incremental identifier of the change request.
+            subject:
+              type: string
+              description: A brief summary of the change request.
+          required:
+          - id
+          - number
+          - subject
+      required:
+      - tool
+      - spaceId
+      - action
+      - changeRequest
+    SiteCoreChannelType:
+      type: string
+      enum:
+      - site
+      - embed
+      - api
+    AIToolCallUpdateVariables:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - updateVariables
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the change in the current conversation.
+        page:
+          description: The page whose variables are being updated. Omitted when updating space variables.
+          $ref: '#/components/schemas/ChangedRevisionPage'
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+    DocumentBlockTable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - table
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            view:
+              oneOf:
+              - $ref: '#/components/schemas/DocumentTableViewGrid'
+              - $ref: '#/components/schemas/DocumentTableViewCards'
+            records:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableRecord'
+            definition:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableDefinition'
+            cellMerges:
+              type: array
+              description: Positional table cell merge ranges. The current document model retains only non-overlapping horizontal or vertical merges between adjacent Text or Number body cells. Anchors and spans are resolved against the table's current sorted record order and visible column order.
+              items:
+                $ref: '#/components/schemas/DocumentTableCellMerge'
+            fullWidth:
+              type: boolean
+              description: Whether to render the block as a full width one
+            search:
+              type: boolean
+              description: Whether to show the search bar on the table. When unset, search is shown automatically on grid tables once they have enough rows.
+          required:
+          - view
+          - records
+          - definition
+        fragments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFragment'
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+      - fragments
+    AIToolCallGetReusableContent:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getReusableContent
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The ID of the revision within which the reusable content is being fetched.
+        reusableContent:
+          $ref: '#/components/schemas/ChangedRevisionReusableContent'
+      required:
+      - tool
+      - spaceId
+      - reusableContent
+      - revisionId
+    AIToolCallCreateReusableContent:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - createReusableContent
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the reusable content change in the current conversation.
+        reusableContent:
+          $ref: '#/components/schemas/ChangedRevisionReusableContent'
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - reusableContent
+    AIMessageTask:
+      oneOf:
+      - type: object
+        description: When the agent is responding to a comment.
+        properties:
+          type:
+            type: string
+            enum:
+            - respond_to_comment
+          spaceId:
+            type: string
+            description: The ID of the space to respond to the comment in.
+          changeRequestId:
+            type: string
+            description: The ID of the change request to respond to the comment in.
+          commentId:
+            type: string
+            description: The ID of the comment to respond to.
+        required:
+        - type
+        - spaceId
+        - commentId
+      - type: object
+        description: When the agent is reviewing a change request.
+        properties:
+          type:
+            type: string
+            enum:
+            - review_change_request
+          spaceId:
+            type: string
+            description: The ID of the space the change request is in.
+          changeRequestId:
+            type: string
+            description: The ID of the change request to review.
+        required:
+        - type
+        - spaceId
+        - changeRequestId
+      - type: object
+        description: When the agent is implementing a task in a change request.
+        properties:
+          type:
+            type: string
+            enum:
+            - implement_change_request
+          spaceId:
+            type: string
+            description: The ID of the space the change request is in.
+          changeRequestId:
+            type: string
+            description: The ID of the change request to implement the task in.
+        required:
+        - type
+        - spaceId
+        - changeRequestId
+      - type: object
+        description: 'When the agent is a background agent running one task for the conversation that started it.
+
+          '
+        properties:
+          type:
+            type: string
+            enum:
+            - background_agent
+          parentConversationId:
+            type: string
+            description: The conversation that started this background agent.
+        required:
+        - type
+        - parentConversationId
+    DocumentAction:
+      description: Action to perform when an inline button is clicked.
+      type: object
+      oneOf:
+      - type: object
+        description: Open a search input, optionally prefilled with a search query.
+        properties:
+          action:
+            type: string
+            enum:
+            - search
+          query:
+            type: string
+            description: The search query to prefill.
+          scope:
+            type: string
+            description: 'Where to search. `site` searches the whole site; `space` limits the search to the space the visitor is reading.
+
+              '
+            enum:
+            - site
+            - space
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open an AI input, optionally prefilled with a question.
+        properties:
+          action:
+            type: string
+            enum:
+            - ask
+          query:
+            type: string
+            description: The question to prefill.
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open a selection input for the option identified by its slug.
+        properties:
+          action:
+            type: string
+            enum:
+            - select
+          slug:
+            type: string
+            description: The slug of the option to select.
+        required:
+        - action
+        - slug
+        additionalProperties: false
+    DocumentBlockTabs:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockTabsItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentBlockParagraph:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - paragraph
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentInlineEmoji:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - emoji
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+          required:
+          - code
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    AIAttachmentImportFile:
+      type: object
+      description: A file attached for the sole purpose of being imported. Its content is never given to the model — the type is one the importer accepts but the model cannot read, such as a ZIP archive — so the model only learns that the file is attached and can import it.
+      properties:
+        type:
+          type: string
+          enum:
+          - import-file
+        url:
+          $ref: '#/components/schemas/URL'
+        filename:
+          type: string
+          description: Name of the file.
+        contentType:
+          type: string
+          description: MIME type of the file. Must be a file type supported by the content import.
+      required:
+      - type
+      - url
+      - filename
+      - contentType
+    DocumentMarkKeyboard:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - keyboard
+      required:
+      - object
+      - type
+    RevisionPageType:
+      type: string
+      enum:
+      - document
+      - group
+      - link
+      - computed
+    DocumentTableSelectOption:
+      type: object
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+      required:
+      - value
+      - label
+      - color
+    AIToolCallOtherSummary:
+      type: object
+      description: Summary of a generic tool call.
+      properties:
+        icon:
+          $ref: '#/components/schemas/Icon'
+        text:
+          type: string
+          description: Text to display to the user to describe the tool call.
+      required:
+      - icon
+      - text
+    DocumentTableCellSpan:
+      description: Number of rows or columns covered by a table cell merge
+      type: integer
+      minimum: 1
+      maximum: 50
+    AIToolCallSubmitChangeRequestReview:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - submitChangeRequestReview
+        spaceId:
+          type: string
+          description: The ID of the space where the review was submitted.
+        changeRequestId:
+          type: string
+          description: The ID of the change request being reviewed.
+        status:
+          $ref: '#/components/schemas/ChangeRequestReviewStatus'
+          description: Result of the review.
+        reviewId:
+          type: string
+          description: Identifier of the review that was created.
+        commentId:
+          type: string
+          description: Identifier of the comment that was created as part of the review.
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+      - status
+      - reviewId
+      - commentId
+    AIToolCallEditReusableContent:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - editReusableContent
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the reusable content change in the current conversation.
+        reusableContent:
+          $ref: '#/components/schemas/ChangedRevisionReusableContent'
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - reusableContent
+    DocumentTableCellMerge:
+      description: Positional table cell merge range. The anchor and spans are resolved against the current sorted record order and visible column order. The current document model applies only non-overlapping horizontal or vertical merges of adjacent Text or Number body cells; unsupported ranges are removed during normalization.
+      type: object
+      properties:
+        anchor:
+          type: object
+          description: Cell at the top-left of the merged range
+          properties:
+            record:
+              type: string
+              description: ID of the anchor record
+            column:
+              type: string
+              description: ID of the anchor column
+          required:
+          - record
+          - column
+        rowSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+        colSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+      required:
+      - anchor
+      - rowSpan
+      - colSpan
+    SiteQuestionStats:
+      type: object
+      description: Aggregated stats for questions and linked answers.
+      properties:
+        total:
+          type: number
+          description: Total count of questions included in the aggregation.
+        answers:
+          type: number
+          description: Total count of answers linked to the questions.
+        feedback:
+          $ref: '#/components/schemas/SiteQuestionStatsFeedback'
+        answered:
+          $ref: '#/components/schemas/SiteQuestionStatsAnswered'
+        relevance:
+          $ref: '#/components/schemas/SiteQuestionStatsRelevance'
+        types:
+          $ref: '#/components/schemas/SiteQuestionStatsTypes'
+        channelTypes:
+          $ref: '#/components/schemas/SiteQuestionStatsChannelTypes'
+        channels:
+          $ref: '#/components/schemas/SiteQuestionStatsChannels'
+        weeklyPulse:
+          type: array
+          minItems: 13
+          maxItems: 13
+          description: Weekly count of related question answers for the past 3 months.
+          items:
+            type: number
+      required:
+      - total
+      - answers
+      - feedback
+      - answered
+      - relevance
+      - types
+      - channelTypes
+      - channels
+      - weeklyPulse
+    AIToolCallGetPageContent:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getPageContent
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The ID of the revision within which the page content is being fetched.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+      required:
+      - tool
+      - spaceId
+      - page
+      - revisionId
+    DocumentBlockListUnordered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-unordered
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        data:
+          type: object
+          additionalProperties: false
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentBlockHeading:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - heading-1
+          - heading-2
+          - heading-3
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[-a-z0-9.+_]+$
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    OpenAPIOperationPointer:
+      type: object
+      description: Pointer to an operation in the OpenAPI spec.
+      properties:
+        path:
+          type: string
+          description: Path of the operation in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the operation in the OpenAPI spec.
+      required:
+      - path
+      - method
+    DocumentInlineMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionStatsAnswered:
+      type: object
+      description: Aggregated answered assessment for answers linked to a site question.
+      properties:
+        'yes':
+          type: number
+          description: Count of answers assessed as fully answered.
+        partially:
+          type: number
+          description: Count of answers assessed as partially answered.
+        'no':
+          type: number
+          description: Count of answers assessed as not answered.
+      required:
+      - 'yes'
+      - partially
+      - 'no'
+    DocumentBlockOpenAPISchemas:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-schemas
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPISchemasPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+            required:
+            - ref
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    DocumentTableDefinitionRating:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - rating
+          max:
+            type: number
+        required:
+        - type
+        - max
+    DocumentTextLeaf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - leaf
+        text:
+          type: string
+        marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextMark'
+      required:
+      - object
+      - text
+      - marks
+    DocumentMarkStrikethrough:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - strikethrough
+      required:
+      - object
+      - type
+    DocumentBlockPrompt:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - prompt
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            description:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            openInAIProviders:
+              type: boolean
+            defaultExpanded:
+              type: string
+              default: hidden
+              description: Controls how much of the prompt content is visible by default.
+              enum:
+              - hidden
+              - partial
+              - full
+          required:
+          - description
+          additionalProperties: false
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockCode'
+          minItems: 1
+          maxItems: 1
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentBlockExpandable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - expandable
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            defaultExpanded:
+              type: boolean
+          additionalProperties: false
+        fragments:
+          type: array
+          items:
+            oneOf:
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-title
+                  type:
+                    type: string
+                    enum:
+                    - expandable-title
+                  nodes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentBlockParagraph'
+                    minItems: 1
+                    maxItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-body
+                  type:
+                    type: string
+                    enum:
+                    - expandable-body
+                  nodes:
+                    type: array
+                    items:
+                      oneOf:
+                      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                      - $ref: '#/components/schemas/DocumentBlockEmbed'
+                      - $ref: '#/components/schemas/DocumentBlockFile'
+                      - $ref: '#/components/schemas/DocumentBlockImages'
+                      - $ref: '#/components/schemas/DocumentBlockCode'
+                      - $ref: '#/components/schemas/DocumentBlockTable'
+                      - $ref: '#/components/schemas/DocumentBlockHint'
+                      - $ref: '#/components/schemas/DocumentBlockPrompt'
+                      - $ref: '#/components/schemas/DocumentBlockQuote'
+                      - $ref: '#/components/schemas/DocumentBlockIf'
+                      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+                      - $ref: '#/components/schemas/DocumentBlockIntegration'
+                      - $ref: '#/components/schemas/DocumentBlockStepper'
+                    minItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - isVoid
+      - fragments
+      - data
+    Icon:
+      type: string
+      maxLength: 50
+      format: icon
+      description: Name of the icon
+      example: gear
+    DocumentTableDefinition:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionText'
+      - $ref: '#/components/schemas/DocumentTableDefinitionNumber'
+      - $ref: '#/components/schemas/DocumentTableDefinitionCheckbox'
+      - $ref: '#/components/schemas/DocumentTableDefinitionFiles'
+      - $ref: '#/components/schemas/DocumentTableDefinitionUsers'
+      - $ref: '#/components/schemas/DocumentTableDefinitionRating'
+      - $ref: '#/components/schemas/DocumentTableDefinitionSelect'
+      - $ref: '#/components/schemas/DocumentTableDefinitionContentRef'
+      - $ref: '#/components/schemas/DocumentTableDefinitionImage'
+    ContentRefUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - user
+        user:
+          type: string
+      required:
+      - kind
+      - user
+    AIToolCallImportOpenAPISpec:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - importOpenAPISpec
+        spaceId:
+          type: string
+          description: The ID of the space the API reference is added to.
+        changeRequestId:
+          type: string
+          description: The ID of the change request the API reference is added to.
+        specSlug:
+          type: string
+          description: The slug of the OpenAPI spec the reference is generated from.
+        url:
+          type: string
+          description: The URL the spec is imported from, when importing from a URL.
+        file:
+          type: string
+          description: Name of the attached file the spec is imported from, when importing a file.
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+      - specSlug
+    DocumentBlockOpenAPIWebhook:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-webhook
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIWebhookPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentInlineMention:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - mention
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    AIToolCallGetPages:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getPages
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The revision ID of the space.
+      required:
+      - tool
+      - spaceId
+      - revisionId
+    DocumentMarkSuperscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - superscript
+      required:
+      - object
+      - type
+    DocumentBlockUpdates:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - updates
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockUpdate'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            format:
+              type: string
+              enum:
+              - numeric
+              - full
+              - short
+              default: full
+          required:
+          - format
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentKitDefaultAction:
+      oneOf:
+      - type: object
+        description: Action to open an overlay modal defined by "componentId".
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.open'
+          componentId:
+            type: string
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - componentId
+        - props
+      - type: object
+        description: Action when a modal overlay is closed, with a return value to the higher level component in the stack. This action will be triggered on the parent component instance.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.close'
+          returnValue:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - returnValue
+      - type: object
+        description: Action to open an url.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.url.open'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action when a link is being unfurled into a block.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@link.unfurl'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action to update the properties stored in the related node.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@editor.node.updateProps'
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - props
+    DocumentBlockCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            syntax:
+              type: string
+            title:
+              type: string
+            overflow:
+              type: string
+              default: scroll
+              enum:
+              - scroll
+              - wrap
+            lineNumbers:
+              type: boolean
+            fullWidth:
+              type: boolean
+            expandable:
+              type: boolean
+            collapsedLineCount:
+              type: integer
+              description: Number of lines rendered in a code block when it is collapsed
+              minimum: 1
+              default: 10
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockCodeLine'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentInlineImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            caption:
+              type: string
+            alt:
+              type: string
+            size:
+              type: string
+              enum:
+              - original
+              - line
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionNumber:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - number
+        required:
+        - type
+    ContentRefAnchor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - anchor
+        anchor:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+        page:
+          description: ID of the page the anchor is in. The anchor is considered as in the current page if none is provided.
+          type: string
+      required:
+      - kind
+      - anchor
+    Timestamp:
+      type: string
+      format: date-time
+    ChangeRequestReviewStatus:
+      type: string
+      description: Status of a change request review.
+      enum:
+      - changes-requested
+      - approved
+    SiteQuestionStatsRelevance:
+      type: object
+      properties:
+        relevant:
+          type: number
+        spam:
+          type: number
+        off-topic:
+          type: number
+        unclear:
+          type: number
+      required:
+      - relevant
+      - spam
+      - off-topic
+      - unclear
+    SiteQuestionAnswer:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-question-answer
+        id:
+          type: string
+          description: The ID of the site question answer.
+        question:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The ID of the parent site question.
+            type:
+              $ref: '#/components/schemas/SiteQuestionType'
+          required:
+          - id
+          - type
+        topics:
+          type: array
+          description: The IDs of the associated site topics.
+          items:
+            type: string
+        input:
+          type: object
+          required:
+          - text
+          - raw
+          properties:
+            text:
+              type: string
+              description: Normalized question text for this answer.
+            raw:
+              type: string
+              description: Raw question text as asked by the user.
+        thread:
+          type: object
+          required:
+          - id
+          - previous
+          properties:
+            id:
+              type: string
+              description: The ID of the thread this answer belongs to.
+            previous:
+              type: string
+              description: ID of the previous answer in the same thread.
+        session:
+          $ref: '#/components/schemas/SiteInsightsSession'
+        feedback:
+          type: object
+          required:
+          - rating
+          properties:
+            rating:
+              type: integer
+              enum:
+              - -1
+              - 1
+              description: Feedback rating provided by the user.
+        responseId:
+          type: string
+          description: The response identifier for this answer.
+        language:
+          type: string
+          description: ISO language code of the question.
+        answered:
+          $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+        helpfulness:
+          $ref: '#/components/schemas/SiteQuestionAnswerHelpfulness'
+        relevance:
+          $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+        channel:
+          oneOf:
+          - type: object
+            properties:
+              type:
+                $ref: '#/components/schemas/SiteCoreChannelType'
+            required:
+            - type
+          - type: object
+            properties:
+              type:
+                $ref: '#/components/schemas/SiteConfigurableChannelType'
+              id:
+                type:
+                - string
+                - 'null'
+                description: ID of the associated site channel when the answer originates from a configurable channel. Null if the channel has been deleted.
+            required:
+            - type
+            - id
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        urls:
+          type: object
+          description: URLs associated with the site question answer.
+          properties:
+            location:
+              type: string
+              format: uri
+              description: URL of the site question answer in the API.
+          required:
+          - location
+      required:
+      - object
+      - id
+      - question
+      - topics
+      - input
+      - responseId
+      - language
+      - answered
+      - helpfulness
+      - relevance
+      - channel
+      - createdAt
+      - urls
+    DocumentTableDefinitionText:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          textAlignment:
+            type: string
+            enum:
+            - center
+            - right
+            - left
+          verticalAlignment:
+            $ref: '#/components/schemas/VerticalAlignment'
+        required:
+        - type
+        - textAlignment
+    SiteQuestionAnswerWithResponse:
+      allOf:
+      - $ref: '#/components/schemas/SiteQuestionAnswer'
+      - type: object
+        properties:
+          response:
+            $ref: '#/components/schemas/AIMessage'
+        required:
+        - response
+    AIToolCallGetChangeRequestDetails:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getChangeRequestDetails
+        spaceId:
+          type: string
+          description: The ID of the space the change request belongs to.
+        changeRequestId:
+          type: string
+          description: The ID of the change request.
+      required:
+      - tool
+      - spaceId
+      - changeRequestId
+    DocumentBlockCodeLine:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code-line
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineAnnotation'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+        data:
+          type: object
+          properties:
+            highlighted:
+              type: boolean
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    AIToolCallGetTags:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getTags
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+        revisionId:
+          type: string
+          description: The revision ID of the space.
+      required:
+      - tool
+      - spaceId
+      - revisionId
+    AIToolCallEditPage:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - editPage
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the page change in the current conversation.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        changeRequestId:
+          type: string
+          description: 'The ID of the change request the edit was made in. Absent when the space itself was edited, through its unlocked live edits.
+
+            '
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - page
+    ContentKitAction:
+      anyOf:
+      - type: object
+        description: Custom action to re-render the block.
+        properties:
+          action:
+            type: string
+        additionalProperties: true
+        required:
+        - action
+      - $ref: '#/components/schemas/ContentKitDefaultAction'
+    AIToolCallMovePage:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - movePage
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the page move in the current conversation.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        changeRequestId:
+          type: string
+          description: 'The ID of the change request the edit was made in. Absent when the space itself was edited, through its unlocked live edits.
+
+            '
+        to:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        moveType:
+          type: string
+          description: 'Indicates how the page was moved relative to the "to" page.
+
+            - `within`: moved as the last child of the target page (or to the root when `to` is omitted)
+
+            - `before`: moved directly before the target page
+
+            - `after`: moved directly after the target page
+
+            '
+          enum:
+          - within
+          - before
+          - after
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - page
+      - moveType
+    SiteQuestionAnswerSourceRecord:
+      allOf:
+      - $ref: '#/components/schemas/SiteQuestionAnswerSourceBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - record
+          record:
+            type: string
+            description: The site context record ID.
+          connector:
+            $ref: '#/components/schemas/ContextConnector'
+        required:
+        - type
+        - record
+    JSONDocument:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - document
+        data:
+          type: object
+          properties:
+            schemaVersion:
+              description: The schema version of the document. If undefined, the document is considered to be of the latest schema version.
+              type: integer
+          additionalProperties: true
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the content referenced in this document from the API.
+              type: string
+      required:
+      - object
+      - data
+      - nodes
+      example:
+        object: document
+        data: {}
+        nodes:
+        - object: block
+          type: paragraph
+          data: {}
+          nodes:
+          - object: text
+            leaves:
+            - object: leaf
+              text: Hello world
+              marks: []
+    DocumentBlockUpdate:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - update
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            date:
+              type: string
+              description: Date of the update. Accepts a YYYY-MM-DD date or a timestamp. Timestamps are normalized to their UTC calendar date; responses use YYYY-MM-DD.
+              oneOf:
+              - type: string
+                format: date
+              - $ref: '#/components/schemas/Timestamp'
+            tags:
+              type: array
+              description: Array of tags. Each tag is id'ed by its slug.
+              items:
+                $ref: '#/components/schemas/ContentRefTag'
+          required:
+          - date
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockImages:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - images
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            align:
+              type: string
+              enum:
+              - center
+              - left
+              - right
+            fullWidth:
+              type: boolean
+            withFrame:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockImage'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    TextAlignment:
+      type: string
+      enum:
+      - start
+      - center
+      - end
+    AIMessageStep:
+      type: object
+      description: A step in a message from the AI agent.
+      properties:
+        startCondition:
+          $ref: '#/components/schemas/AIMessageStepStartCondition'
+        content:
+          $ref: '#/components/schemas/JSONDocument'
+        reasoning:
+          $ref: '#/components/schemas/JSONDocument'
+        toolCalls:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIToolCall'
+        phase:
+          $ref: '#/components/schemas/AIMessageStepPhase'
+        timing:
+          type: object
+          description: The timing of the step.
+          properties:
+            reasoning:
+              $ref: '#/components/schemas/Timerange'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIAttachment'
+        context:
+          $ref: '#/components/schemas/AIMessageContext'
+    ContentRefFile:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - file
+        file:
+          type: string
+        space:
+          description: ID of the space the file is in. The file is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - file
+    DocumentBlockListTasks:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-tasks
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    OpenAPISchemasPointer:
+      type: object
+      description: Pointer to schemas in the OpenAPI spec.
+      properties:
+        grouped:
+          type: boolean
+          description: Whether the schemas are grouped or not.
+          default: true
+        schemas:
+          type: array
+          description: List of schemas name from the OpenAPI spec.
+          items:
+            type: string
+        title:
+          type: string
+          description: Custom title for the schemas block. When not provided, defaults to "The <SchemaName> object".
+      required:
+      - schemas
+    SiteQuestion:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-question
+        id:
+          type: string
+          description: The ID of the site question.
+        question:
+          type: string
+          description: Canonical text for the unique site question.
+        type:
+          $ref: '#/components/schemas/SiteQuestionType'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        askedAt:
+          $ref: '#/components/schemas/Timestamp'
+        stats:
+          $ref: '#/components/schemas/SiteQuestionStats'
+        urls:
+          type: object
+          description: URLs associated with the site question.
+          properties:
+            location:
+              type: string
+              format: uri
+              description: URL of the site question in the API.
+          required:
+          - location
+      required:
+      - object
+      - id
+      - question
+      - type
+      - createdAt
+      - askedAt
+      - stats
+      - urls
+    DocumentBlockColumns:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - columns
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockColumn'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    DocumentMarkCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - code
+      required:
+      - object
+      - type
+    VerticalAlignment:
+      type: string
+      enum:
+      - top
+      - middle
+      - bottom
+    DocumentTableImageRecord:
+      description: A table record value for image columns, supporting both direct ContentRefs and the additional format with record-level settings.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - type: object
+        properties:
+          ref:
+            oneOf:
+            - $ref: '#/components/schemas/ContentRefFile'
+            - $ref: '#/components/schemas/ContentRefURL'
+          objectFit:
+            $ref: '#/components/schemas/CardsImageObjectFit'
+          alt:
+            type: string
+            description: Alternative text for the cover image
+        required:
+        - ref
+    AIToolCallStartBackgroundAgent:
+      type: object
+      description: 'Tool call recording that the agent started a background agent: a child conversation running one bounded task on its own, in parallel with the conversation that started it. The client renders its live status from `AgentState.backgroundAgents`, matched on `agentId`, and can open the child conversation to read what it did.
+
+        '
+      properties:
+        tool:
+          type: string
+          enum:
+          - startBackgroundAgent
+        agentId:
+          type: string
+          description: Identifier of the background agent within the conversation that started it.
+        conversationId:
+          type: string
+          description: 'The child conversation holding the background agent''s transcript. It can only be read, never continued.
+
+            '
+        title:
+          type: string
+          description: 'A few words naming what the background agent is doing, for a tab and a line of a transcript. The task itself is a brief and far too long to label anything with.
+
+            '
+        task:
+          type: string
+          description: The task the background agent was given.
+        pages:
+          type: array
+          description: 'IDs of the pages the background agent owns, when it was started to change content. Two background agents of the same conversation never own the same page.
+
+            '
+          items:
+            type: string
+      required:
+      - tool
+      - agentId
+      - conversationId
+      - title
+      - task
+    AIAttachmentImage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - image
+        url:
+          $ref: '#/components/schemas/URL'
+        filename:
+          type: string
+          description: Name of the image file.
+      required:
+      - type
+      - url
+    AIToolCallGetComments:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - getComments
+        spaceId:
+          type: string
+          description: The ID of the space the comments were read from.
+        commentId:
+          type: string
+          description: The ID of the comment that was read, when a single comment was requested by URL or ID.
+        count:
+          type: integer
+          description: The number of comments that were read.
+      required:
+      - tool
+      - spaceId
+    DocumentBlockStepperStep:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper-step
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            width:
+              $ref: '#/components/schemas/Length'
+            height:
+              $ref: '#/components/schemas/Length'
+            alt:
+              type: string
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - fragments
+      - isVoid
+    AIToolCall:
+      oneOf:
+      - $ref: '#/components/schemas/AIToolCallGetPageContent'
+      - $ref: '#/components/schemas/AIToolCallGetRecordContent'
+      - $ref: '#/components/schemas/AIToolCallGetPages'
+      - $ref: '#/components/schemas/AIToolCallGetReusableContents'
+      - $ref: '#/components/schemas/AIToolCallSearch'
+      - $ref: '#/components/schemas/AIToolCallEditPage'
+      - $ref: '#/components/schemas/AIToolCallCreatePage'
+      - $ref: '#/components/schemas/AIToolCallDeletePage'
+      - $ref: '#/components/schemas/AIToolCallRenamePage'
+      - $ref: '#/components/schemas/AIToolCallMovePage'
+      - $ref: '#/components/schemas/AIToolCallListModifiedPages'
+      - $ref: '#/components/schemas/AIToolCallGetPageDiff'
+      - $ref: '#/components/schemas/AIToolCallCreateReusableContent'
+      - $ref: '#/components/schemas/AIToolCallEditReusableContent'
+      - $ref: '#/components/schemas/AIToolCallGetReusableContent'
+      - $ref: '#/components/schemas/AIToolCallGetVariables'
+      - $ref: '#/components/schemas/AIToolCallUpdateVariables'
+      - $ref: '#/components/schemas/AIToolCallGetTags'
+      - $ref: '#/components/schemas/AIToolCallUpdateTags'
+      - $ref: '#/components/schemas/AIToolCallCreateChangeRequest'
+      - $ref: '#/components/schemas/AIToolCallGetChangeRequestDetails'
+      - $ref: '#/components/schemas/AIToolCallSetChangeRequestDetails'
+      - $ref: '#/components/schemas/AIToolCallArchiveChangeRequest'
+      - $ref: '#/components/schemas/AIToolCallComment'
+      - $ref: '#/components/schemas/AIToolCallReplyToComment'
+      - $ref: '#/components/schemas/AIToolCallGetComments'
+      - $ref: '#/components/schemas/AIToolCallSubmitChangeRequestReview'
+      - $ref: '#/components/schemas/AIToolCallStartContentImport'
+      - $ref: '#/components/schemas/AIToolCallCheckContentImport'
+      - $ref: '#/components/schemas/AIToolCallImportOpenAPISpec'
+      - $ref: '#/components/schemas/AIToolCallStartBackgroundAgent'
+      - $ref: '#/components/schemas/AIToolCallMCP'
+      - $ref: '#/components/schemas/AIToolCallOther'
+    AIMessageStepStartCondition:
+      type: string
+      description: Describe the state in which the steps started.
+      enum:
+      - compaction
+    SiteQuestionStatsChannelTypes:
+      type: object
+      description: Count of answers by site channel type, including core channels.
+      additionalProperties:
+        type: number
+    DocumentTableViewCards:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - cards
+        cardSize:
+          type: string
+          description: Size of the cards. It indicates how many columns will be used
+          enum:
+          - medium
+          - large
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        targetDefinition:
+          type: string
+          description: Definition ID to use as a target link for the card
+        coverDefinition:
+          type: string
+          description: Definition ID to use as a cover image
+        coverDefinitionDark:
+          type: string
+          description: Definition ID to use as a dark mode cover image
+        hideColumnTitle:
+          type: boolean
+          description: Should we display the column title or not
+        wrap:
+          type: boolean
+          description: Whether the cards wrap onto multiple rows (true, the default) or are laid out in a single horizontally-scrolling carousel row (false).
+      required:
+      - type
+      - columns
+      - cardSize
+    AIToolCallSearch:
+      type: object
+      description: Tool to search for content
+      properties:
+        tool:
+          type: string
+          enum:
+          - search
+        query:
+          type: string
+          description: The query that has been searched for.
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIToolCallSearchResult'
+      required:
+      - tool
+      - query
+      - results
+    ChangedRevisionReusableContent:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        document:
+          type: string
+      required:
+      - id
+      - title
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    SiteQuestionAnswerSourceBase:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-question-answer-source
+        id:
+          type: string
+          description: The ID of the source.
+        weight:
+          type: number
+          description: Relative weight of this source in the generated answer.
+        title:
+          type: string
+          description: The title of the source.
+        urls:
+          type: object
+          description: URLs associated with the site question answer.
+          properties:
+            location:
+              type: string
+              format: uri
+              description: URL of the site question answer in the API.
+          required:
+          - location
+      required:
+      - object
+      - id
+      - title
+      - weight
+      - urls
+    ChangedRevisionPage:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/RevisionPageType'
+        title:
+          type: string
+        path:
+          type: string
+      required:
+      - id
+      - type
+      - title
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    ContentRefReusableContent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - reusable-content
+        reusableContent:
+          type: string
+        space:
+          type: string
+          description: The space in which the reusable content is defined. If undefined, the reusable content is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - reusableContent
+    DocumentTableDefinitionBase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          description: Title for the column
+      required:
+      - id
+      - title
+    AIToolCallComment:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - comment
+        spaceId:
+          type: string
+          description: The ID of the space being commented.
+        page:
+          description: The page being commented.
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        commentId:
+          type: string
+          description: The ID of the comment being posted.
+      required:
+      - tool
+      - spaceId
+      - commentId
+    AIToolCallGetRecordContent:
+      type: object
+      description: Tool to read the body of an external record.
+      properties:
+        tool:
+          type: string
+          enum:
+          - getRecordContent
+        siteId:
+          type: string
+          description: The ID of the site owning the context record.
+        recordId:
+          type: string
+          description: The ID of the context record.
+        title:
+          type: string
+          description: The title of the record.
+        url:
+          type: string
+          format: uri
+          description: URL of the record in the source system.
+      required:
+      - tool
+      - siteId
+      - recordId
+      - title
+    SiteQuestionAnswerHelpfulness:
+      type: string
+      description: Helpfulness of the response for the end user need.
+      enum:
+      - low
+      - medium
+      - high
+    DocumentBlockTabsItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        data:
+          type: object
+          properties:
+            title:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            slug:
+              description: Stable identifier for this tab's selection, shared with every tab and button targeting the same slug. It is slugified before matching, so casing and spacing need not be exact. Omit it — or send an empty value, which counts as omitted — to derive one from the title, which is what makes same-named tabs across a site select together. A value that slugifies to nothing, such as emoji alone, also falls back to the title.
+              type: string
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    AIToolCallReplyToComment:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - replyToComment
+        spaceId:
+          type: string
+          description: The ID of the space being commented.
+        page:
+          description: The page being commented.
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        commentId:
+          type: string
+          description: The ID of the comment being replied to.
+        replyId:
+          type: string
+          description: The ID of the reply being posted.
+      required:
+      - tool
+      - spaceId
+      - commentId
+      - replyId
+    DocumentBlockColumn:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - column
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            width:
+              $ref: '#/components/schemas/Length'
+            verticalAlignment:
+              $ref: '#/components/schemas/VerticalAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentTextMark:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentMarkBold'
+      - $ref: '#/components/schemas/DocumentMarkItalic'
+      - $ref: '#/components/schemas/DocumentMarkCode'
+      - $ref: '#/components/schemas/DocumentMarkKeyboard'
+      - $ref: '#/components/schemas/DocumentMarkStrikethrough'
+      - $ref: '#/components/schemas/DocumentMarkColor'
+      - $ref: '#/components/schemas/DocumentMarkSuperscript'
+      - $ref: '#/components/schemas/DocumentMarkSubscript'
+    AIMessageRole:
+      type: string
+      enum:
+      - user
+      - assistant
+      - developer
+    DocumentTableViewGrid:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - grid
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        columnWidths:
+          type: object
+          description: Percent width of each column
+          additionalProperties:
+            type: number
+        hideHeader:
+          type: boolean
+          description: Should we display the header with column titles
+        stickyHeader:
+          type: boolean
+          description: Should we keep the table header sticky while the page scrolls
+        stickyFirstColumn:
+          type: boolean
+          description: Should we keep the first visible table column sticky while horizontally scrolling
+        useNewSizing:
+          type: boolean
+          description: 'Tables in GitBook originally used a scaled width approach i.e. the width defined
+
+            in columnWidths would be scaled to ensure a 100% width table.
+
+
+            We later changed this to treat the widths in columnWidths as exact values - they are
+
+            never scaled. A columnWidth of 50 is rendered as 50px.
+
+
+            In order to maintain backwards compatibility, we track whether or not we
+
+            use the new system here.
+
+
+            All new tables should have this value set to true, older tables will have it set
+
+            to undefined.
+
+            '
+      required:
+      - type
+      - columns
+      - hideHeader
+    SiteQuestionAnswerResolution:
+      type: string
+      description: Whether the response answered the question.
+      enum:
+      - 'no'
+      - partially
+      - 'yes'
+    DocumentMarkColor:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - color
+        data:
+          type: object
+          properties:
+            text:
+              $ref: '#/components/schemas/DocumentTextColor'
+            background:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - text
+          - background
+      required:
+      - object
+      - type
+      - data
+    AIToolCallCreatePage:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - createPage
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the page change in the current conversation.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+        changeRequestId:
+          type: string
+          description: 'The ID of the change request the edit was made in. Absent when the space itself was edited, through its unlocked live edits.
+
+            '
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+      - page
+    SiteQuestionAnswerSourcePage:
+      allOf:
+      - $ref: '#/components/schemas/SiteQuestionAnswerSourceBase'
+      - type: object
+        title: Page source
+        description: Source data pointing to a page used for a site question answer.
+        properties:
+          type:
+            type: string
+            enum:
+            - page
+          space:
+            type: string
+            description: The space ID of the source page.
+          revision:
+            type: string
+            description: The revision ID used for this source page.
+          page:
+            type: string
+            description: The page ID of the source page.
+        required:
+        - type
+        - space
+        - revision
+        - page
+    AIAttachment:
+      oneOf:
+      - $ref: '#/components/schemas/AIAttachmentImage'
+      - $ref: '#/components/schemas/AIAttachmentFile'
+      - $ref: '#/components/schemas/AIAttachmentImportFile'
+    DocumentTableRecord:
+      type: object
+      properties:
+        orderIndex:
+          type: string
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: number
+            - type:
+              - string
+              - 'null'
+            - type: boolean
+            - type: array
+              items:
+                type: string
+            - $ref: '#/components/schemas/ContentRef'
+            - $ref: '#/components/schemas/DocumentTableImageRecord'
+      required:
+      - orderIndex
+      - values
+    DocumentBlockOpenAPIOperation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-operation
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    AIToolCallListModifiedPages:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - listModifiedPages
+        spaceId:
+          type: string
+          description: The ID of the space being accessed.
+      required:
+      - tool
+      - spaceId
+    DocumentInline:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentInlineLink'
+      - $ref: '#/components/schemas/DocumentInlineEmoji'
+      - $ref: '#/components/schemas/DocumentInlineIcon'
+      - $ref: '#/components/schemas/DocumentInlineExpression'
+      - $ref: '#/components/schemas/DocumentInlineMath'
+      - $ref: '#/components/schemas/DocumentInlineImage'
+      - $ref: '#/components/schemas/DocumentInlineAnnotation'
+      - $ref: '#/components/schemas/DocumentInlineMention'
+      - $ref: '#/components/schemas/DocumentInlineButton'
+    DocumentBlockMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentMarkItalic:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - italic
+      required:
+      - object
+      - type
+    AIMessageResponseMetadata:
+      description: The response that generated this message.
+      type: object
+      properties:
+        stopReason:
+          type: string
+          description: The reason the response was stopped. If not defined, the response finished normally.
+          enum:
+          - aborted
+        id:
+          type: string
+          description: The ID of the response that generated this message. It can be undefined if the stream was aborted.
+        previous:
+          type: string
+          description: The ID of the previous response that this message is based on.
+    DocumentBlockContentRef:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - content-ref
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockListItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            checked:
+              type: boolean
+      required:
+      - object
+      - type
+      - nodes
+    DocumentTableDefinitionImage:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - image
+        required:
+        - type
+    Length:
+      oneOf:
+      - type: number
+      - type: object
+        properties:
+          unit:
+            type: string
+          value:
+            type: number
+        required:
+        - unit
+        - value
+    AIToolCallUpdateTags:
+      type: object
+      properties:
+        tool:
+          type: string
+          enum:
+          - updateTags
+        spaceId:
+          type: string
+          description: The ID of the space being edited.
+        baseRevisionId:
+          type: string
+          description: The base revision ID used to compare the change in the current conversation.
+      required:
+      - tool
+      - spaceId
+      - baseRevisionId
+    DocumentTextColor:
+      type: string
+      description: 'Allowed color tokens for color marks (text and background; background reuses this enum). Named colors are fixed palette keys. `$*` tokens are semantic: resolved from the published sites customization when rendering; authors may still persist them in content when valid.
+
+        '
+      enum:
+      - default
+      - green
+      - blue
+      - red
+      - orange
+      - yellow
+      - purple
+      - pink
+      - violet
+      - cyan
+      - $primary
+      - $info
+      - $success
+      - $warning
+      - $danger
+      - $tint
+    AIMessageContext:
+      type: object
+      description: Context about the current user sending a message.
+      properties:
+        location:
+          type: object
+          properties:
+            spaceId:
+              type: string
+              description: ID of the current space.
+            pageId:
+              type: string
+              description: ID of the current page.
+          required:
+          - spaceId
+          - pageId
+        comments:
+          type: array
+          description: Comments on the content the user is referring to in the message.
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: ID of the comment.
+              content:
+                type: string
+                description: Snapshot of the comment for display.
+            required:
+            - id
+        selection:
+          type: object
+          description: Range of the current selection in a document.
+          properties:
+            anchorKey:
+              oneOf:
+              - type: string
+              - type: 'null'
+            anchorOffset:
+              type: integer
+            focusKey:
+              oneOf:
+              - type: string
+              - type: 'null'
+            focusOffset:
+              type: integer
+            content:
+              type: string
+              description: Snapshot of the selection for display.
+          required:
+          - anchorKey
+          - anchorOffset
+          - focusKey
+          - focusOffset
+    DocumentBlockListOrdered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-ordered
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            start:
+              type: number
+              description: An integer to start counting from for the list items.
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    AIToolCallMCP:
+      type: object
+      description: Tool called from an MCP server
+      properties:
+        tool:
+          type: string
+          enum:
+          - mcp
+        mcpServerId:
+          type: string
+          description: The ID of the MCP server that has been called.
+        mcpToolName:
+          type: string
+          description: The name of the tool that has been called.
+        mcpToolTitle:
+          type: string
+          description: The title of the tool that has been called.
+      required:
+      - tool
+      - mcpServerId
+      - mcpToolName
+    DocumentInlineLink:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - link
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineImage'
+            - $ref: '#/components/schemas/DocumentInlineMath'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+            - $ref: '#/components/schemas/DocumentInlineMention'
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    AIMessage:
+      type: object
+      properties:
+        id:
+          type: string
+        role:
+          $ref: '#/components/schemas/AIMessageRole'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIMessageStep'
+        task:
+          $ref: '#/components/schemas/AIMessageTask'
+        response:
+          $ref: '#/components/schemas/AIMessageResponseMetadata'
+        createdAt:
+          type: string
+          format: date-time
+          description: 'When the message was added to the conversation. Absent on messages recorded before this field existed.
+
+            '
+      required:
+      - id
+      - role
+      - steps
+    DocumentInlineButton:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - button
+        key:
+          type: string
+        data:
+          allOf:
+          - type: object
+            properties:
+              label:
+                type: string
+              kind:
+                type: string
+                enum:
+                - primary
+                - secondary
+              size:
+                type: string
+                enum:
+                - small
+                - medium
+                - large
+              icon:
+                $ref: '#/components/schemas/Icon'
+            required:
+            - label
+            - kind
+          - oneOf:
+            - type: object
+              properties:
+                ref:
+                  $ref: '#/components/schemas/ContentRef'
+              required:
+              - ref
+            - type: object
+              properties:
+                action:
+                  $ref: '#/components/schemas/DocumentAction'
+              required:
+              - action
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+  parameters:
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    siteQuestionId:
+      name: siteQuestionId
+      in: path
+      required: true
+      description: The unique id of the site question
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    listOrder:
+      name: order
+      in: query
+      description: An order for the items in the list
+      schema:
+        type: string
+        default: desc
+        enum:
+        - asc
+        - desc
+    siteQuestionAnswerId:
+      name: siteQuestionAnswerId
+      in: path
+      required: true
+      description: The unique id of the site question answer
+      schema:
+        type: string
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

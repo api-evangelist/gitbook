@@ -1,0 +1,215 @@
+openapi: 3.2.0
+info:
+  title: GitBook Space Embeds API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: space-embeds
+  x-page-title: Space embeds
+  x-page-description: Render or resolve embedded content within a space.
+  x-parent: spaces
+  description: Automatically fetch metadata or previews for embedded resources such as videos, images, or external docs, enabling richer content experiences in your space.
+paths:
+  /spaces/{spaceId}/embed:
+    get:
+      operationId: getEmbedByUrlInSpace
+      summary: Resolve a URL to an oEmbed object within a space
+      description: Resolves an external URL to an oEmbed representation (title, thumbnail, HTML snippet) within the context of a space. Use this to preview or embed third-party content referenced in a space's pages. Requires the URL as a query parameter.
+      x-gitbook-mcp: true
+      tags:
+      - space-embeds
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - name: url
+        in: query
+        required: true
+        description: URL to resolve
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Embed'
+components:
+  schemas:
+    IntegrationBlockMarkdown:
+      oneOf:
+      - type: object
+        description: Format the custom block as a codeblock
+        properties:
+          codeblock:
+            description: Code block syntax to use to identify the block.
+            type: string
+          body:
+            description: Key of the property to use as body of the codeblock.
+            type: string
+        required:
+        - codeblock
+        - body
+    Embed:
+      allOf:
+      - type: object
+        properties:
+          title:
+            type: string
+          site:
+            type: string
+          icon:
+            type: string
+        required:
+        - title
+        - site
+      - oneOf:
+        - type: object
+          title: Link
+          properties:
+            type:
+              type: string
+              enum:
+              - link
+          required:
+          - type
+        - type: object
+          title: HTML
+          properties:
+            type:
+              type: string
+              enum:
+              - rich
+            html:
+              type: string
+          required:
+          - type
+          - html
+        - type: object
+          title: Integration
+          properties:
+            type:
+              type: string
+              enum:
+              - integration
+            integration:
+              description: The identifier of the integration performing the rendering
+              type: string
+            block:
+              $ref: '#/components/schemas/IntegrationBlock'
+          required:
+          - type
+          - integration
+          - block
+    IntegrationBlock:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID in the integration for the block. It also represents the UI component used.
+        title:
+          type: string
+          description: Short descriptive title for the block.
+          minLength: 2
+          maxLength: 40
+        description:
+          type: string
+          description: Long descriptive text for the block.
+          minLength: 0
+          maxLength: 150
+        icon:
+          type: string
+          description: URL of the icon to represent this block.
+        urlUnfurl:
+          type: array
+          description: URLs patterns to convert as this block.
+          items:
+            type: string
+        markdown:
+          $ref: '#/components/schemas/IntegrationBlockMarkdown'
+      required:
+      - id
+      - title
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+  parameters:
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

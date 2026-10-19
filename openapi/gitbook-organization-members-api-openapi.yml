@@ -1,82 +1,106 @@
 openapi: 3.2.0
 info:
   title: GitBook Organization Members API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
-- name: Organization Members
-  description: Manage members and their roles within an organization.
+- name: organization-members
+  x-page-title: Organization members
+  x-page-description: Handle all aspects of membership within an organization, from listing to role management.
+  x-parent: organizations
+  description: Organization members can be managed through this API, which lets you invite and manage users under a particular organization. You can define roles and permissions to ensure your team has the right level of access.
 paths:
   /orgs/{organizationId}/members:
     get:
-      operationId: listOrganizationMembers
-      summary: GitBook List organization members
-      description: Returns the list of members in an organization.
+      operationId: listMembersInOrganizationById
+      x-gitbook-mcp: true
+      summary: List all organization members
       tags:
-      - Organization Members
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:read
       parameters:
       - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/pageParam'
-      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/listOrder'
+      - $ref: '#/components/parameters/memberRoleFilter'
+      - $ref: '#/components/parameters/memberSearch'
+      - $ref: '#/components/parameters/memberSort'
       responses:
         '200':
-          description: A list of organization members.
+          description: OK
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
                     items:
-                      $ref: '#/components/schemas/OrganizationMember'
-                  next:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/OrganizationMember'
   /orgs/{organizationId}/members/{userId}:
     get:
-      operationId: getOrganizationMember
-      summary: GitBook Get an organization member
-      description: Returns details about a specific organization member.
+      operationId: getMemberInOrganizationById
+      x-gitbook-mcp: true
+      summary: Get an organization member by its ID
       tags:
-      - Organization Members
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:read
       parameters:
       - $ref: '#/components/parameters/organizationId'
       - $ref: '#/components/parameters/userId'
       responses:
         '200':
-          description: The organization member.
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrganizationMember'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
     patch:
-      operationId: updateOrganizationMember
-      summary: GitBook Update an organization member
-      description: Updates the role of an organization member.
+      operationId: updateMemberInOrganizationById
+      summary: Update an organization member
       tags:
-      - Organization Members
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:write
       parameters:
       - $ref: '#/components/parameters/organizationId'
       - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The member has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
       requestBody:
         required: true
         content:
@@ -85,142 +109,1121 @@ paths:
               type: object
               properties:
                 role:
-                  $ref: '#/components/schemas/MemberRole'
-      responses:
-        '200':
-          description: The updated organization member.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrganizationMember'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+                  $ref: '#/components/schemas/MemberRoleOrGuest'
     delete:
-      operationId: removeOrganizationMember
-      summary: GitBook Remove an organization member
-      description: Removes a member from an organization.
+      operationId: removeMemberFromOrganizationById
+      summary: Remove an organization member or request an organization admin to do it
       tags:
-      - Organization Members
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:write
       parameters:
       - $ref: '#/components/parameters/organizationId'
       - $ref: '#/components/parameters/userId'
       responses:
+        '202':
+          description: The removal request was sent to the organization administrators.
         '204':
-          description: Member removed successfully.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
+          description: Member did not exist in the organization.
+        '205':
+          description: The member was deleted from the organization.
+  /orgs/{organizationId}/ping:
+    post:
+      operationId: updateOrganizationMemberLastSeenAt
+      summary: Update an organization member last seen at
+      tags:
+      - organization-members
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: Organization member has been updated. Optionally returns a JWT token to attach to the user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gitbookVisitorClaims:
+                    description: A JTW token containing the claims to attach to this user.
+                    type: string
+  /orgs/{organizationId}/members/{userId}/sso:
+    post:
+      operationId: setUserAsSSOMemberForOrganization
+      summary: Set a user as an SSO member of an organization
+      tags:
+      - organization-members
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: The user has been added as an SSO member of the organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationMember'
+  /orgs/{organizationId}/members/{userId}/spaces:
+    get:
+      operationId: listSpacesForOrganizationMember
+      summary: List an organization member space permissions
+      tags:
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/listOrder'
+      responses:
+        '200':
+          description: Listing of spaces that can be accessed by the user in the organization.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/MemberContentPermission'
+  /orgs/{organizationId}/members/{userId}/teams:
+    get:
+      operationId: listTeamsForOrganizationMember
+      x-gitbook-mcp: true
+      summary: List all organization member teams
+      tags:
+      - organization-members
+      security:
+      - user: []
+      - oauth:
+        - organization:members:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/userId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - in: query
+        name: title
+        description: If provided, only teams whose name contains the given parameter will be returned. Case insensitive.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - team
+                        - member
+                        properties:
+                          team:
+                            $ref: '#/components/schemas/OrganizationTeam'
+                          member:
+                            $ref: '#/components/schemas/TeamMember'
 components:
+  schemas:
+    GitSyncOperationDirection:
+      type: string
+      enum:
+      - export
+      - import
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    MemberContentPermission:
+      type: object
+      description: Permission of a member in a content.
+      properties:
+        permission:
+          $ref: '#/components/schemas/MemberRole'
+        space:
+          $ref: '#/components/schemas/Space'
+      required:
+      - permission
+      - space
+    DefaultLevel:
+      description: Default level for a piece of content
+      oneOf:
+      - $ref: '#/components/schemas/MemberRoleOrGuest'
+      - type: string
+        enum:
+        - inherit
+    Expression:
+      type: string
+      description: Expression to evaluate
+      minLength: 0
+      maxLength: 1024
+    MergeRulesConfigurationInherit:
+      type: object
+      description: The merge rules inherits from the organization configuration.
+      properties:
+        type:
+          type: string
+          enum:
+          - inherit
+      required:
+      - type
+    PreviousGitSyncState:
+      type: object
+      description: What is still known about a target's Git Sync after its installation was removed. Never returned alongside `gitSync`, which describes a live installation.
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          description: The URL to the directory of the repository tree the content synced with before its Git Sync installation was removed, at the branch it synced.
+    MergeRulesConfigurationRules:
+      type: object
+      description: The merge rules are composed of individual rules that must all pass.
+      properties:
+        type:
+          type: string
+          enum:
+          - rules
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeRule'
+      required:
+      - type
+      - rules
+    MergeRule:
+      oneOf:
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_one_of_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - allow_bypass
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_at_least_one_review
+            - require_at_least_one_approved_review
+            - require_all_reviews_approved
+            - require_agent_review
+            - require_up_to_date_change_request
+            - require_change_request_subject
+            - require_change_request_description
+            - require_author_to_merge
+        required:
+        - rule
+      - type: object
+        description: The merge rule is written in the advanced custom expression syntax.
+        properties:
+          rule:
+            type: string
+            enum:
+            - custom
+          expression:
+            $ref: '#/components/schemas/Expression'
+          message:
+            type: string
+            description: Optional message to display when the expression evaluates to false.
+        required:
+        - rule
+        - expression
+    OrganizationTeam:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "team"
+          enum:
+          - team
+        id:
+          type: string
+          description: Unique identifier for the team.
+        title:
+          $ref: '#/components/schemas/OrganizationTeamTitle'
+        members:
+          type: integer
+          description: Count of members in this team.
+        spaces:
+          type: number
+          description: Count of spaces this team has access to.
+        createdAt:
+          description: Date at which the team was created.
+          $ref: '#/components/schemas/Timestamp'
+        permissions:
+          type: object
+          description: The set of permissions for the team
+          properties:
+            admin:
+              type: boolean
+              description: Can the user manage the team
+            view:
+              type: boolean
+              description: Can the user view the team and list its members
+          required:
+          - admin
+          - view
+      required:
+      - object
+      - id
+      - title
+      - members
+      - spaces
+      - createdAt
+      - permissions
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    Space:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "space"
+          enum:
+          - space
+        id:
+          type: string
+          description: Unique identifier for the space
+        title:
+          $ref: '#/components/schemas/SpaceTitle'
+        emoji:
+          description: An emoji for this space. It'll match the emoji shown in the GitBook app.
+          $ref: '#/components/schemas/Emoji'
+        visibility:
+          $ref: '#/components/schemas/ContentVisibility'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        deletedAt:
+          $ref: '#/components/schemas/Timestamp'
+        editMode:
+          $ref: '#/components/schemas/SpaceEditMode'
+        type:
+          type: string
+          description: Kind of space. Only set to `styleguide` for spaces holding a team's writing style guide; omitted for regular spaces.
+          enum:
+          - styleguide
+        mergeRules:
+          $ref: '#/components/schemas/MergeRulesSpaceConfiguration'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the space in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the space in the application
+              format: uri
+            published:
+              type: string
+              description: URL of the published version of the space. Only defined when visibility is not "private."
+              format: uri
+            public:
+              type: string
+              description: URL of the public version of the space. Only defined when visibility is "public".
+              format: uri
+            icon:
+              description: URL of the icon of this space, if defined.
+              $ref: '#/components/schemas/URL'
+          required:
+          - app
+          - location
+        organization:
+          type: string
+          description: ID of the organization owning this space
+        parent:
+          type: string
+          description: ID of the parent collection.
+        language:
+          $ref: '#/components/schemas/TranslationLanguage'
+        gitSync:
+          $ref: '#/components/schemas/GitSyncState'
+        previousGitSync:
+          $ref: '#/components/schemas/PreviousGitSyncState'
+        imports:
+          description: 'Import runs targeting this space, still running or ended recently, most recent first. Only returned when fetching a single space.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentImportRun'
+        visitorAuth:
+          $ref: '#/components/schemas/VisitorAuth'
+        revision:
+          type: string
+          description: ID of the active revision in the space.
+        defaultLevel:
+          $ref: '#/components/schemas/DefaultLevel'
+        comments:
+          type: number
+          description: Count of opened comments on the space.
+        changeRequests:
+          type: number
+          description: Total count of change requests on the space.
+        changeRequestsOpen:
+          type: number
+          description: Count of open change requests on the space.
+        changeRequestsDraft:
+          type: number
+          description: Count of draft change requests on the space.
+        internal_poweredByV2:
+          type: boolean
+          description: Whether the space is powered by V2 of the content system.
+        internal_singleWebsocket:
+          type: boolean
+          description: Whether the space uses a single websocket connection for all real-time communication.
+        permissions:
+          type: object
+          description: The set of permissions for the space
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the space content.
+            access:
+              type: boolean
+              description: Can the user access the space in the application.
+            admin:
+              type: boolean
+              description: Can the user edit the title, install integrations, and manage the space.
+            viewInviteLinks:
+              type: boolean
+              description: Can the user view the invite links of the space.
+            edit:
+              type: boolean
+              description: Can the user edit the content of the space by creating a change request.
+            triggerGitSync:
+              type: boolean
+              description: Can the user trigger a git sync.
+            comment:
+              type: boolean
+              description: Can the user comment on the content.
+            merge:
+              type: boolean
+              description: Can the user merge change requests.
+            review:
+              type: boolean
+              description: Can the user review change requests.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations in the space.
+          required:
+          - view
+          - access
+          - admin
+          - viewInviteLinks
+          - edit
+          - triggerGitSync
+          - comment
+          - merge
+          - review
+          - installIntegration
+      required:
+      - object
+      - id
+      - title
+      - emoji
+      - organization
+      - visibility
+      - revision
+      - createdAt
+      - updatedAt
+      - comments
+      - changeRequests
+      - changeRequestsOpen
+      - changeRequestsDraft
+      - mergeRules
+      - urls
+      - defaultLevel
+      - permissions
+    VisitorAuth:
+      oneOf:
+      - $ref: '#/components/schemas/VisitorAuthCustomBackend'
+      - allOf:
+        - $ref: '#/components/schemas/VisitorAuthIntegrationBackend'
+        - type: object
+          properties:
+            integration:
+              type: string
+              description: Name of integration being used as the backend for authenticated access
+          required:
+          - integration
+    VisitorAuthCustomBackend:
+      type: object
+      title: Custom backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Custom backend for authenticated access
+          enum:
+          - custom
+      required:
+      - backend
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
+    OrganizationTeamTitle:
+      type: string
+      description: Title of the team
+      minLength: 1
+      maxLength: 64
+    GitSyncInstallationStatus:
+      type: string
+      enum:
+      - unauthenticated
+      - active
+      - pending
+    OrganizationMember:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "member"
+          enum:
+          - member
+        id:
+          type: string
+          description: Unique identifier for the user.
+        role:
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+        user:
+          $ref: '#/components/schemas/User'
+        disabled:
+          type: boolean
+          description: Whatever the membership of this user is disabled and prevent them from accessing content.
+        joinedAt:
+          description: Date at which the user joined the organization.
+          $ref: '#/components/schemas/Timestamp'
+        lastSeenAt:
+          description: Date at which the user was last seen active in the organization.
+          $ref: '#/components/schemas/Timestamp'
+        sso:
+          type: boolean
+          description: Whether the user can login with SSO.
+        spaces:
+          type: number
+        teams:
+          type: number
+        sites:
+          type: number
+      required:
+      - object
+      - id
+      - role
+      - user
+      - disabled
+      - joinedAt
+      - sso
+      - spaces
+      - teams
+      - sites
+    GitSyncProvider:
+      type: string
+      description: The provider of the Git Sync installation.
+      enum:
+      - github
+      - gitlab
+      - github-legacy
+    MergeRulesStandaloneConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationRules'
+      - $ref: '#/components/schemas/MergeRulesConfigurationNone'
+    Timestamp:
+      type: string
+      format: date-time
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    Emoji:
+      type: string
+      maxLength: 50
+      format: emoji
+      description: Unicode codepoint or character of the emoji
+      example: 🎉
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    TeamMemberRole:
+      type: string
+      description: '"The role of a team member.
+
+        "owner": Can manage team members.
+
+        "member": Is a member of the team.
+
+        '
+      enum:
+      - owner
+      - member
+    TeamMember:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/TeamMemberRole'
+      required:
+      - role
+    ContentVisibility:
+      type: string
+      description: "* `public`: Anyone can access the content, and the content is indexed by search engines.\n* `unlisted`: Anyone can access the content, and the content is not indexed by search engines\n* `share-link`: Anyone with a secret token in the url can access the content.\n* `visitor-auth`: Anyone authenticated through a JWT token can access the content.\n* `in-collection`: Anyone who can access the parent collection can access the content.\n  Only available for spaces in a collection.\n* `private`: Authorized members can access the content.\n"
+      enum:
+      - public
+      - unlisted
+      - share-link
+      - visitor-auth
+      - in-collection
+      - private
+    GitSyncState:
+      type: object
+      properties:
+        repoName:
+          type: string
+          description: Repository name.
+        installationStatus:
+          $ref: '#/components/schemas/GitSyncInstallationStatus'
+        installationProvider:
+          $ref: '#/components/schemas/GitSyncProvider'
+        integration:
+          type: string
+          deprecated: true
+          description: The integration name providing the Git Sync.
+        installationId:
+          type: string
+          description: The ID of the Git Sync installation.
+        parentInstallationId:
+          type: string
+          description: The ID of the parent Git Sync installation, if any.
+        url:
+          type: string
+          description: The URL to the repository tree, used when rendering public content.
+        installationProjectDirectory:
+          type: string
+          description: Directory in the repository this content syncs from, resolved against the parent installation when the installation is managed by a site. Absent when the content syncs from the root of the repository.
+        operation:
+          type: object
+          description: The latest operation on the Git Sync installation.
+          properties:
+            state:
+              $ref: '#/components/schemas/GitSyncOperationState'
+            direction:
+              $ref: '#/components/schemas/GitSyncOperationDirection'
+            startedAt:
+              $ref: '#/components/schemas/Timestamp'
+            endedAt:
+              $ref: '#/components/schemas/Timestamp'
+            error:
+              type: string
+              description: Why the operation failed, when it did.
+            errorAction:
+              $ref: '#/components/schemas/GitSyncOperationErrorAction'
+          required:
+          - state
+          - direction
+          - startedAt
+        operationTimeout:
+          type: integer
+          description: How long an operation is allowed to run before it is terminated (in milliseconds).
+        updatedAt:
+          description: When the Git provider details were last updated
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - installationId
+      - installationProvider
+      - installationStatus
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    GitSyncOperationErrorAction:
+      type: object
+      description: An action the user can take to resolve a failed Git Sync operation.
+      properties:
+        label:
+          type: string
+          description: Label for the action.
+        url:
+          type: string
+          format: uri
+          description: URL where the user can resolve the failure.
+      required:
+      - label
+      - url
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    MergeRulesSpaceConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationInherit'
+      - $ref: '#/components/schemas/MergeRulesStandaloneConfiguration'
+    MergeRulesConfigurationNone:
+      type: object
+      description: The merge rules are disabled, change requests can be merged without review.
+      properties:
+        type:
+          type: string
+          enum:
+          - none
+      required:
+      - type
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
+        page:
+          type: string
+          description: ID of the page to import in
+      required:
+      - space
+    SpaceEditMode:
+      type: string
+      description: 'Determines how a Space can be edited.
+
+        * `live`: Users can directly edit the space
+
+        * `locked`: All edits are locked for this space.
+
+        '
+      enum:
+      - live
+      - locked
+    SpaceTitle:
+      type: string
+      description: Title of the space
+      maxLength: 50
+    GitSyncOperationState:
+      type: string
+      description: '* `running`: The operation is still running
+
+        * `failure`: The operation failed
+
+        * `success`: The operation was successful
+
+        * `timeout`: The operation timed out
+
+        '
+      enum:
+      - running
+      - failure
+      - success
+      - timeout
+    TranslationLanguage:
+      type: string
+      enum:
+      - en
+      - fr
+      - de
+      - es
+      - it
+      - pt
+      - pt-br
+      - ru
+      - ja
+      - zh
+      - zh-tw
+      - yue
+      - ko
+      - ar
+      - hi
+      - nl
+      - pl
+      - tr
+      - sv
+      - 'no'
+      - da
+      - fi
+      - el
+      - cs
+      - hu
+      - ro
+      - th
+      - vi
+      - id
+      - ms
+      - he
+      - uk
+      - sk
+      - bg
+      - hr
+      - lt
+      - lv
+      - et
+      - sl
+      - fr-ca
+      - es-mx
+      - es-419
+    VisitorAuthIntegrationBackend:
+      type: object
+      title: Integration backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Integration as backend for authenticated access
+          enum:
+          - integration
+      required:
+      - backend
   parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
+    memberSearch:
+      name: search
+      in: query
+      description: A query to filter the list by display name and email
       schema:
         type: string
-    limitParam:
+    listLimit:
       name: limit
       in: query
-      description: Maximum number of items to return per page.
+      description: The number of results per page
       schema:
-        type: integer
-        default: 20
-        maximum: 100
+        type: number
+        minimum: 0
+        maximum: 1000
+    listOrder:
+      name: order
+      in: query
+      description: An order for the items in the list
+      schema:
+        type: string
+        default: desc
+        enum:
+        - asc
+        - desc
+    memberSort:
+      name: sort
+      in: query
+      description: The property to sort the list by
+      schema:
+        type: string
+        default: joinedAt
+        enum:
+        - joinedAt
+        - lastSeenAt
+        - name
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    memberRoleFilter:
+      name: role
+      in: query
+      description: The role to filter the list by
+      schema:
+        oneOf:
+        - $ref: '#/components/schemas/MemberRole'
+        - type: string
+          enum:
+          - guest
     userId:
       name: userId
       in: path
       required: true
-      description: The unique identifier of the user.
+      description: The unique ID of the User
       schema:
         type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
       schema:
-        type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  schemas:
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: string
-          description: The cursor for the next page of results.
-    OrganizationMember:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/User'
-        role:
-          $ref: '#/components/schemas/MemberRole'
-        createdAt:
-          type: string
-          format: date-time
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-    MemberRole:
-      type: string
-      enum:
-      - admin
-      - create
-      - review
-      - edit
-      - comment
-      - read
-      description: The role of a member within an organization.
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the user.
-        displayName:
-          type: string
-          description: The display name of the user.
-        email:
-          type: string
-          format: email
-          description: The email address of the user.
-        photoURL:
-          type: string
-          format: uri
-          description: URL to the user's profile photo.
-        urls:
-          type: object
-          properties:
-            app:
-              type: string
-              format: uri
+        $ref: '#/components/schemas/EntityId'
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

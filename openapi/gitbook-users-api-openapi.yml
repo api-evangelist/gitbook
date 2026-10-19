@@ -1,120 +1,260 @@
 openapi: 3.2.0
 info:
   title: GitBook Users API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
 - name: Users
-  description: Manage user accounts and profiles.
+  x-page-icon: users
+  x-page-title: Users
+  x-page-description: Retrieve and manage user information and profiles.
+  description: 'The Users API allows you to fetch data about GitBook users, including the authenticated account or other team members by ID. This is crucial for customizing permissions, personalizing content, or establishing user-specific flows.
+
+
+    {% openapi-schemas spec="gitbook" schemas="User" grouped="false" %}
+
+    The User object
+
+    {% endopenapi-schemas %}'
 paths:
   /user:
     get:
-      operationId: getCurrentUser
-      summary: GitBook Get the authenticated user
-      description: Returns the currently authenticated user.
+      operationId: getAuthenticatedUser
+      summary: Get profile of authenticated user
       tags:
       - Users
+      security:
+      - user: []
+      - oauth:
+        - user:read
+      description: Returns details about the user associated with the authentication provided in the request's authorization header.
       responses:
         '200':
-          description: The authenticated user.
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: User not found
+          $ref: '#/components/responses/NotFoundError'
+  /user/notifications/token:
+    post:
+      operationId: createUserNotificationsToken
+      summary: Create a JWT to access the in-app notifications service
+      description: Generates a JWT for the authenticated user. This token is used by the frontend notifications client to access user endpoints.
+      tags:
+      - Users
+      security:
+      - user-internal: []
+      responses:
+        '200':
+          description: The notifications service User JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APITemporaryToken'
   /users/{userId}:
     get:
       operationId: getUserById
-      summary: GitBook Get a user by ID
-      description: Returns a user by their unique identifier.
+      summary: Get a user by its ID
       tags:
       - Users
+      security:
+      - user: []
+      description: Provides publicly available information about someone with a GitBook account.
       parameters:
       - $ref: '#/components/parameters/userId'
       responses:
         '200':
-          description: The requested user.
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: User not found
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateUserById
+      summary: Update a user by its ID
+      tags:
+      - Users
+      security:
+      - user: []
+      description: Update a GitBook account's details.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                displayName:
+                  type: string
+                  description: Full name for the user
+                  minLength: 1
+                  maxLength: 64
+                photoURL:
+                  $ref: '#/components/schemas/URL'
+      responses:
+        '200':
+          description: The user has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          $ref: '#/components/responses/NotFoundError'
 components:
   responses:
-    NotFound:
-      description: The requested resource was not found.
+    NotFoundError:
+      description: Not Found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  schemas:
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    APITemporaryToken:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Temporary access token to authenticate with the API
+      required:
+      - token
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
   parameters:
     userId:
       name: userId
       in: path
       required: true
-      description: The unique identifier of the user.
+      description: The unique ID of the User
       schema:
         type: string
-  schemas:
-    Error:
-      type: object
-      properties:
-        error:
-          type: object
-          properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
-              type: string
-              description: A description of the error.
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          description: The unique identifier of the user.
-        displayName:
-          type: string
-          description: The display name of the user.
-        email:
-          type: string
-          format: email
-          description: The email address of the user.
-        photoURL:
-          type: string
-          format: uri
-          description: URL to the user's profile photo.
-        urls:
-          type: object
-          properties:
-            app:
-              type: string
-              format: uri
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

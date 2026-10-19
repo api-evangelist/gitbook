@@ -1,0 +1,397 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Agent Feedback API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-agent-feedback
+  x-page-title: Site agent feedback
+  x-page-description: Collect feedback from AI agents about the surfaces your site exposes to them.
+  x-parent: sites
+  description: Collect structured feedback from AI agents about the tools, operations, commands and content they worked with, so you can see where agents struggle instead of only how often they call you. Feedback is usually about the surfaces you expose to agents, such as your own MCP server, API or CLI; the site is where it is collected and who owns it.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/agents/feedback:
+    post:
+      operationId: submitAgentFeedbackToSite
+      summary: Submit agent feedback
+      description: Submit structured feedback from an AI agent about an MCP tool or operation, a CLI command, an API endpoint, a site page/mcp, or the product overall. The site collects and owns the feedback rather than being its subject.
+      x-internal: true
+      tags:
+      - site-agent-feedback
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentFeedbackInput'
+      responses:
+        '201':
+          description: The feedback was recorded successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier of the submission.
+                  result:
+                    type: string
+                    description: Message relayed back to the agent, acknowledging the feedback and telling it what happens next.
+                required:
+                - id
+                - result
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+components:
+  schemas:
+    AgentFeedbackSubjectApiEndpoint:
+      type: object
+      additionalProperties: false
+      description: Feedback about an API endpoint the agent called directly, without an MCP server or a command line interface in between.
+      properties:
+        kind:
+          type: string
+          enum:
+          - api-endpoint
+        method:
+          type: string
+          description: HTTP method of the endpoint.
+          enum:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - HEAD
+          - OPTIONS
+        path:
+          type: string
+          maxLength: 500
+          description: Templated path of the endpoint, for example `/v1/orders/{orderId}/fulfill`. It must never contain resolved identifiers or query string values.
+      required:
+      - kind
+      - method
+      - path
+    AgentFeedbackSubjectDocumentation:
+      type: object
+      additionalProperties: false
+      description: Feedback about published documentation, such as a page that is outdated, incorrect, or missing information the agent needed to help its user.
+      properties:
+        kind:
+          type: string
+          enum:
+          - documentation
+        url:
+          description: URL of the content the feedback is about.
+          $ref: '#/components/schemas/URL'
+      required:
+      - kind
+      - url
+    AgentFeedbackContent:
+      type: object
+      additionalProperties: false
+      description: The content of the feedback. It must never contain parameter values, request or response bodies, credentials, or anything identifying the end user the agent acted for.
+      properties:
+        category:
+          type: string
+          description: "Classification of the feedback:\n  - Usability: The subject was hard to understand or use correctly, such as a confusing name or unclear parameters.\n  - Reliability: The subject behaved inconsistently, failed unexpectedly, or returned unusable results.\n  - Documentation: The description, schema, or guidance about the subject was missing, unclear, or misleading.\n  - Efficiency: Reaching the outcome took more calls, steps, or tokens than it should have.\n  - Interoperability: The subject did not compose well with other tools, operations, or formats.\n  - Could not accomplish: Nothing exposed to the agent could accomplish what it needed to do."
+          enum:
+          - usability
+          - reliability
+          - documentation
+          - efficiency
+          - interoperability
+          - could-not-accomplish
+        severity:
+          type: string
+          description: How much the issue impeded the agent.
+          enum:
+          - low
+          - medium
+          - high
+        goal:
+          description: What the agent was working towards when it ran into the issue.
+          $ref: '#/components/schemas/AgentGoal'
+        summary:
+          type: string
+          minLength: 1
+          maxLength: 256
+          description: A short summary of what went wrong, in the agent's own words.
+        detail:
+          type: string
+          maxLength: 4096
+          description: Additional explanation of the issue and how the agent ran into it.
+        workaround:
+          type: string
+          maxLength: 2048
+          description: How the agent worked around the issue, when it managed to.
+        metrics:
+          type: object
+          additionalProperties: false
+          description: How the agent interacted with the subject before reporting.
+          properties:
+            callCount:
+              type: integer
+              minimum: 0
+              description: Number of times the agent used the subject.
+            successCount:
+              type: integer
+              minimum: 0
+              description: Number of those uses that produced a usable result.
+            retryCount:
+              type: integer
+              minimum: 0
+              description: Number of those uses that were retries after a failure.
+      required:
+      - category
+      - summary
+    AgentFeedbackSubject:
+      description: What the feedback is about. `kind` determines both the shape of the subject and the surface the agent was working through.
+      oneOf:
+      - $ref: '#/components/schemas/AgentFeedbackSubjectMCPTool'
+      - $ref: '#/components/schemas/AgentFeedbackSubjectCliCommand'
+      - $ref: '#/components/schemas/AgentFeedbackSubjectApiEndpoint'
+      - $ref: '#/components/schemas/AgentFeedbackSubjectDocumentation'
+      - $ref: '#/components/schemas/AgentFeedbackSubjectGeneric'
+      discriminator:
+        propertyName: kind
+    AgentFeedbackSubjectCliCommand:
+      type: object
+      additionalProperties: false
+      description: Feedback about a command exposed by a command line interface.
+      properties:
+        kind:
+          type: string
+          enum:
+          - cli-command
+        command:
+          type: string
+          maxLength: 200
+          description: The command the agent ran, without its arguments. Do not include any auth or other sensitive information.
+        flags:
+          type: array
+          maxItems: 50
+          description: Names of the flags passed to the command. It must never contain their values.
+          items:
+            type: string
+            maxLength: 100
+      required:
+      - kind
+      - command
+    AgentFeedbackInput:
+      type: object
+      additionalProperties: false
+      description: Feedback submitted by an AI agent about a tool, command, endpoint or page it worked with. `reportedBy` and `feedback` have the same shape whatever the feedback is about; only `subject` varies.
+      properties:
+        reportedBy:
+          $ref: '#/components/schemas/AgentFeedbackReportedBy'
+        subject:
+          $ref: '#/components/schemas/AgentFeedbackSubject'
+        feedback:
+          $ref: '#/components/schemas/AgentFeedbackContent'
+      required:
+      - subject
+      - feedback
+    AgentFeedbackSubjectGeneric:
+      type: object
+      additionalProperties: false
+      description: Feedback with no single tool, command, endpoint, or page behind it, such as product friction or a capability the agent expected to find and could not.
+      properties:
+        kind:
+          type: string
+          enum:
+          - generic
+      required:
+      - kind
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    AgentFeedbackReportedBy:
+      type: object
+      additionalProperties: false
+      description: The agent that reported the feedback. It must never identify the end user the agent is acting on behalf of.
+      properties:
+        model:
+          type: string
+          maxLength: 100
+          description: Self-reported model powering the agent.
+        userAgent:
+          type: string
+          maxLength: 512
+          description: User-Agent the agent itself presented, for example `claude-code/1.2.3`. It is what identifies the harness the agent ran in.
+        correlationId:
+          type: string
+          maxLength: 100
+          description: Identifier the surface gave the agent for the call being reported, used to find that call in the surface's own logs. Not an identifier of this report.
+        onDemand:
+          type: boolean
+          default: false
+          description: Whether the user explicitly asked the agent to submit this feedback.
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    AgentGoal:
+      type: string
+      maxLength: 1024
+      description: The end goal the agent is trying to accomplish on behalf of the user. Unlike the immediate query, the goal describes the broader task or outcome the agent is working towards.
+    AgentFeedbackSubjectMCPTool:
+      type: object
+      additionalProperties: false
+      description: Feedback about a tool exposed by an MCP server.
+      properties:
+        kind:
+          type: string
+          enum:
+          - mcp-tool
+        toolName:
+          type: string
+          maxLength: 200
+          description: Name of the tool the agent called, as it was exposed to the agent.
+        target:
+          type: string
+          maxLength: 200
+          description: What the tool was pointed at, for a tool that dispatches to something else rather than doing one fixed thing. For a tool that invokes an API operation, the identifier of that operation.
+      required:
+      - kind
+      - toolName
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 403
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

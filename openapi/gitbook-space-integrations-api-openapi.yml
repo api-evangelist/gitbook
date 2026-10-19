@@ -1,0 +1,1291 @@
+openapi: 3.2.0
+info:
+  title: GitBook Space Integrations API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: space-integrations
+  x-page-title: Space integrations
+  x-page-description: Connect external tools and plugins to enhance your space functionality.
+  x-parent: spaces
+  description: This API handles the registration and removal of integrations, automating how data flows between GitBook and your chosen external services.
+paths:
+  /spaces/{spaceId}/integrations:
+    get:
+      operationId: listSpaceIntegrations
+      summary: List all third-party integrations enabled on a space
+      description: Returns a paginated list of integrations that are currently installed and enabled on the space. Use the query parameter to filter by integration name. Use this to check which integrations are active before interacting with integration-specific features or blocks.
+      x-gitbook-mcp: true
+      tags:
+      - space-integrations
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/integrationSearchQuery'
+      responses:
+        '200':
+          description: Listing of integrations enabled in the space.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Integration'
+  /spaces/{spaceId}/integration-blocks:
+    get:
+      operationId: listSpaceIntegrationsBlocks
+      summary: List all custom content blocks provided by integrations in a space
+      description: Returns all custom block types contributed by integrations installed on the space. Integration blocks are custom content elements (e.g. embedded widgets, code runners) that integrations register for use in pages. Use this to discover what custom block types are available in a given space.
+      x-gitbook-mcp: true
+      tags:
+      - space-integrations
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: list of installed integration blocks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpaceIntegrationBlocks'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    BlockReason:
+      type: string
+      description: A short description giving context on the reason for the block.
+      minLength: 1
+      maxLength: 255
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    BillingTrialStatus:
+      type: string
+      description: '- notapplicable, no trial can be started for this organization. - none, no trial has been started yet. - active, trial is active. - ended, the trial has ended and the user has choosen to stay on the free plan or has upgraded to a paid plan. - expired, the trial has ended but the user hasn''t deciced yet what to do.
+
+        '
+      enum:
+      - notapplicable
+      - none
+      - active
+      - ended
+      - expired
+    IntegrationContentSource:
+      type: object
+      description: Definition of a content source provided by the integration.
+      properties:
+        id:
+          type: string
+          description: Unique ID in the integration for the source.
+        title:
+          type: string
+          description: Short descriptive title for the source.
+          minLength: 2
+          maxLength: 40
+        description:
+          type: string
+          description: Long descriptive text for the source.
+          minLength: 0
+          maxLength: 150
+        icon:
+          type: string
+          description: URL of the icon to represent this source.
+        configuration:
+          $ref: '#/components/schemas/IntegrationConfigurationComponent'
+      required:
+      - id
+      - title
+      - configuration
+    Expression:
+      type: string
+      description: Expression to evaluate
+      minLength: 0
+      maxLength: 1024
+    AICreditThreshold:
+      description: An AI credit threshold from 5% to 50%, or null when disabled.
+      oneOf:
+      - type: number
+        minimum: 5
+        maximum: 50
+      - type: 'null'
+    OrganizationType:
+      type: string
+      enum:
+      - business
+      - community
+    BillingCreditsBundle:
+      type: string
+      description: The AI credit bundle to top up every month
+      enum:
+      - none
+      - '4750_250'
+      - '9000_1000'
+      - '12750_2250'
+      - '30000_10000'
+    BillingProduct:
+      type: string
+      description: Name of the product
+      enum:
+      - free_2024
+      - plus_2024
+      - pro_2024
+      - enterprise_2024
+      - community_2024
+      - internal
+    OrganizationUseCase:
+      type: string
+      enum:
+      - internalDocs
+      - docsSite
+      - audienceControlledSite
+      - productDocs
+      - teamKnowledgeBase
+      - designSystem
+      - openSourceDocs
+      - notes
+      - other
+    MergeRulesConfigurationRules:
+      type: object
+      description: The merge rules are composed of individual rules that must all pass.
+      properties:
+        type:
+          type: string
+          enum:
+          - rules
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeRule'
+      required:
+      - type
+      - rules
+    MergeRule:
+      oneOf:
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_one_of_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - allow_bypass
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_at_least_one_review
+            - require_at_least_one_approved_review
+            - require_all_reviews_approved
+            - require_agent_review
+            - require_up_to_date_change_request
+            - require_change_request_subject
+            - require_change_request_description
+            - require_author_to_merge
+        required:
+        - rule
+      - type: object
+        description: The merge rule is written in the advanced custom expression syntax.
+        properties:
+          rule:
+            type: string
+            enum:
+            - custom
+          expression:
+            $ref: '#/components/schemas/Expression'
+          message:
+            type: string
+            description: Optional message to display when the expression evaluates to false.
+        required:
+        - rule
+        - expression
+    OrganizationEmailDomains:
+      type: array
+      items:
+        type: string
+    IntegrationDescription:
+      type: string
+      description: Description of the integration
+      maxLength: 100
+    OrganizationSupportCost:
+      description: What support costs the organization, per ticket or per hour of agent time, used to estimate how much AI answers save in site insights.
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          perTicket:
+            type: number
+            minimum: 0.01
+            description: Cost of one support ticket, in `currency`.
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+            description: ISO 4217 currency code.
+        required:
+        - perTicket
+        - currency
+      - type: object
+        additionalProperties: false
+        properties:
+          perHour:
+            type: number
+            minimum: 0.01
+            description: Cost of one hour of support agent time, in `currency`.
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+            description: ISO 4217 currency code.
+        required:
+        - perHour
+        - currency
+    IntegrationConfigurationSchema:
+      type: object
+      description: Schema for a configuration
+      properties:
+        properties:
+          type: object
+          additionalProperties:
+            allOf:
+            - type: object
+              properties:
+                title:
+                  $ref: '#/components/schemas/IntegrationPropertyTitle'
+                description:
+                  type: string
+                  maxLength: 100
+            - oneOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - string
+                  default:
+                    type: string
+                  completion_url:
+                    description: If specified, this URL will be called to fetch suggestions for auto-completing the property.
+                    type: string
+                  enum:
+                    type: array
+                    description: If specified, only values from this array are allowed as inputs.
+                    items:
+                      type: string
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - number
+                  default:
+                    type: number
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - boolean
+                  default:
+                    type: boolean
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - button
+                  callback_url:
+                    type: string
+                  button_text:
+                    type: string
+                required:
+                - type
+                - callback_url
+                - button_text
+        required:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+      required:
+      - properties
+    OrganizationBilling:
+      type: object
+      properties:
+        interval:
+          $ref: '#/components/schemas/BillingInterval'
+        endDate:
+          oneOf:
+          - $ref: '#/components/schemas/Timestamp'
+          - type: 'null'
+        hasPaymentFailed:
+          description: If true, we were unable to collect the last payment
+          type: boolean
+        canCheckout:
+          description: "If true, organization can create a checkout session to subscribe/update billing. \nIf false, organization must resolve other billing issues before a checkout can be done.\n"
+          type: boolean
+        isScheduledToCancel:
+          description: If true, the billing is set to cancel at the end of its current period
+          type: boolean
+        pricing:
+          description: Pricing information for the organization
+          $ref: '#/components/schemas/OrganizationPricing'
+        usageAddons:
+          description: Configuration for the usage-based addons
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/BillingMeterAddon'
+        minUsers:
+          description: The minimum number of members allowed for this organization.
+          type: number
+        maxUsers:
+          description: The maximum number of members allowed for this organization
+          type: number
+        minPremiumSites:
+          description: The minimum number of premium sites allowed for this organization.
+          type: number
+        maxPremiumSites:
+          description: The maximum number of premium sites allowed for this organization.
+          type: number
+        minUltimateSites:
+          description: The minimum number of ultimate sites allowed for this organization.
+          type: number
+        maxUltimateSites:
+          description: The maximum number of ultimate sites allowed for this organization.
+          type: number
+        paidMembers:
+          description: The number of paid members on the current subscription.
+          type: number
+        paidPremiumSites:
+          description: The number of paid premium sites on the current subscription.
+          type: number
+        paidUltimateSites:
+          description: The number of paid ultimate sites on the current subscription.
+          type: number
+        canChangeInterval:
+          description: Whether changing billing interval is allowed
+          type: boolean
+        canUseSAML:
+          description: Whether configuring SAML is allowed
+          type: boolean
+        canUseAI:
+          description: Whether AI can be enabled for the organization
+          type: boolean
+        creditsBundle:
+          description: The AI credit bundle the organization tops up every month, or null when the organization is not billed for AI usage. `none` means pay as you go.
+          oneOf:
+          - $ref: '#/components/schemas/BillingCreditsBundle'
+          - type: 'null'
+        aiCreditAllowance:
+          description: The yearly AI credit allowance agreed in the organization's contract, or null when none is set.
+          oneOf:
+          - type: integer
+          - type: 'null'
+        aiCreditRollover:
+          description: The percentage of unused paid bundle credits carried over to the next monthly AI billing period.
+          type: integer
+          minimum: 0
+          maximum: 100
+      required:
+      - interval
+      - endDate
+      - hasPaymentFailed
+      - canCheckout
+      - isScheduledToCancel
+      - pricing
+      - usageAddons
+      - canChangeInterval
+      - canUseSAML
+      - canUseAI
+      - creditsBundle
+      - aiCreditAllowance
+      - aiCreditRollover
+    SpaceIntegrationBlocks:
+      type: array
+      items:
+        type: object
+        required:
+        - name
+        - blocks
+        properties:
+          name:
+            type: string
+            description: Unique named identifier for the integration
+          blocks:
+            type: array
+            items:
+              $ref: '#/components/schemas/IntegrationBlock'
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    BillingInterval:
+      type: string
+      description: Interval for a billing subscription
+      enum:
+      - monthly
+      - yearly
+    IntegrationExternalLinks:
+      type: array
+      description: External urls configured by the developer of the integration
+      maxItems: 5
+      items:
+        type: object
+        properties:
+          url:
+            $ref: '#/components/schemas/URL'
+          label:
+            type: string
+        required:
+        - url
+        - label
+    Organization:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "organization"
+          enum:
+          - organization
+        id:
+          type: string
+          description: Unique identifier for the organization
+        title:
+          $ref: '#/components/schemas/OrganizationTitle'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        emailDomains:
+          $ref: '#/components/schemas/OrganizationEmailDomains'
+        hostname:
+          $ref: '#/components/schemas/OrganizationHostname'
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+        useCase:
+          $ref: '#/components/schemas/OrganizationUseCase'
+        communityType:
+          $ref: '#/components/schemas/OrganizationCommunityType'
+        defaultRole:
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+        defaultContent:
+          $ref: '#/components/schemas/OrganizationDefaultContent'
+        sso:
+          description: Whether SSO is enforced organization-wide
+          type: boolean
+        ai:
+          description: If true, the organization is configured to use all our AI features.
+          type: boolean
+        aiPreference:
+          description: Whether the master AI setting is turned on, regardless of plan availability. Contract overrides forcing AI off take precedence.
+          type: boolean
+        aiSettings:
+          $ref: '#/components/schemas/OrganizationAISettings'
+        aiPaused:
+          description: Whether AI features have been paused automatically due to lack of AI credits.
+          type: boolean
+        inviteLinks:
+          description: If true, invite links are enabled for this organization.
+          type: boolean
+        auditLogs:
+          description: Whether audit logs can currently be accessed for this organization.
+          type: boolean
+        plan:
+          $ref: '#/components/schemas/BillingProduct'
+        billing:
+          description: Billing details, only available for org members.
+          $ref: '#/components/schemas/OrganizationBilling'
+        mergeRules:
+          $ref: '#/components/schemas/MergeRulesStandaloneConfiguration'
+        supportCost:
+          description: Support cost set by the organization, only available for org members.
+          $ref: '#/components/schemas/OrganizationSupportCost'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the organization in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the organization in the application
+              format: uri
+            logo:
+              description: URL of the logo of this organization, if defined.
+              $ref: '#/components/schemas/URL'
+          required:
+          - app
+          - location
+        trial:
+          type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/BillingTrialStatus'
+            count:
+              type: integer
+              description: Number of trials the organization has consumed.
+            endDate:
+              description: The trial's end date, if the organization has or had a trial.
+              $ref: '#/components/schemas/Timestamp'
+            decision:
+              type: string
+              description: The decision taken by the user at the end of the trial
+              enum:
+              - downgrade
+          required:
+          - status
+          - count
+        customHostname:
+          description: Custom hostname linked to this organization
+          type: string
+        blocked:
+          type: object
+          description: If the organization is blocked, information about the block will appear here
+          properties:
+            source:
+              $ref: '#/components/schemas/BlockSource'
+            reason:
+              $ref: '#/components/schemas/BlockReason'
+          required:
+          - reason
+        permissions:
+          type: object
+          description: The set of permissions for the organization
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the organization.
+            access:
+              type: boolean
+              description: Can the user view the organization in the application.
+            admin:
+              type: boolean
+              description: Can the user manage the title, members, etc.
+            ownTeam:
+              type: boolean
+              description: Is the user a team owner.
+            createContent:
+              type: boolean
+              description: Can the user create new spaces/collections in the organization.
+            createOpenAPISpec:
+              type: boolean
+              description: Can the user create new OpenAPI specifications.
+            viewBilling:
+              type: boolean
+              description: Can the user view the billing details of the organization.
+            listMembers:
+              type: boolean
+              description: Can the user list the members of the organization.
+            listTeams:
+              type: boolean
+              description: Can the user list the teams in the organization.
+            listIntegrations:
+              type: boolean
+              description: Can the user list the integrations in the organization.
+            listInstallations:
+              type: boolean
+              description: Can the user list the integration installations in the organization.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations in the organization.
+          required:
+          - view
+          - access
+          - admin
+          - ownTeam
+          - createContent
+          - createOpenAPISpec
+          - viewBilling
+          - listMembers
+          - listTeams
+          - listIntegrations
+          - listInstallations
+          - installIntegration
+      required:
+      - object
+      - id
+      - plan
+      - title
+      - createdAt
+      - inviteLinks
+      - type
+      - emailDomains
+      - mergeRules
+      - urls
+      - trial
+      - permissions
+    IntegrationScope:
+      type: string
+      enum:
+      - space:content:read
+      - space:content:write
+      - space:metadata:read
+      - space:metadata:write
+      - space:git:sync
+      - page:feedback:read
+      - site:metadata:read
+      - site:views:read
+      - site:script:inject
+      - site:script:cookies
+      - site:visitor:auth
+      - site:visitor:claims
+      - site:adaptive:read
+      - site:adaptive:write
+      - conversations:ingest
+      - openapi:read
+      - openapi:write
+    IntegrationTitle:
+      type: string
+      description: Title of the integration
+      minLength: 2
+      maxLength: 30
+    OrganizationPricePair:
+      type: object
+      description: Pricing pair for monthly and yearly intervals
+      properties:
+        monthly:
+          type: number
+          description: Monthly price in USD
+          minimum: 0
+        yearly:
+          type: number
+          description: Yearly price in USD (per month)
+          minimum: 0
+      required:
+      - monthly
+      - yearly
+    IntegrationPropertyTitle:
+      type: string
+      description: Property title for an integration configuration property
+      minLength: 2
+      maxLength: 50
+    BillingMeterAddon:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+      required:
+      - enabled
+    Integration:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - integration
+        name:
+          type: string
+          description: Unique named identifier for the integration
+        version:
+          type: number
+          description: Version of the integration
+        title:
+          $ref: '#/components/schemas/IntegrationTitle'
+        description:
+          $ref: '#/components/schemas/IntegrationDescription'
+        summary:
+          $ref: '#/components/schemas/IntegrationSummary'
+        previewImages:
+          type: array
+          description: URLs of images to showcase the integration
+          maxItems: 3
+          items:
+            type: string
+        target:
+          $ref: '#/components/schemas/IntegrationTarget'
+        verified:
+          type: boolean
+          description: If true, the integration has been verified by the GitBook team
+        visibility:
+          $ref: '#/components/schemas/IntegrationVisibility'
+        scopes:
+          $ref: '#/components/schemas/IntegrationScopes'
+        categories:
+          $ref: '#/components/schemas/IntegrationCategories'
+        blocks:
+          $ref: '#/components/schemas/IntegrationBlocks'
+        contentSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationContentSource'
+        configurations:
+          $ref: '#/components/schemas/IntegrationConfigurations'
+        externalLinks:
+          $ref: '#/components/schemas/IntegrationExternalLinks'
+        owner:
+          $ref: '#/components/schemas/Organization'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the integration in the API
+              format: uri
+            icon:
+              type: string
+              description: URL of the icon associated to the integration
+              format: uri
+            app:
+              type: string
+              description: URL of the integration in the application
+              format: uri
+            assets:
+              type: string
+              description: URL of the integration's assets.
+              format: uri
+            publicEndpoint:
+              type: string
+              description: Public HTTP endpoint for the integration
+              format: uri
+            publicContentEndpoint:
+              type: string
+              description: Public endpoint serving the integration's rendered content (e.g. WebFrames), isolated from the cookie-bearing publicEndpoint origin. Equals publicEndpoint when no separate content origin is configured.
+              format: uri
+          required:
+          - location
+          - app
+          - assets
+          - publicEndpoint
+          - publicContentEndpoint
+        permissions:
+          type: object
+          description: The set of permissions for the integration
+          properties:
+            admin:
+              type: boolean
+          required:
+          - admin
+        contentSecurityPolicy:
+          $ref: '#/components/schemas/IntegrationContentSecurityPolicy'
+      required:
+      - object
+      - name
+      - version
+      - title
+      - scopes
+      - categories
+      - visibility
+      - target
+      - verified
+      - previewImages
+      - externalLinks
+      - owner
+      - permissions
+      - urls
+    IntegrationScopes:
+      type: array
+      description: Permissions that should be granted to the integration
+      items:
+        $ref: '#/components/schemas/IntegrationScope'
+    SitePointer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - site
+        site:
+          type: string
+          description: Unique identifier for the site
+      required:
+      - type
+      - site
+    IntegrationBlockMarkdown:
+      oneOf:
+      - type: object
+        description: Format the custom block as a codeblock
+        properties:
+          codeblock:
+            description: Code block syntax to use to identify the block.
+            type: string
+          body:
+            description: Key of the property to use as body of the codeblock.
+            type: string
+        required:
+        - codeblock
+        - body
+    OrganizationPricing:
+      type: object
+      description: Pricing information for an organization
+      properties:
+        members:
+          type: object
+          description: Pricing for members (organization plan)
+          properties:
+            plus_2024:
+              $ref: '#/components/schemas/OrganizationPricePair'
+            pro_2024:
+              $ref: '#/components/schemas/OrganizationPricePair'
+          required:
+          - plus_2024
+          - pro_2024
+          additionalProperties: false
+        sites:
+          type: object
+          description: Pricing for site types (site plans)
+          properties:
+            premium:
+              $ref: '#/components/schemas/OrganizationPricePair'
+            ultimate:
+              $ref: '#/components/schemas/OrganizationPricePair'
+          required:
+          - premium
+          - ultimate
+          additionalProperties: false
+      required:
+      - members
+      - sites
+    IntegrationConfigurations:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+        space:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+        site:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+    MergeRulesStandaloneConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationRules'
+      - $ref: '#/components/schemas/MergeRulesConfigurationNone'
+    Timestamp:
+      type: string
+      format: date-time
+    IntegrationBlock:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID in the integration for the block. It also represents the UI component used.
+        title:
+          type: string
+          description: Short descriptive title for the block.
+          minLength: 2
+          maxLength: 40
+        description:
+          type: string
+          description: Long descriptive text for the block.
+          minLength: 0
+          maxLength: 150
+        icon:
+          type: string
+          description: URL of the icon to represent this block.
+        urlUnfurl:
+          type: array
+          description: URLs patterns to convert as this block.
+          items:
+            type: string
+        markdown:
+          $ref: '#/components/schemas/IntegrationBlockMarkdown'
+      required:
+      - id
+      - title
+    IntegrationVisibility:
+      type: string
+      enum:
+      - public
+      - private
+      - unlisted
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    OrganizationAISettings:
+      type: object
+      description: AI preferences. Missing feature keys leave features enabled, subject to the master AI setting and feature eligibility.
+      additionalProperties: false
+      properties:
+        ai-agent:
+          type: boolean
+          enum:
+          - false
+        ai-assistant:
+          type: boolean
+          enum:
+          - false
+        ai-broken-links:
+          type: boolean
+          enum:
+          - false
+        ai-content-gap:
+          type: boolean
+          enum:
+          - false
+        ai-insight:
+          type: boolean
+          enum:
+          - false
+        ai-import:
+          type: boolean
+          enum:
+          - false
+        ai-platform:
+          type: boolean
+          enum:
+          - false
+        ai-style-guide:
+          type: boolean
+          enum:
+          - false
+        ai-translation:
+          type: boolean
+          enum:
+          - false
+        aiCreditAlertThreshold:
+          $ref: '#/components/schemas/AICreditThreshold'
+        aiCreditPauseEnabled:
+          description: Whether AI features pause automatically once all AI credits are used, before usage is billed as overage.
+          type: boolean
+        aiAlertNotificationAlertId:
+          type: string
+          readOnly: true
+        aiPauseNotificationAlertId:
+          type: string
+          readOnly: true
+    IntegrationBlocks:
+      type: array
+      description: Custom blocks defined by this integration.
+      items:
+        $ref: '#/components/schemas/IntegrationBlock'
+    OrganizationTitle:
+      type: string
+      description: Name of the organization
+      minLength: 2
+      maxLength: 255
+      pattern: \S.*\S
+    IntegrationConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/IntegrationConfigurationSchema'
+      - $ref: '#/components/schemas/IntegrationConfigurationComponent'
+    OrganizationCommunityType:
+      type: string
+      enum:
+      - nonProfit
+      - openSource
+      - education
+    BlockSource:
+      type: string
+      description: Source for an organization block
+      enum:
+      - backoffice
+      - external
+      - internal
+    OrganizationDefaultContent:
+      description: The default content for the organization
+      oneOf:
+      - $ref: '#/components/schemas/SitePointer'
+    MergeRulesConfigurationNone:
+      type: object
+      description: The merge rules are disabled, change requests can be merged without review.
+      properties:
+        type:
+          type: string
+          enum:
+          - none
+      required:
+      - type
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    OrganizationHostname:
+      type: string
+      description: Default hostname for the organization's public content, e.g. <org-hostname>.gitbook.io
+      minLength: 3
+      maxLength: 32
+    IntegrationContentSecurityPolicy:
+      description: "Security policy to validate the content of the integrations scripts and Contentkit. Will be sent as \nheaders when processing the script fetch event and the blocks fetch events.\n"
+      oneOf:
+      - type: string
+      - type: object
+        properties:
+          base-uri:
+            type: string
+          block-all-mixed-content:
+            type: string
+          child-src:
+            type: string
+          connect-src:
+            type: string
+          default-src:
+            type: string
+          font-src:
+            type: string
+          form-action:
+            type: string
+          frame-ancestors:
+            type: string
+          frame-src:
+            type: string
+          img-src:
+            type: string
+          manifest-src:
+            type: string
+          media-src:
+            type: string
+          navigate-to:
+            type: string
+          object-src:
+            type: string
+          plugin-types:
+            type: string
+          prefetch-src:
+            type: string
+          referrer:
+            type: string
+          report-to:
+            type: string
+          report-uri:
+            type: string
+          require-sri-for:
+            type: string
+          require-trusted-types-for:
+            type: string
+          sandbox:
+            type: string
+          script-src:
+            type: string
+          script-src-attr:
+            type: string
+          script-src-elem:
+            type: string
+          style-src:
+            type: string
+          style-src-attr:
+            type: string
+          style-src-elem:
+            type: string
+          trusted-types:
+            type: string
+          upgrade-insecure-requests:
+            type: string
+          worker-src:
+            type: string
+    IntegrationConfigurationComponent:
+      type: object
+      description: ContentKit component for configuration
+      properties:
+        componentId:
+          type: string
+          description: ID of the ContentKit component defined in the integration
+      required:
+      - componentId
+    IntegrationCategories:
+      type: array
+      description: Categories for which the integration is listed in the marketplace
+      items:
+        $ref: '#/components/schemas/IntegrationCategory'
+    IntegrationCategory:
+      type: string
+      enum:
+      - analytics
+      - collaboration
+      - content
+      - marketing
+      - visitor-auth
+      - other
+    IntegrationTarget:
+      type: string
+      description: The target on which the integration can operate and needs to be configured for
+      enum:
+      - all
+      - site
+      - space
+      - organization
+    IntegrationSummary:
+      type: string
+      description: Long form markdown summary of the integration
+      maxLength: 2048
+  parameters:
+    integrationSearchQuery:
+      name: search
+      in: query
+      description: 'A search string to filter integrations by name
+
+        '
+      schema:
+        type: string
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

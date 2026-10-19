@@ -1,0 +1,398 @@
+openapi: 3.2.0
+info:
+  title: GitBook Space Git API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: space-git
+  x-page-title: Git
+  x-page-description: Connect Git repositories to your space for seamless version control.
+  x-parent: spaces
+  description: Manage the linkage between your GitBook space and external Git repositories, enabling commits, merges, and pull requests directly tied to your documentation.
+paths:
+  /spaces/{spaceId}/git/import:
+    post:
+      operationId: importGitRepository
+      summary: Pull content into a space from a connected Git repository
+      description: Triggers an import from provided Git repository into the space, updating the space's content to match the repository (if not standalone). This is an async operation — it runs in the background after the request returns 204.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - space-git
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '204':
+          description: Operation to import the repository has been queued.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportGitRepository'
+  /spaces/{spaceId}/git/export:
+    post:
+      operationId: exportToGitRepository
+      summary: Push space content to a connected Git repository
+      description: Triggers an export of the space's current content to the provided Git repository. This is an async operation — the export runs in the background after the request returns 204.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - space-git
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '204':
+          description: Operation to export the space has been queued.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportToGitRepository'
+  /spaces/{spaceId}/git/info:
+    get:
+      operationId: getSpaceGitInfo
+      summary: Get the Git Sync configuration and status for a space
+      description: Returns metadata about the Git Sync provider connected to the space. Returns 404 if no Git provider is configured. Use this to check sync state before triggering an import or export.
+      x-gitbook-mcp: true
+      tags:
+      - space-git
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '200':
+          description: The Git Sync info for the space
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitSyncState'
+        '404':
+          description: No Git provider currently set up on the space
+          $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    GitSyncOperationDirection:
+      type: string
+      enum:
+      - export
+      - import
+    GitSyncState:
+      type: object
+      properties:
+        repoName:
+          type: string
+          description: Repository name.
+        installationStatus:
+          $ref: '#/components/schemas/GitSyncInstallationStatus'
+        installationProvider:
+          $ref: '#/components/schemas/GitSyncProvider'
+        integration:
+          type: string
+          deprecated: true
+          description: The integration name providing the Git Sync.
+        installationId:
+          type: string
+          description: The ID of the Git Sync installation.
+        parentInstallationId:
+          type: string
+          description: The ID of the parent Git Sync installation, if any.
+        url:
+          type: string
+          description: The URL to the repository tree, used when rendering public content.
+        installationProjectDirectory:
+          type: string
+          description: Directory in the repository this content syncs from, resolved against the parent installation when the installation is managed by a site. Absent when the content syncs from the root of the repository.
+        operation:
+          type: object
+          description: The latest operation on the Git Sync installation.
+          properties:
+            state:
+              $ref: '#/components/schemas/GitSyncOperationState'
+            direction:
+              $ref: '#/components/schemas/GitSyncOperationDirection'
+            startedAt:
+              $ref: '#/components/schemas/Timestamp'
+            endedAt:
+              $ref: '#/components/schemas/Timestamp'
+            error:
+              type: string
+              description: Why the operation failed, when it did.
+            errorAction:
+              $ref: '#/components/schemas/GitSyncOperationErrorAction'
+          required:
+          - state
+          - direction
+          - startedAt
+        operationTimeout:
+          type: integer
+          description: How long an operation is allowed to run before it is terminated (in milliseconds).
+        updatedAt:
+          description: When the Git provider details were last updated
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - installationId
+      - installationProvider
+      - installationStatus
+    GitSyncProvider:
+      type: string
+      description: The provider of the Git Sync installation.
+      enum:
+      - github
+      - gitlab
+      - github-legacy
+    Timestamp:
+      type: string
+      format: date-time
+    UpdateSpaceGitInfo:
+      type: object
+      description: Update metadata about the Git provider on the space
+      properties:
+        provider:
+          type: string
+          description: The git provider
+          enum:
+          - github
+          - gitlab
+        url:
+          type: string
+          description: The repository's tree URL
+    GitSyncOperationErrorAction:
+      type: object
+      description: An action the user can take to resolve a failed Git Sync operation.
+      properties:
+        label:
+          type: string
+          description: Label for the action.
+        url:
+          type: string
+          format: uri
+          description: URL where the user can resolve the failure.
+      required:
+      - label
+      - url
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    GitSyncOperationState:
+      type: string
+      description: '* `running`: The operation is still running
+
+        * `failure`: The operation failed
+
+        * `success`: The operation was successful
+
+        * `timeout`: The operation timed out
+
+        '
+      enum:
+      - running
+      - failure
+      - success
+      - timeout
+    GitSyncInstallationStatus:
+      type: string
+      enum:
+      - unauthenticated
+      - active
+      - pending
+    ExportToGitRepository:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL of the Git repository to export to. It can contain basic auth credentials.
+        ref:
+          type: string
+          description: Git ref to push the commit to in the format "refs/heads/main"
+        commitMessage:
+          type: string
+          description: Message for the commit generated by the export
+        repoCacheID:
+          type: string
+          description: Unique identifier to use to cache the Git repository across multiple operations.
+          deprecated: true
+        repoTreeURL:
+          type: string
+          description: URL to use as a prefix for external file references.
+        repoCommitURL:
+          type: string
+          description: URL to use as a prefix for the commit URL.
+        repoProjectDirectory:
+          type: string
+          description: Path to a root directory for the project in the repository.
+        timestamp:
+          description: 'The timestamp of the event that triggered this export. It ensures that Git sync import and export operations are executed in the same order on GitBook and on the remote repository.
+
+            '
+          $ref: '#/components/schemas/Timestamp'
+        force:
+          type: boolean
+        standalone:
+          type: boolean
+          description: 'If true, the export will be done in a standalone mode, meaning that the exported content will not be linked to the Git repository. This is useful for creating a snapshot of the space''s content.
+
+            '
+        gitInfo:
+          description: Optional metadata to store on the space about the Git provider
+          deprecated: true
+          $ref: '#/components/schemas/UpdateSpaceGitInfo'
+      required:
+      - url
+      - ref
+      - commitMessage
+    ImportGitRepository:
+      type: object
+      properties:
+        url:
+          type: string
+          description: URL of the Git repository to import. It can contain basic auth credentials.
+        ref:
+          type: string
+          description: Git ref to import in the format "refs/heads/main"
+        repoCacheID:
+          type: string
+          description: Unique identifier to use to cache the Git repository across multiple operations.
+          deprecated: true
+        repoTreeURL:
+          type: string
+          description: URL to use as a prefix for external file references.
+        repoCommitURL:
+          type: string
+          description: URL to use as a prefix for the commit URL.
+        repoProjectDirectory:
+          type: string
+          description: Path to a root directory for the project in the repository.
+        timestamp:
+          description: 'The timestamp of the event that triggered this import. It ensures that Git sync import and export operations are executed in the same order on GitBook and on the remote repository.
+
+            '
+          $ref: '#/components/schemas/Timestamp'
+        force:
+          type: boolean
+        standalone:
+          type: boolean
+          description: If true, the import will generate a revision without updating the space primary content.
+        gitInfo:
+          description: Optional metadata to store on the space about the Git provider
+          deprecated: true
+          $ref: '#/components/schemas/UpdateSpaceGitInfo'
+      required:
+      - url
+      - ref
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

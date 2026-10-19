@@ -1,0 +1,12 @@
+{
+ "url": "https://api.gitbook.com/openapi.json",
+ "final": "https://api.gitbook.com/openapi.json",
+ "status": 200,
+ "content_type": "application/json; charset=UTF-8",
+ "bytes": 1842509,
+ "sha256": "eb3e199237088455e50f8d6f005eea870f3d4e6e3b331a4fb1f47bbf4776d1d6",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}

@@ -1,0 +1,654 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Channels API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-channels
+  x-page-title: Site channels
+  x-page-description: Configure site channels for your docs site.
+  x-parent: sites
+  description: 'Manage the channels used as origins for questions and answers in your site ask data.
+
+
+    {% openapi-schemas spec="gitbook" schemas="SiteChannel" grouped="false" %}
+
+    The SiteChannel object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/sites/{siteId}/channels:
+    get:
+      operationId: listSiteChannels
+      summary: List all GitBook Agent channels for a site
+      description: Returns a paginated list of channels configured for the site. Channels are integrations that allow GitBook Agent to operate within external tools your team already uses, bringing documentation assistance directly into existing workflows. Each channel has a role that determines whether the Agent answers questions from the site's documentation or actively collaborates by opening and managing content changes. Use this to inspect or manage the Agent channel integrations for a site.
+      x-gitbook-mcp: true
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteChannel'
+    post:
+      operationId: createSiteChannel
+      summary: Create a new GitBook Agent channel for a site
+      description: Configures a new channel integration that allows GitBook Agent to operate within an external tool connected to this site. The channel role determines whether the Agent acts as a support assistant — answering questions sourced from the site's documentation — or as a collaborator that can open change requests and sync documentation updates directly from the connected platform.
+      x-gitbook-mcp: true
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/SiteChannelSetup'
+              - type: object
+                properties:
+                  role:
+                    $ref: '#/components/schemas/SiteChannelRole'
+      responses:
+        '201':
+          description: Site channel created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteChannel'
+  /orgs/{organizationId}/sites/{siteId}/channels/scopes:
+    post:
+      operationId: listSiteChannelScopes
+      summary: List available site channel scopes
+      description: Lists accessible Linear teams, GitHub repositories, Slack channels or Jira projects. Requires site admin permission. Linear, GitHub and Slack require an already-connected channel belonging to this site and matching the provider. Jira uses either the credentials supplied, verified without saving a connection, or those stored on an existing Jira context connection of this site. Slack includes public channels and accessible private channels, excluding archived channels. To fetch another page, pass the opaque token from `next.page` as the `page` query parameter with the same request body. An absent `next` means there are no more pages; an empty `items` array alone does not indicate the end of the list.
+      x-gitbook-mcp:
+        readOnly: true
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                required:
+                - provider
+                - siteChannelId
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - linear
+                  siteChannelId:
+                    type: string
+                    description: ID of an already-connected channel belonging to this site and matching the provider.
+              - type: object
+                required:
+                - provider
+                - siteChannelId
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - github
+                  siteChannelId:
+                    type: string
+                    description: ID of an already-connected channel belonging to this site and matching the provider.
+              - type: object
+                required:
+                - provider
+                - siteChannelId
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - slack
+                  siteChannelId:
+                    type: string
+                    description: ID of an already-connected channel belonging to this site and matching the provider.
+              - type: object
+                required:
+                - provider
+                - siteContextConnectionId
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - jira
+                  siteContextConnectionId:
+                    type: string
+                    description: ID of a Jira context connection belonging to this site, whose stored credentials are used.
+              - type: object
+                required:
+                - provider
+                - credentials
+                properties:
+                  provider:
+                    type: string
+                    enum:
+                    - jira
+                  credentials:
+                    type: object
+                    required:
+                    - baseUrl
+                    - apiEmail
+                    - apiToken
+                    properties:
+                      baseUrl:
+                        type: string
+                        format: uri
+                        minLength: 1
+                        maxLength: 2048
+                        description: Base URL of the Jira Cloud site, e.g. https://your-team.atlassian.net.
+                      apiEmail:
+                        type: string
+                        format: email
+                        minLength: 1
+                        maxLength: 254
+                        description: Email of the Atlassian account whose API token is used.
+                      apiToken:
+                        type: string
+                        minLength: 1
+                        maxLength: 1024
+                        description: Atlassian API token used to verify the account and list accessible projects. Not saved.
+              discriminator:
+                propertyName: provider
+      responses:
+        '200':
+          description: Scopes available through the connected provider or supplied Jira credentials
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - object
+                  - items
+                  - connection
+                  properties:
+                    object:
+                      type: string
+                      enum:
+                      - site-channel-scopes
+                    connection:
+                      type: string
+                      description: Linear workspace name, GitHub account name, Slack workspace name (or ID if unavailable), or Jira Cloud hostname.
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                        - key
+                        - name
+                        properties:
+                          key:
+                            type: string
+                            description: Value accepted by the provider scope settings, such as a team key, repository full name, channel name, Jira project key.
+                          name:
+                            type: string
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /orgs/{organizationId}/sites/{siteId}/channels/{siteChannelId}:
+    get:
+      operationId: getSiteChannelById
+      summary: Get a GitBook Agent channel for a site by its ID
+      description: Retrieves the configuration of a specific GitBook Agent channel integration, including its connected platform type and role. Use this to inspect or verify the channel's setup before updating it.
+      x-gitbook-mcp: true
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteChannelId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteChannel'
+    patch:
+      operationId: updateSiteChannelById
+      summary: Update a GitBook Agent channel for a site
+      description: Modifies the configuration of a specific GitBook Agent channel integration, including its role. Use this to change whether the Agent answers documentation questions or actively collaborates on content changes through the connected platform.
+      x-gitbook-mcp: true
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteChannelId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/SiteChannelSetup'
+              - type: object
+                properties:
+                  role:
+                    $ref: '#/components/schemas/SiteChannelRole'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteChannel'
+    delete:
+      operationId: deleteSiteChannelById
+      summary: Delete a GitBook Agent channel from a site
+      description: Removes the channel configuration from the site, so GitBook Agent stops answering and collaborating through the connected platform. The app itself is not uninstalled and its access is not revoked on the platform, so remove it there as well to fully disconnect.
+      tags:
+      - site-channels
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteChannelId'
+      responses:
+        '204':
+          description: Site channel did not exist
+        '205':
+          description: Site channel deleted
+components:
+  parameters:
+    siteChannelId:
+      name: siteChannelId
+      in: path
+      required: true
+      description: The unique id of the site channel
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  schemas:
+    SiteChannel:
+      allOf:
+      - $ref: '#/components/schemas/SiteChannelSetup'
+      - type: object
+        properties:
+          object:
+            type: string
+            enum:
+            - site-channel
+          id:
+            type: string
+            description: Unique identifier for the site channel.
+          status:
+            $ref: '#/components/schemas/SiteChannelStatus'
+          role:
+            $ref: '#/components/schemas/SiteChannelRole'
+          answers:
+            type: integer
+            minimum: 0
+            description: Number of answers linked to this channel.
+          createdAt:
+            $ref: '#/components/schemas/Timestamp'
+          urls:
+            type: object
+            properties:
+              location:
+                type: string
+                format: uri
+                description: URL of the site channel in the API.
+            required:
+            - location
+        required:
+        - object
+        - id
+        - status
+        - role
+        - answers
+        - createdAt
+        - urls
+    GitHubRepositoryPattern:
+      type: string
+      description: A GitHub repository name or pattern in the format "owner/repository". For example, "my-org/my-repo" or "my-org/*" to allow all repositories under "my-org".
+      pattern: ^[a-zA-Z0-9._*-]+\/[a-zA-Z0-9._*-]+$
+    Timestamp:
+      type: string
+      format: date-time
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    GenericChannelPattern:
+      type: string
+      description: A generic channel name or pattern. For example, "general" or "support-*".
+      pattern: ^[a-zA-Z0-9_\*-]+$
+    SiteChannelRole:
+      type: string
+      enum:
+      - collaborator
+      - support
+    SiteChannelStatus:
+      type: string
+      enum:
+      - active
+      - pending
+    SiteChannelSetup:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - builtin:slack
+          setupSettings:
+            type: object
+            additionalProperties: false
+            properties:
+              allowedChannels:
+                description: List of allowed Slack channel names or patterns. If empty, all channels are allowed.
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericChannelPattern'
+        required:
+        - type
+        - setupSettings
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - builtin:linear
+          setupSettings:
+            type: object
+            additionalProperties: false
+            properties:
+              allowedTeams:
+                description: List of allowed Linear team keys or patterns. If empty, all teams are allowed.
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericChannelPattern'
+        required:
+        - type
+        - setupSettings
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - builtin:github
+          setupSettings:
+            type: object
+            additionalProperties: false
+            properties:
+              allowedRepositories:
+                description: List of allowed GitHub repository names or patterns. If empty, all repositories are allowed.
+                type: array
+                items:
+                  $ref: '#/components/schemas/GitHubRepositoryPattern'
+        required:
+        - type
+        - setupSettings
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - builtin:discord
+          setupSettings:
+            type: object
+            additionalProperties: false
+            properties:
+              allowedChannels:
+                description: List of allowed Discord channel names or patterns. If empty, all channels are allowed.
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenericChannelPattern'
+        required:
+        - type
+        - setupSettings
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 403
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 401
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

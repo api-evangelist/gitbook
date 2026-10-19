@@ -1,0 +1,697 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Redirects API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-redirects
+  x-page-title: Site redirects
+  x-page-description: Establish redirects for pages that have moved or changed in your docs site.
+  x-parent: sites
+  description: 'Keep your site''s content fresh without breaking old links. This API allows you to create and manage redirection rules.
+
+
+    {% openapi-schemas spec="gitbook" schemas="SiteRedirect" grouped="false" %}
+
+    The SiteRedirect object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/sites/{siteId}/redirects:
+    post:
+      operationId: createSiteRedirect
+      summary: Create a URL redirect rule for a site
+      description: Creates a new redirect rule mapping a source path to a destination URL or content reference. Creating a live redirect also resolves open broken-link findings for the same source path. Use the bulk upsert endpoint instead when creating many redirects at once.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                siteFindingId:
+                  type: string
+                  description: The broken-link finding that prompted this redirect. Must belong to this site. Used to attribute redirect creation, including drafts, to the finding.
+                source:
+                  $ref: '#/components/schemas/SiteRedirectSourcePath'
+                captureWildcard:
+                  type: boolean
+                  default: false
+                  description: Capture and append the wildcard-matched suffix to the destination URL.
+                draft:
+                  type: boolean
+                  default: false
+                  description: Whether the redirect is draft and not live.
+                permanent:
+                  type: boolean
+                  default: false
+                  description: Whether the redirect is permanent for public live traffic.
+                destination:
+                  $ref: '#/components/schemas/SiteRedirectInputDestination'
+              required:
+              - source
+              - destination
+      responses:
+        '201':
+          description: The redirect was created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteRedirect'
+    put:
+      operationId: bulkUpsertSiteRedirects
+      summary: Create, update, delete, or publish site redirect rules in bulk
+      description: Processes up to 500 redirect operations in a single request. Each redirect in the array is processed independently and the response includes per-item status. Prefer this over individual create/update calls when managing large sets of redirects.
+      x-gitbook-mcp: true
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirects:
+                  type: array
+                  minItems: 1
+                  maxItems: 500
+                  items:
+                    oneOf:
+                    - type: object
+                      properties:
+                        source:
+                          $ref: '#/components/schemas/SiteRedirectSourcePath'
+                        intent:
+                          type: string
+                          enum:
+                          - publish
+                          description: 'Publish a draft redirect to live and remove the draft redirect.
+
+                            '
+                      required:
+                      - source
+                      - intent
+                    - type: object
+                      properties:
+                        source:
+                          $ref: '#/components/schemas/SiteRedirectSourcePath'
+                        intent:
+                          type: string
+                          enum:
+                          - live
+                          - draft
+                          default: live
+                          description: 'Redirect operation intent.
+
+                            - live: upsert/delete a live redirect (draft=false)
+
+                            - draft: upsert/delete a draft redirect (draft=true)
+
+                            '
+                        captureWildcard:
+                          type: boolean
+                          default: false
+                          description: Capture and append the wildcard-matched suffix to the destination URL.
+                        permanent:
+                          type: boolean
+                          description: Whether the redirect is permanent for public live traffic.
+                        destination:
+                          description: If set to null, the redirect matching the source+intent target will be deleted.
+                          oneOf:
+                          - $ref: '#/components/schemas/SiteRedirectInputDestination'
+                          - type: 'null'
+                      required:
+                      - source
+                      - destination
+              required:
+              - redirects
+      responses:
+        '200':
+          description: List of results for each redirect processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - created
+                            description: The redirect was created.
+                          source:
+                            $ref: '#/components/schemas/SiteRedirectSourcePath'
+                          draft:
+                            type: boolean
+                            description: Whether the redirect is draft and not live.
+                          id:
+                            type: string
+                            description: The ID of the created redirect.
+                        required:
+                        - status
+                        - source
+                        - draft
+                        - id
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - updated
+                            description: The redirect was updated.
+                          source:
+                            $ref: '#/components/schemas/SiteRedirectSourcePath'
+                          draft:
+                            type: boolean
+                            description: Whether the redirect is draft and not live.
+                          id:
+                            type: string
+                            description: The ID of the updated redirect.
+                        required:
+                        - status
+                        - source
+                        - draft
+                        - id
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - deleted
+                            description: The redirect was deleted.
+                          source:
+                            $ref: '#/components/schemas/SiteRedirectSourcePath'
+                          draft:
+                            type: boolean
+                            description: Whether the deleted redirect was draft.
+                        required:
+                        - status
+                        - source
+                        - draft
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - published
+                            description: The draft redirect was published to live and removed from draft.
+                          source:
+                            $ref: '#/components/schemas/SiteRedirectSourcePath'
+                          draft:
+                            type: boolean
+                            description: Always false for published redirects.
+                          id:
+                            type: string
+                            description: The ID of the resulting live redirect.
+                        required:
+                        - status
+                        - source
+                        - draft
+                        - id
+                      - type: object
+                        properties:
+                          status:
+                            type: string
+                            enum:
+                            - error
+                            description: There was an error processing the redirect.
+                          source:
+                            $ref: '#/components/schemas/SiteRedirectSourcePath'
+                          draft:
+                            type: boolean
+                            description: Whether the redirect is draft and not live.
+                          error:
+                            type: string
+                            description: The error message.
+                        required:
+                        - status
+                        - source
+                        - draft
+                        - error
+                required:
+                - results
+    get:
+      operationId: listSiteRedirects
+      summary: List all URL redirect rules configured for a site
+      description: Returns a paginated list of redirect rules for the site. Supports filtering by draft status and searching by path. Use this to audit redirects, find a specific rule before updating it, or check whether draft redirects are pending publication.
+      x-gitbook-mcp: true
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: search
+        in: query
+        description: Search for a redirect by path
+        schema:
+          type: string
+      - name: draft
+        in: query
+        description: Filter redirects by draft mode.
+        schema:
+          type: boolean
+          default: false
+      - name: orderBy
+        in: query
+        description: Sort redirects by the given field.
+        schema:
+          $ref: '#/components/schemas/SiteRedirectOrderBy'
+      responses:
+        '200':
+          description: The list of redirects for the site.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteRedirect'
+  /orgs/{organizationId}/sites/{siteId}/redirects/{siteRedirectId}:
+    patch:
+      operationId: updateSiteRedirectById
+      summary: Update a URL redirect rule for a site
+      description: Updates an existing redirect rule for a site. Only provided fields are updated.
+      x-gitbook-mcp: true
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteRedirectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  $ref: '#/components/schemas/SiteRedirectSourcePath'
+                captureWildcard:
+                  type: boolean
+                  description: Capture and append the wildcard-matched suffix to the destination URL.
+                draft:
+                  type: boolean
+                  description: When true, it can be used to promote a draft redirect to live.
+                permanent:
+                  type: boolean
+                  description: Whether the redirect is permanent for public live traffic.
+                destination:
+                  $ref: '#/components/schemas/SiteRedirectDestination'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteRedirect'
+    delete:
+      operationId: deleteSiteRedirectById
+      summary: Delete a site redirect
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteRedirectId'
+      responses:
+        '204':
+          description: Site redirect did not exist
+        '205':
+          description: Site redirect deleted
+  /orgs/{organizationId}/sites/{siteId}/redirect:
+    get:
+      operationId: getSiteRedirectBySource
+      summary: Resolve a site redirect rule by its source path
+      description: Looks up a redirect rule by its source URL path and returns both the redirect configuration and the resolved destination URL. Use this to check whether a specific path has a redirect configured, or to resolve where a path currently points before updating or removing the redirect.
+      x-gitbook-mcp: true
+      tags:
+      - site-redirects
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteShareKey'
+      - name: source
+        in: query
+        required: true
+        description: The source path of the redirect.
+        schema:
+          $ref: '#/components/schemas/SiteRedirectSourcePath'
+      responses:
+        '200':
+          description: The redirect was resolved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect:
+                    $ref: '#/components/schemas/SiteRedirect'
+                  target:
+                    type: string
+                    description: URL of the destination of the redirect.
+                required:
+                - redirect
+                - target
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  parameters:
+    siteShareKey:
+      name: shareKey
+      in: query
+      description: For sites published via share-links, the share key is useful to resolve published URLs.
+      schema:
+        type: string
+    siteRedirectId:
+      name: siteRedirectId
+      in: path
+      required: true
+      description: The unique id of the site redirect
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  schemas:
+    SiteRedirect:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-redirect
+        id:
+          type: string
+          description: The unique identifier for the redirect.
+        source:
+          $ref: '#/components/schemas/SiteRedirectSourcePath'
+        draft:
+          type: boolean
+          description: Whether the redirect is draft and not live.
+        captureWildcard:
+          type: boolean
+          description: Capture and append the wildcard-matched suffix to the destination URL.
+        permanent:
+          type: boolean
+          description: Whether the redirect is configured as permanent. Permanent redirects are served as HTTP 308 for public live traffic and HTTP 307 in non-public contexts.
+        destination:
+          $ref: '#/components/schemas/SiteRedirectDestination'
+        createdAt:
+          type: string
+          format: date-time
+          description: When the redirect was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the redirect was last updated. Absent if never updated since creation.
+      required:
+      - object
+      - id
+      - source
+      - draft
+      - captureWildcard
+      - permanent
+      - destination
+      - createdAt
+    SiteRedirectOrderBy:
+      type: string
+      enum:
+      - createdAt
+      - updatedAt
+      - source
+      default: createdAt
+      description: The field to sort site redirects by. `createdAt` returns the most recently created redirects first. `updatedAt` returns the most recently updated redirects first (falling back to the creation date for redirects never updated). `source` returns redirects sorted alphabetically by source path. Defaults to 'createdAt'.
+    SiteRedirectDestinationExternal:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - external
+        url:
+          $ref: '#/components/schemas/URL'
+      required:
+      - kind
+      - url
+    SiteRedirectInputDestinationPath:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - path
+        spaceId:
+          type: string
+          description: Unique identifier for the space containing the page referenced by the path.
+        path:
+          type: string
+          description: Path to the page within the space revision to resolve.
+      required:
+      - kind
+      - spaceId
+      - path
+    SiteRedirectDestinationSiteSection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - site-section
+        siteSectionId:
+          type: string
+          description: Unique identifier for the site section to redirect to
+      required:
+      - kind
+      - siteSectionId
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    SiteRedirectSourcePath:
+      type: string
+      description: The source path to redirect from.
+      maxLength: 512
+      pattern: ^\/(?!\*)(?!.*\*.+)(?:[A-Za-z0-9\-._~+]|%[0-9A-Fa-f]{2})+(?:\/(?:[A-Za-z0-9\-._~+]|%[0-9A-Fa-f]{2})+)*(?:\/\*|\*)?$
+    SiteRedirectInputDestination:
+      oneOf:
+      - $ref: '#/components/schemas/SiteRedirectDestination'
+      - $ref: '#/components/schemas/SiteRedirectInputDestinationPath'
+    SiteRedirectDestinationPage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - site-page
+        siteSpaceId:
+          type: string
+          description: Unique identifier for the site space of the page
+        pageId:
+          type: string
+          description: Unique identifier for the page within the site space to redirect to
+      required:
+      - kind
+      - siteSpaceId
+      - pageId
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    SiteRedirectDestination:
+      oneOf:
+      - $ref: '#/components/schemas/SiteRedirectDestinationSiteSection'
+      - $ref: '#/components/schemas/SiteRedirectDestinationSiteSpace'
+      - $ref: '#/components/schemas/SiteRedirectDestinationPage'
+      - $ref: '#/components/schemas/SiteRedirectDestinationExternal'
+    SiteRedirectDestinationSiteSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - site-space
+        siteSpaceId:
+          type: string
+          description: Unique identifier for the site space to redirect to
+      required:
+      - kind
+      - siteSpaceId
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

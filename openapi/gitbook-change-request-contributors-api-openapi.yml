@@ -1,0 +1,243 @@
+openapi: 3.2.0
+info:
+  title: GitBook Change Request Contributors API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: change-request-contributors
+  x-page-title: Change request contributors
+  x-page-description: See who's participating in the change request.
+  x-parent: change-requests
+  description: 'Quickly access the full list of collaborators and their contributions within a change request for better traceability and communication.
+
+
+    {% openapi-schemas spec="gitbook" schemas="UserContributor" grouped="false" %}
+
+    The UserContributor object
+
+    {% endopenapi-schemas %}'
+paths:
+  /spaces/{spaceId}/change-requests/{changeRequestId}/contributors:
+    get:
+      operationId: getContributorsByChangeRequestId
+      summary: List all users who have made edits to a change request
+      description: Returns a list of users who have contributed content edits to the change request. Use this to identify who has been actively editing the draft, for example when deciding who to notify before merging.
+      x-gitbook-mcp: true
+      tags:
+      - change-request-contributors
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/changeRequestId'
+      responses:
+        '200':
+          description: Contributors on the change request
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChangeRequestUserContributor'
+        '404':
+          description: The change request could not be found.
+          $ref: '#/components/responses/NotFoundError'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    Timestamp:
+      type: string
+      format: date-time
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    UserContributor:
+      type: object
+      description: Contributor towards content.
+      properties:
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        count:
+          type: integer
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - updatedAt
+      - count
+      - user
+    ChangeRequestUserContributor:
+      allOf:
+      - $ref: '#/components/schemas/UserContributor'
+      - type: object
+        properties:
+          actionType:
+            type: string
+            enum:
+            - edit
+            - comment
+        required:
+        - actionType
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    changeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      description: The unique ID of the change request or its number identifier in the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

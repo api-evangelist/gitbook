@@ -1,0 +1,385 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Permissions API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-permissions
+  x-page-title: Site permissions
+  x-page-description: Manage which members and teams can access or contribute to a docs site.
+  x-parent: sites
+  description: Invite, remove, or update users and teams permissions for a site. This provides a way to tightly control collaboration and visibility among your teammates.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/permissions:
+    post:
+      operationId: inviteToSite
+      summary: Invite a user or a team to a site
+      tags:
+      - site-permissions
+      security:
+      - user: []
+      - oauth:
+        - site:permissions:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: OK
+        '404':
+          description: No team or user with the provided Id
+          $ref: '#/components/responses/NotFoundError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteSiteUsersAndTeams'
+  /orgs/{organizationId}/sites/{siteId}/permissions/teams:
+    get:
+      operationId: listTeamPermissionsInSite
+      summary: List an org team's permission in a site
+      tags:
+      - site-permissions
+      security:
+      - user: []
+      - oauth:
+        - site:permissions:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: Listing of teams who have been added to a site.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/TeamSitePermissionOverride'
+        '404':
+          description: No site was found with the given Id
+          $ref: '#/components/responses/NotFoundError'
+  /orgs/{organizationId}/sites/{siteId}/permissions/teams/{teamId}:
+    patch:
+      operationId: updateTeamPermissionInSite
+      summary: Update an org team's permission in a site
+      tags:
+      - site-permissions
+      security:
+      - user: []
+      - oauth:
+        - site:permissions:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/teamId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  $ref: '#/components/schemas/MemberRole'
+      responses:
+        '204':
+          description: Team permission was updated
+        '404':
+          description: No team found with the given ID
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: removeTeamFromSite
+      summary: Remove an org team from a site
+      tags:
+      - site-permissions
+      security:
+      - user: []
+      - oauth:
+        - site:permissions:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/teamId'
+      responses:
+        '204':
+          description: The team was not found in the site
+        '205':
+          description: The team has been removed from the site
+components:
+  schemas:
+    OrganizationTeam:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "team"
+          enum:
+          - team
+        id:
+          type: string
+          description: Unique identifier for the team.
+        title:
+          $ref: '#/components/schemas/OrganizationTeamTitle'
+        members:
+          type: integer
+          description: Count of members in this team.
+        spaces:
+          type: number
+          description: Count of spaces this team has access to.
+        createdAt:
+          description: Date at which the team was created.
+          $ref: '#/components/schemas/Timestamp'
+        permissions:
+          type: object
+          description: The set of permissions for the team
+          properties:
+            admin:
+              type: boolean
+              description: Can the user manage the team
+            view:
+              type: boolean
+              description: Can the user view the team and list its members
+          required:
+          - admin
+          - view
+      required:
+      - object
+      - id
+      - title
+      - members
+      - spaces
+      - createdAt
+      - permissions
+    OrganizationTeamTitle:
+      type: string
+      description: Title of the team
+      minLength: 1
+      maxLength: 64
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    TeamSitePermissionOverride:
+      type: object
+      description: Permission override of a team in a site.
+      properties:
+        permission:
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+        team:
+          $ref: '#/components/schemas/OrganizationTeam'
+      required:
+      - permission
+      - team
+    Timestamp:
+      type: string
+      format: date-time
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    InviteSiteUsersAndTeams:
+      type: object
+      properties:
+        role:
+          description: Role to set.
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+      anyOf:
+      - type: object
+        properties:
+          teams:
+            type: array
+            minItems: 1
+            items:
+              type: string
+              description: The ID of the team to be invited
+        required:
+        - teams
+      - type: object
+        properties:
+          users:
+            type: array
+            minItems: 1
+            items:
+              type: string
+              description: The ID of the user to be invited
+        required:
+        - users
+      required:
+      - role
+  parameters:
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    teamId:
+      name: teamId
+      in: path
+      required: true
+      description: The unique ID of the Team
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

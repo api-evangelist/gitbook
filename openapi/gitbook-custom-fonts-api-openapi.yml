@@ -1,0 +1,420 @@
+openapi: 3.2.0
+info:
+  title: GitBook Custom Fonts API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: custom-fonts
+  x-page-icon: font
+  x-page-title: Custom fonts
+  x-page-description: Bring your own fonts to personalize your documentation style.
+  description: 'Upload and manage custom fonts for branding or aesthetic purposes. Once added, fonts can be applied to your spaces or sites to achieve a unique look.
+
+
+    {% openapi-schemas spec="gitbook" schemas="CustomizationFontDefinition" grouped="false" %}
+
+    The CustomizationFontDefinition object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/fonts:
+    get:
+      operationId: listCustomFonts
+      summary: List all custom fonts
+      tags:
+      - custom-fonts
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/CustomizationFontDefinition'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      operationId: createCustomFont
+      summary: Create a custom font
+      tags:
+      - custom-fonts
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Defines a custom font and associated font faces with storage references.
+              properties:
+                fontFamily:
+                  $ref: '#/components/schemas/FontFamily'
+                fontFaces:
+                  type: array
+                  description: 'Array of font faces specifying weights and their corresponding storage keys.
+
+                    At least one font face with weight 400 (regular) must be provided.
+
+                    '
+                  items:
+                    type: object
+                    properties:
+                      weight:
+                        $ref: '#/components/schemas/FontWeight'
+                      storageKey:
+                        $ref: '#/components/schemas/StorageFileKey'
+                    required:
+                    - weight
+                    - storageKey
+                  minItems: 1
+              required:
+              - fontFamily
+              - fontFaces
+      responses:
+        '201':
+          description: Custom font created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomizationFontDefinition'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '412':
+          description: Invalid request data, such as missing required font weights.
+          $ref: '#/components/responses/PreconditionFailedError'
+  /orgs/{organizationId}/fonts/{fontId}:
+    get:
+      operationId: getCustomFont
+      summary: Get a custom font by its ID
+      tags:
+      - custom-fonts
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/fontId'
+      responses:
+        '200':
+          description: Custom font.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomizationFontDefinition'
+        '404':
+          description: Organization or font not found.
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      operationId: updateCustomFont
+      summary: Update a custom font
+      tags:
+      - custom-fonts
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/fontId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Defines a custom font and associated font faces with storage references.
+              properties:
+                fontFamily:
+                  $ref: '#/components/schemas/FontFamily'
+                fontFaces:
+                  type: array
+                  description: 'Array of font faces specifying weights and their corresponding storage keys. Passing null as the storage key will remove that weight.
+
+                    '
+                  items:
+                    type: object
+                    properties:
+                      weight:
+                        $ref: '#/components/schemas/FontWeight'
+                      storageKey:
+                        oneOf:
+                        - $ref: '#/components/schemas/StorageFileKey'
+                        - type: 'null'
+                    required:
+                    - weight
+                    - storageKey
+      responses:
+        '201':
+          description: Custom font created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomizationFontDefinition'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '412':
+          description: Invalid request data, such as missing required font weights.
+          $ref: '#/components/responses/PreconditionFailedError'
+    delete:
+      operationId: deleteCustomFont
+      summary: Delete a custom font
+      tags:
+      - custom-fonts
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/fontId'
+      responses:
+        '204':
+          description: Organization or font not found.
+        '205':
+          description: Custom font deleted successfully.
+components:
+  schemas:
+    FontFace:
+      type: object
+      description: A single font-face declaration specifying the weight and source files for a particular variation of the font.
+      properties:
+        weight:
+          $ref: '#/components/schemas/FontWeight'
+        sources:
+          type: array
+          description: Font source files provided in supported formats (e.g., woff2, woff).
+          items:
+            $ref: '#/components/schemas/FontSource'
+          minItems: 1
+      required:
+      - weight
+      - sources
+    CustomizationFontDefinition:
+      allOf:
+      - $ref: '#/components/schemas/CustomizationFontDefinitionInput'
+      - type: object
+        properties:
+          permissions:
+            type: object
+            description: The set of permissions for the font definition
+            properties:
+              edit:
+                type: boolean
+                description: Can the user edit the font definition
+            required:
+            - edit
+        required:
+        - permissions
+    CustomizationFontDefinitionInput:
+      type: object
+      description: Defines a font family along with its various font-face declarations for use in CSS '@font-face' rules.
+      properties:
+        id:
+          type: string
+          description: A globally unique identifier for the font definition.
+        custom:
+          type: boolean
+          description: Whether the font is a custom font. If false, this font is provided by GitBook.
+        fontFamily:
+          $ref: '#/components/schemas/FontFamily'
+        fontFaces:
+          type: array
+          description: A list of font-face definitions, specifying variations such as weight and style.
+          items:
+            $ref: '#/components/schemas/FontFace'
+          minItems: 1
+      required:
+      - id
+      - custom
+      - fontFamily
+      - fontFaces
+    FontFamily:
+      type: string
+      description: The human-readable font-family name used in CSS (e.g., "Open Sans", "Playfair Display").
+      minLength: 1
+      maxLength: 50
+    StorageFileKey:
+      type: string
+      description: The path of the file in the storage bucket
+      minLength: 1
+      maxLength: 512
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    FontWeight:
+      type: integer
+      description: Numeric representation of the font weight (400=regular, 500=medium, 700=bold, 900=black).
+      minimum: 1
+      maximum: 1000
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    FontSource:
+      type: object
+      description: A font file referenced within a font-face declaration, specifying the file's location and format.
+      properties:
+        url:
+          description: The absolute or relative URL pointing to the font file.
+          $ref: '#/components/schemas/URL'
+        format:
+          type: string
+          description: The format of the font file. Prefer 'woff2' for modern browsers.
+          enum:
+          - woff2
+          - woff
+      required:
+      - url
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    PreconditionFailedError:
+      description: PreconditionFailed
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 412
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    fontId:
+      name: fontId
+      in: path
+      required: true
+      description: The unique ID of a font
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

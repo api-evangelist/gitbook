@@ -1,101 +1,462 @@
 openapi: 3.2.0
 info:
   title: GitBook Imports API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
 - name: Imports
-  description: Import content into spaces.
+  x-page-icon: cloud-arrow-up
+  x-page-title: Imports
+  x-page-description: Import content into GitBook.
+  description: The Imports API provides allows you to import content into GitBook.
 paths:
-  /spaces/{spaceId}/import/content:
-    post:
-      operationId: importContentToSpace
-      summary: GitBook Import content to a space
-      description: Imports content from an external source into a space. Supports various formats.
+  /org/{organizationId}/imports:
+    get:
+      operationId: listImportRuns
+      summary: List the import runs of an organization
+      description: Returns the import runs of the organization, most recent first. Runs left behind by an import that never reported back are returned as failed.
       tags:
       - Imports
+      x-gitbook-mcp: true
+      security:
+      - user: []
+      - oauth:
+        - space:read
       parameters:
-      - $ref: '#/components/parameters/spaceId'
+      - $ref: '#/components/parameters/organizationId'
+      - name: space
+        in: query
+        description: Only return the import runs targeting this space.
+        schema:
+          type: string
+      - name: changeRequest
+        in: query
+        description: Only return the import runs targeting this change request.
+        schema:
+          type: string
+      - name: site
+        in: query
+        description: Only return the import runs targeting a space of this site.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Only return the import runs in this status. `active` covers both `pending` and `in-progress`.
+        schema:
+          type: string
+          enum:
+          - active
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContentImportRun'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      operationId: startImportRun
+      summary: Import content into a space from a website
+      tags:
+      - Imports
+      security:
+      - user: []
+      - oauth:
+        - space:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-              - url
               properties:
-                url:
+                source:
+                  $ref: '#/components/schemas/ContentImportSource'
+                target:
+                  $ref: '#/components/schemas/ContentImportTarget'
+                site:
+                  description: ID of the site the import is for, to list it among that site's imports. Only needed when the target space does not belong to the site yet — a site being set up, whose space is attached once the import has started. Otherwise the site is resolved from the space.
                   type: string
-                  format: uri
-                  description: The URL of the content to import (e.g., a GitHub repository or external documentation site).
+                enhance:
+                  description: Enhance the imported content with AI
+                  default: true
+                  type: boolean
+              required:
+              - source
+              - target
       responses:
-        '202':
-          description: Import started.
+        '201':
+          description: Import run created successfully.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: The import job ID.
-                  status:
-                    type: string
-                    description: The status of the import.
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: '#/components/schemas/ContentImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
         '404':
-          $ref: '#/components/responses/NotFound'
+          $ref: '#/components/responses/NotFoundError'
+  /org/{organizationId}/imports/{importRunId}:
+    get:
+      operationId: getImportRun
+      summary: Get an import run
+      description: Returns the import run. A run left behind by an import that never reported back is returned as failed.
+      tags:
+      - Imports
+      x-gitbook-mcp: true
+      security:
+      - user: []
+      - oauth:
+        - space:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/importRunId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentImportRun'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /org/{organizationId}/imports/{importRunId}/cancel:
+    post:
+      operationId: cancelImportRun
+      summary: Cancel an import run
+      tags:
+      - Imports
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/importRunId'
+      responses:
+        '200':
+          description: Import run canceled successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 components:
   responses:
-    NotFound:
-      description: The requested resource was not found.
+    NotFoundError:
+      description: Not Found
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    BadRequestError:
+      description: Bad Request
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
   schemas:
-    Error:
+    Timestamp:
+      type: string
+      format: date-time
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    List:
       type: object
       properties:
-        error:
+        next:
           type: object
           properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
+            page:
               type: string
-              description: A description of the error.
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
+        page:
+          type: string
+          description: ID of the page to import in
+      required:
+      - space
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
   parameters:
-    spaceId:
-      name: spaceId
-      in: path
-      required: true
-      description: The unique identifier of the space.
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
       schema:
         type: string
+    importRunId:
+      name: importRunId
+      in: path
+      required: true
+      description: The unique id of the import run
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

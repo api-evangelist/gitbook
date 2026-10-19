@@ -1,0 +1,188 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Preview API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-preview
+  x-page-title: Site preview
+  x-page-description: Fetch an up-to-date preview of your site before publishing.
+  x-parent: sites
+  description: Quickly generate a preview of how your site's content and layout will appear once published, allowing for final checks and refinement prior to going live.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/publishing/preview:
+    get:
+      operationId: getSitePublishingPreviewById
+      summary: Generate a temporary preview URL for a site's published content
+      description: Generates a time-limited URL (valid for 1 hour) to preview how a site will look when published. Use this to verify changes before making the site publicly accessible.
+      x-gitbook-mcp: true
+      tags:
+      - site-preview
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: siteSpace
+        in: query
+        description: ID of the site-space to preview. If not provided, the default site-space will be used.
+        schema:
+          type: string
+      - name: claims
+        in: query
+        description: Rison encoded string of attributes/assertions about the visitor for which we want to preview the site.
+        schema:
+          type: string
+      - name: country
+        in: query
+        description: ISO 3166-1 alpha-2 code of the country of the visitor for which we want to preview the site. It is matched against the `regions` of the site adaptive schema to resolve `visitor.region`.
+        schema:
+          type: string
+      - name: visitorAuthenticated
+        in: query
+        description: Whether the visitor for which we want to preview the site is signed in, as `visitor.isAuthenticated` reports it. Claims outside `unsigned` already imply a signed-in visitor; set this to preview one that is signed in while carrying no claim.
+        schema:
+          type: boolean
+      - name: draft
+        in: query
+        description: Whether to include draft content in the preview. Defaults to true
+        schema:
+          type: boolean
+          default: true
+      - name: target
+        in: query
+        description: Target URL of the preview. If not provided, the default site preview URL will be used.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    $ref: '#/components/schemas/URL'
+                required:
+                - url
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+components:
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  schemas:
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

@@ -1,0 +1,500 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site External Links API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-external-links
+  x-page-title: Site external links
+  x-page-description: Manage links to external destinations in a site's navigation.
+  x-parent: sites
+  description: 'External links add absolute HTTP or HTTPS destinations alongside sections and groups in a site''s navigation.
+
+
+    {% openapi-schemas spec="gitbook" schemas="SiteExternalLink" grouped="false" %}
+
+    The SiteExternalLink object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/sites/{siteId}/external-links:
+    post:
+      operationId: addExternalLinkToSite
+      summary: Add an external link to a site's navigation
+      description: Creates an external navigation link at the site root or in a section group. On a site with root variants and no sections, creating the first external link enables sections and moves those variants into a default section. Links cannot be placed inside a section. The destination must be an absolute HTTP or HTTPS URL. Draft links and links whose adaptive condition does not match are omitted from published structure responses. Use the generic structure sort operation after creation to change sibling order.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - site-external-links
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  $ref: '#/components/schemas/SiteSectionTitle'
+                localizedTitle:
+                  $ref: '#/components/schemas/LocalizedString128'
+                description:
+                  oneOf:
+                  - $ref: '#/components/schemas/SiteSectionDescription'
+                  - type: 'null'
+                localizedDescription:
+                  oneOf:
+                  - $ref: '#/components/schemas/LocalizedString256'
+                  - type: 'null'
+                icon:
+                  oneOf:
+                  - $ref: '#/components/schemas/Icon'
+                  - type: 'null'
+                url:
+                  $ref: '#/components/schemas/URL'
+                  description: Absolute HTTP or HTTPS destination URL
+                parent:
+                  type: string
+                  description: ID of the section group to create the link in. Omit to place it at the site root.
+                draft:
+                  type: boolean
+                  description: Whether the external link should be created in draft mode
+                condition:
+                  oneOf:
+                  - $ref: '#/components/schemas/Expression'
+                  - type: 'null'
+                  description: Adaptive condition controlling whether visitors see the link
+              required:
+              - title
+              - url
+      responses:
+        '201':
+          description: External link added to the site
+          headers:
+            Location:
+              description: API URL for the newly created external link
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteExternalLink'
+        '400':
+          description: The parent group is invalid, or the site has no sections or root variants
+          $ref: '#/components/responses/BadRequestError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /orgs/{organizationId}/sites/{siteId}/external-links/{siteExternalLinkId}:
+    patch:
+      operationId: updateSiteExternalLinkById
+      summary: Update an external link in a site's navigation
+      description: Updates an external navigation link. Set parent to a section group ID to move the link into that group, or null to move it to the site root; links cannot be placed inside a section. A changed destination must remain an absolute HTTP or HTTPS URL. Draft and adaptive-condition fields control visibility. Use the generic structure sort operation after changing the parent to adjust the link's sibling order.
+      x-gitbook-mcp: true
+      x-gitbook-return-preference: true
+      tags:
+      - site-external-links
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteExternalLinkId'
+      - $ref: '#/components/parameters/returnPreference'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  $ref: '#/components/schemas/SiteSectionTitle'
+                localizedTitle:
+                  oneOf:
+                  - $ref: '#/components/schemas/LocalizedString128'
+                  - type: 'null'
+                description:
+                  oneOf:
+                  - $ref: '#/components/schemas/SiteSectionDescription'
+                  - type: 'null'
+                localizedDescription:
+                  oneOf:
+                  - $ref: '#/components/schemas/LocalizedString256'
+                  - type: 'null'
+                icon:
+                  oneOf:
+                  - $ref: '#/components/schemas/Icon'
+                  - type: 'null'
+                url:
+                  $ref: '#/components/schemas/URL'
+                  description: Absolute HTTP or HTTPS destination URL
+                parent:
+                  description: ID of the section group to move the link into. Set to null to move it to the site root.
+                  oneOf:
+                  - type: string
+                  - type: 'null'
+                draft:
+                  type: boolean
+                  description: Whether the external link should be kept in draft mode
+                condition:
+                  oneOf:
+                  - $ref: '#/components/schemas/Expression'
+                  - type: 'null'
+                  description: Adaptive condition controlling whether visitors see the link
+      responses:
+        '200':
+          description: External link updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteExternalLink'
+        '204':
+          description: External link updated without returning its representation
+          headers:
+            Preference-Applied:
+              $ref: '#/components/headers/returnPreferenceApplied'
+        '400':
+          description: The parent group or destination URL is invalid
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          description: Site or external link not found
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+    delete:
+      operationId: deleteSiteExternalLinkById
+      summary: Delete an external link from a site's navigation
+      description: Deletes an external link. This operation is intentionally unavailable to MCP clients.
+      tags:
+      - site-external-links
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteExternalLinkId'
+      responses:
+        '204':
+          description: External link did not exist
+        '205':
+          description: External link has been deleted
+        '404':
+          description: Site not found
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  schemas:
+    SiteSectionDescription:
+      type: string
+      description: Description of the site section
+      minLength: 0
+      maxLength: 256
+    Expression:
+      type: string
+      description: Expression to evaluate
+      minLength: 0
+      maxLength: 1024
+    SiteSectionTitle:
+      type: string
+      description: Title of the site section
+      minLength: 2
+      maxLength: 128
+    Icon:
+      type: string
+      maxLength: 50
+      format: icon
+      description: Name of the icon
+      example: gear
+    LocalizedString256:
+      type: object
+      description: Localized string value with a 256 character limit, keyed by locale. Contains overrides for non-default languages only.
+      additionalProperties:
+        type: string
+        maxLength: 256
+      propertyNames:
+        $ref: '#/components/schemas/TranslationLanguage'
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    SiteExternalLink:
+      type: object
+      properties:
+        object:
+          type: string
+          description: The object type, which is always "site-external-link"
+          enum:
+          - site-external-link
+        id:
+          type: string
+          description: Unique identifier of the external link
+        title:
+          $ref: '#/components/schemas/SiteSectionTitle'
+        localizedTitle:
+          $ref: '#/components/schemas/LocalizedString128'
+        description:
+          $ref: '#/components/schemas/SiteSectionDescription'
+        localizedDescription:
+          $ref: '#/components/schemas/LocalizedString256'
+        icon:
+          $ref: '#/components/schemas/Icon'
+        url:
+          $ref: '#/components/schemas/URL'
+          description: Absolute HTTP or HTTPS URL opened by the external link
+        sectionGroup:
+          type: string
+          description: ID of the section group the external link belongs to. Omitted for a root link.
+        draft:
+          type: boolean
+          description: Whether the external link is draft and not live
+        condition:
+          description: Conditional expression used to evaluate whether the external link should be shown to the site's visitor
+          $ref: '#/components/schemas/Expression'
+      required:
+      - object
+      - id
+      - title
+      - url
+      - draft
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: integer
+              format: int32
+            message:
+              type: string
+          required:
+          - code
+          - message
+    LocalizedString128:
+      type: object
+      description: Localized string value with a 128 character limit, keyed by locale. Contains overrides for non-default languages only.
+      additionalProperties:
+        type: string
+        maxLength: 128
+      propertyNames:
+        $ref: '#/components/schemas/TranslationLanguage'
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    TranslationLanguage:
+      type: string
+      enum:
+      - en
+      - fr
+      - de
+      - es
+      - it
+      - pt
+      - pt-br
+      - ru
+      - ja
+      - zh
+      - zh-tw
+      - yue
+      - ko
+      - ar
+      - hi
+      - nl
+      - pl
+      - tr
+      - sv
+      - 'no'
+      - da
+      - fi
+      - el
+      - cs
+      - hu
+      - ro
+      - th
+      - vi
+      - id
+      - ms
+      - he
+      - uk
+      - sk
+      - bg
+      - hr
+      - lt
+      - lv
+      - et
+      - sl
+      - fr-ca
+      - es-mx
+      - es-419
+  parameters:
+    returnPreference:
+      in: header
+      name: prefer
+      description: Control whether a successful response includes the updated resource representation.
+      required: false
+      schema:
+        type: string
+        enum:
+        - return=minimal
+        - return=representation
+    siteExternalLinkId:
+      name: siteExternalLinkId
+      in: path
+      required: true
+      description: The unique ID of the site external link
+      schema:
+        type: string
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  responses:
+    UnexpectedError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  headers:
+    returnPreferenceApplied:
+      description: Confirms that the requested minimal response preference was applied.
+      schema:
+        type: string
+        enum:
+        - return=minimal
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

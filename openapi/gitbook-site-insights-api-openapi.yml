@@ -1,0 +1,2477 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Insights API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-insights
+  x-page-title: Site insights
+  x-page-description: Analyze traffic and engagement metrics for your docs site.
+  x-parent: sites
+  description: This API delivers insights about how visitors interact with your site, including page views and user engagement, helping you measure and optimize your content strategy.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/agent-feedback:
+    post:
+      operationId: submitSiteAgentFeedback
+      deprecated: true
+      summary: Submit agent feedback for a site.
+      description: 'Submit feedback from an AI agent about the content of the site, such as outdated, incorrect or missing content encountered while helping a user.
+
+
+        Deprecated in favour of `submitAgentFeedbackToSite`, which collects feedback about every surface a site exposes to agents. Send the same payload there as a `site-content` subject.'
+      x-internal: true
+      tags:
+      - site-insights
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                feedback:
+                  description: The feedback about the content of the site.
+                  type: string
+                  minLength: 1
+                  maxLength: 2048
+                goal:
+                  description: 'The end goal the agent is trying to accomplish on behalf of the user, giving the context the agent was working towards when it encountered the issue.
+
+                    '
+                  $ref: '#/components/schemas/AgentGoal'
+                url:
+                  description: URL of the content the feedback is about.
+                  $ref: '#/components/schemas/URL'
+                spaceId:
+                  description: ID of the space the feedback is about.
+                  type: string
+                pageId:
+                  description: ID of the page the feedback is about.
+                  type: string
+                source:
+                  description: 'Surface the feedback was submitted from. When omitted, the feedback is recorded with an unknown source.
+
+                    '
+                  $ref: '#/components/schemas/AgentFeedbackSource'
+              required:
+              - feedback
+              - url
+              - spaceId
+              - pageId
+      responses:
+        '204':
+          description: Feedback submitted
+  /orgs/{organizationId}/sites/{siteId}/insights/events:
+    post:
+      operationId: trackEventsInSiteById
+      summary: Track site events
+      tags:
+      - site-insights
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: Events have been tracked.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                events:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SiteInsightsEvent'
+              required:
+              - events
+  /orgs/{organizationId}/sites/{siteId}/insights/events/aggregate:
+    post:
+      operationId: aggregateSiteEvents
+      summary: Query a site's analytics events
+      description: 'Runs an aggregation query over a published site''s Insights events, grouped and filtered over a time range. Use it to answer analytics questions about how visitors engage with a site''s documentation: page views, visitors, searches, referrers, and broken URLs (404s). A 404 is a `page_view` or `search_open_result` event whose `page` is `null`, in the `site` display context; filter `eventPageNotFoundType` not in `conditional` to leave out 404s that adaptive content explains. Group by `datetime` for a trend over time and by `urlPath` for the top broken URLs.'
+      x-gitbook-mcp:
+        readOnly: true
+      security:
+      - user: []
+      - oauth:
+        - site:insights:read
+      tags:
+      - site-insights
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SiteInsightsQueryEventsAggregation'
+      responses:
+        '200':
+          description: Aggregated events in the site.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteInsightsQueryEventsAggregationResult'
+  /orgs/{organizationId}/sites/{siteId}/insights/visitor-segments:
+    get:
+      operationId: listSiteVisitorSegments
+      summary: List a site visitor segments
+      tags:
+      - site-insights
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: List of visitor segments in the site.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteInsightsVisitorSegment'
+components:
+  schemas:
+    SiteInsightsDisplayContext:
+      type: string
+      description: Context in which the event was recorded.
+      enum:
+      - site
+      - server
+      - embed
+      - mcp
+    SiteInsightsQueryEventsValues:
+      oneOf:
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - datetime
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/Timestamp'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - dayOfWeek
+          values:
+            type: array
+            items:
+              type: integer
+              minimum: 1
+              maximum: 7
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - hourOfDay
+          values:
+            type: array
+            items:
+              type: integer
+              minimum: 0
+              maximum: 23
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - url
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/URL'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - urlPath
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventsCount
+          values:
+            type: array
+            items:
+              type: number
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - sessionsCount
+          values:
+            type: array
+            items:
+              type: number
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorsCount
+          values:
+            type: array
+            items:
+              type: number
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventType
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsEventType'
+      - type: object
+        required:
+        - column
+        - claim
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorClaim
+          claim:
+            type: string
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorAuthenticated
+          values:
+            type: array
+            items:
+              type:
+              - boolean
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorClaimProperty
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorBrowser
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsVisitorBrowser'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorDevice
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsVisitorDevice'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorOS
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsVisitorOS'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorBot
+          values:
+            type: array
+            items:
+              oneOf:
+              - $ref: '#/components/schemas/SiteInsightsVisitorBot'
+              - type: string
+                enum:
+                - ''
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetValue
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/ContentRef'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetKind
+          values:
+            type: array
+            items:
+              type: string
+              enum:
+              - url
+              - page
+              - file
+              - anchor
+              - space
+              - collection
+              - user
+              - reusable-content
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkPosition
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsLinkPosition'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - siteSection
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLLMSVariant
+          values:
+            type: array
+            items:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/SiteInsightsLLMSVariant'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageNotFoundType
+          values:
+            type: array
+            items:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/SiteInsightsPageNotFoundType'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventMarkdownSource
+          values:
+            type: array
+            items:
+              oneOf:
+              - type: 'null'
+              - $ref: '#/components/schemas/SiteInsightsMarkdownSource'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - siteSpace
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - siteShareKey
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - displayContext
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsDisplayContext'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - page
+          values:
+            description: Pages to match. `null` matches events that resolved to no page, which for `page_view` events is a 404 (a broken URL).
+            type: array
+            items:
+              oneOf:
+              - type: 'null'
+              - type: object
+                required:
+                - page
+                - space
+                properties:
+                  page:
+                    type:
+                    - string
+                    - 'null'
+                  space:
+                    type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorGeoCountry
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorGeoPoint
+          values:
+            type: array
+            items:
+              type:
+              - object
+              - 'null'
+              required:
+              - latitude
+              - longitude
+              - h3
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                h3:
+                  type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorLanguage
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorUserAgent
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorId
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetDomain
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAPIOperationPath
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAPIOperationMethod
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventSearchQuery
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventSearchResultRecordId
+          values:
+            type: array
+            items:
+              type:
+              - string
+              - 'null'
+      - type: object
+        description: 'Ratings submitted on a page, counted once per rating a reader submitted rather than once
+
+          per event.
+
+          '
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - pageFeedbackRating
+          values:
+            type: array
+            items:
+              type: object
+              required:
+              - ok
+              - good
+              - bad
+              properties:
+                ok:
+                  type: number
+                good:
+                  type: number
+                bad:
+                  type: number
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - askResponseRating
+          values:
+            type: array
+            items:
+              type: object
+              required:
+              - positive
+              - negative
+              properties:
+                positive:
+                  type: number
+                negative:
+                  type: number
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageFeedbackRating
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/PageFeedbackRating'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAskResponseRating
+          values:
+            type: array
+            items:
+              type: integer
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageFeedbackComment
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - referrer
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - referrerDomain
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - previousUrl
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - utmSource
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - utmMedium
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - utmCampaign
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - utmTerm
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - utmContent
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAdDomain
+          values:
+            type: array
+            items:
+              type: string
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAdPlacement
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsAdPlacement'
+      - type: object
+        required:
+        - column
+        - values
+        properties:
+          column:
+            type: string
+            enum:
+            - eventTrademarkPlacement
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/SiteInsightsTrademarkPlacement'
+    SiteInsightsEventBase:
+      type: object
+      properties:
+        session:
+          $ref: '#/components/schemas/SiteInsightsEventSession'
+        location:
+          $ref: '#/components/schemas/SiteInsightsEventLocation'
+        timestamp:
+          description: Optional timestamp of the event. If not provided, the current timestamp will be used. Must be within 5 minutes of the current time.
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - session
+      - location
+    SiteInsightsQueryRange:
+      oneOf:
+      - $ref: '#/components/schemas/SiteInsightsQueryRangePreset'
+      - $ref: '#/components/schemas/SiteInsightsQueryRangeCustom'
+    SiteInsightsLLMSVariant:
+      type: string
+      enum:
+      - standard
+      - full
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    ContentRefTag:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - tag
+        tag:
+          type: string
+          description: The slug of the tag, also used as the ID, and references the tags defined on a revision.
+        space:
+          type: string
+          description: The space in which the tag is defined. If undefined, the tag is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - tag
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    SiteInsightsEventAskView:
+      description: Event when a user views the ask UI.
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ask_view
+          trigger:
+            type: string
+            enum:
+            - hover
+            - selection
+            - site
+            - page
+            - code
+            - embed
+        required:
+        - type
+    SiteInsightsQueryOperator:
+      type: string
+      enum:
+      - in
+      - notIn
+      - greaterThan
+      - greaterThanOrEqual
+      - lessThan
+      - lessThanOrEqual
+    SiteInsightsEventAgentFeedback:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - agent_feedback
+        required:
+        - type
+    SiteInsightsQueryEventsFilter:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsQueryEventsValues'
+      - type: object
+        properties:
+          operator:
+            $ref: '#/components/schemas/SiteInsightsQueryOperator'
+    ContentRefCollection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - collection
+        collection:
+          type: string
+      required:
+      - kind
+      - collection
+    ContentRefPage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - page
+        page:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - page
+    SiteInsightsEventRSSRequest:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - rss_request
+        required:
+        - type
+    SiteInsightsMarkdownSource:
+      description: How a page's markdown was requested. `page-action` means a reader used the site's page-actions menu — its copy or view-as-markdown action — rather than a client fetching the URL directly.
+      type: string
+      enum:
+      - page-action
+    OpenAPIOperationPointer:
+      type: object
+      description: Pointer to an operation in the OpenAPI spec.
+      properties:
+        path:
+          type: string
+          description: Path of the operation in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the operation in the OpenAPI spec.
+      required:
+      - path
+      - method
+    SiteInsightsEventTrademarkClick:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - trademark_click
+          placement:
+            $ref: '#/components/schemas/SiteInsightsTrademarkPlacement'
+        required:
+        - type
+        - placement
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    SiteInsightsEventAskRateResponse:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ask_rate_response
+          query:
+            type: string
+            description: Question asked.
+          rating:
+            type: integer
+            enum:
+            - 1
+            - -1
+          responseId:
+            type: string
+            description: ID of the AI response.
+        required:
+        - type
+        - query
+        - rating
+        - responseId
+    SiteInsightsEventAPIClientRequest:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - api_client_request
+          operation:
+            $ref: '#/components/schemas/OpenAPIOperationPointer'
+        required:
+        - type
+        - operation
+    SiteInsightsVisitorOS:
+      type: string
+      enum:
+      - windows
+      - macos
+      - linux
+      - android
+      - ios
+      - unknown
+    ContentRefUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - user
+        user:
+          type: string
+      required:
+      - kind
+      - user
+    ContentRefReusableContent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - reusable-content
+        reusableContent:
+          type: string
+        space:
+          type: string
+          description: The space in which the reusable content is defined. If undefined, the reusable content is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - reusableContent
+    SiteInsightsEventPageMarkdownRequest:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - page_markdown_request
+          markdownSource:
+            $ref: '#/components/schemas/SiteInsightsMarkdownSource'
+        required:
+        - type
+    SiteInsightsEventLLMSRequest:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - llms_request
+          llmsVariant:
+            $ref: '#/components/schemas/SiteInsightsLLMSVariant'
+        required:
+        - type
+        - llmsVariant
+    SiteInsightsQueryEventsAggregation:
+      type: object
+      required:
+      - range
+      properties:
+        select:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteInsightsQueryEventsColumn'
+        where:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteInsightsQueryEventsFilter'
+        groupBy:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteInsightsQueryEventsColumn'
+        order:
+          type: object
+          required:
+          - by
+          - direction
+          properties:
+            by:
+              $ref: '#/components/schemas/SiteInsightsQueryEventsColumn'
+            direction:
+              type: string
+              enum:
+              - asc
+              - desc
+        range:
+          $ref: '#/components/schemas/SiteInsightsQueryRange'
+        limit:
+          type: integer
+          default: 1000
+          minimum: 1
+          maximum: 1000
+    SiteInsightsQueryDateTimeColumn:
+      type: object
+      required:
+      - column
+      properties:
+        column:
+          type: string
+          enum:
+          - datetime
+        interval:
+          type: string
+          enum:
+          - hour
+          - day
+          - week
+          - month
+    SiteInsightsQueryRangePreset:
+      type: string
+      enum:
+      - yearToDate
+      - lastYear
+      - last3Months
+      - last30Days
+      - last7Days
+      - last24Hours
+    SiteInsightsSession:
+      type: object
+      description: Identifiers for a GitBook site session, used for analytics and adaptive content.
+      properties:
+        visitorId:
+          type: string
+          description: GitBook's unique identifier of the visitor.
+        sessionId:
+          type: string
+          description: GitBook's unique identifier of the visitor's session.
+      required:
+      - visitorId
+      - sessionId
+    ContentRef:
+      description: A relative reference to content in GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - $ref: '#/components/schemas/ContentRefPage'
+      - $ref: '#/components/schemas/ContentRefAnchor'
+      - $ref: '#/components/schemas/ContentRefUser'
+      - $ref: '#/components/schemas/ContentRefCollection'
+      - $ref: '#/components/schemas/ContentRefSpace'
+      - $ref: '#/components/schemas/ContentRefReusableContent'
+      - $ref: '#/components/schemas/ContentRefTag'
+      - $ref: '#/components/schemas/ContentRefOpenAPI'
+    SiteInsightsVisitorBot:
+      type:
+      - string
+      - 'null'
+      enum:
+      - null
+      - unknown
+      - googlebot
+      - bingbot
+      - duckduckbot
+      - facebookbot
+      - applebot
+      - chatgpt
+      - openai
+      - claude
+      - anthropic
+      - gemini
+      - perplexity
+      - cohere
+      - mistral
+      - deepseek
+      - meta
+      - bytespider
+      - ccbot
+      - amazonbot
+      - youbot
+      - cursor
+      - vscode
+      - claude-code
+      - codex
+      - opencode
+      - gptbot
+      - claudebot
+      - meta-fetcher
+      - grok
+      - github-copilot
+      - meta-webindexer
+      - meta-ads
+      - duckassist
+      - amzn-searchbot
+      - amzn-user
+      - other-bot
+      - parallel
+      - exa
+      - linkup
+      - vertex-ai
+      - atlassian
+      - kapa
+      - bedrock
+    SiteInsightsVisitorBrowser:
+      type: string
+      enum:
+      - chrome
+      - firefox
+      - safari
+      - edge
+      - ie
+      - opera
+      - unknown
+    SiteInsightsEventAskQuestion:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ask_question
+          query:
+            type: string
+            description: Question being asked.
+          goal:
+            type: string
+            description: The end goal the calling agent is trying to accomplish on behalf of the user, when provided alongside the question. Used to measure the goal→completion lifecycle per agent.
+        required:
+        - type
+        - query
+    SiteInsightsEventType:
+      type: string
+      enum:
+      - page_view
+      - page_markdown_request
+      - search_open
+      - search_type_query
+      - search_open_result
+      - page_post_feedback
+      - page_post_feedback_comment
+      - agent_feedback
+      - ask_question
+      - ask_view
+      - ask_trigger_click
+      - ask_rate_response
+      - link_click
+      - api_client_open
+      - api_client_request
+      - ad_click
+      - ad_display
+      - trademark_click
+      - llms_request
+      - mcp_request
+      - rss_request
+    SiteInsightsQueryRangeCustom:
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/Timestamp'
+        to:
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - from
+      - to
+    SiteInsightsPageNotFoundType:
+      description: Why a site URL returned a 404. `conditional` means the URL targets content gated by an adaptive-content condition, so the visitor lacked access to a page that exists. Computed by GitBook when the event is ingested; 404s recorded before this existed, and those on genuinely missing pages, carry no value.
+      type: string
+      enum:
+      - conditional
+    SiteInsightsEventAdDisplay:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ad_display
+          ad:
+            $ref: '#/components/schemas/SiteInsightsAd'
+        required:
+        - type
+        - ad
+    SiteInsightsQueryEventsColumn:
+      oneOf:
+      - $ref: '#/components/schemas/SiteInsightsQueryDateTimeColumn'
+      - type: object
+        description: Day of the week the event happened, in UTC, from 1 (Monday) to 7 (Sunday). Group by it alongside `hourOfDay` to fold any range into a weekly activity profile.
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - dayOfWeek
+      - type: object
+        description: Hour of the day the event happened, in UTC, from 0 to 23.
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - hourOfDay
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - url
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - urlPath
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventType
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventsCount
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - sessionsCount
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorsCount
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - siteSection
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - siteSpace
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - siteShareKey
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - displayContext
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - page
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorGeoCountry
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorGeoPoint
+          precision:
+            type: integer
+            minimum: 0
+            maximum: 15
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorDevice
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorBrowser
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorOS
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorBot
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorLanguage
+      - type: object
+        description: The raw `User-Agent` header of the request. `visitorBot`, `visitorBrowser`, `visitorOS` and `visitorDevice` are parsed from it.
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorUserAgent
+      - type: object
+        description: 'Pseudonymous identifier of the visitor, stable across a browser''s visits. Events served by the server (`displayContext` of `server` or `mcp`: markdown pages, llms.txt, RSS, MCP) get a new one per request, so it only tells visitors apart on `site` and `embed`.'
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorId
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetValue
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetKind
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkTargetDomain
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLinkPosition
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAPIOperationPath
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAPIOperationMethod
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventLLMSVariant
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageNotFoundType
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventMarkdownSource
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventSearchQuery
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventSearchResultRecordId
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageFeedbackRating
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventPageFeedbackComment
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAskResponseRating
+      - type: object
+        description: 'How a page was rated, counted once per rating a reader submitted rather than once per
+
+          event: rating a page and then commenting on it records two events carrying the same
+
+          rating, and a reader may rate a page again on a later visit.
+
+          '
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - pageFeedbackRating
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - askResponseRating
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - referrer
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - referrerDomain
+      - type: object
+        description: Path of the page of the site the visitor was on before the event, without the origin, share-link prefix, query string or fragment. Empty when the visitor came from another origin, or for events tracked before it was recorded.
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - previousUrl
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - utmSource
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - utmMedium
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - utmCampaign
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - utmTerm
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - utmContent
+      - type: object
+        description: Whether the visitor was authenticated when the event happened. Recorded at ingest from the site's visibility and the visitor's claims, so it is only exact for events tracked after that became available; older events fall back to the presence of any claim.
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorAuthenticated
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorClaimProperty
+      - type: object
+        required:
+        - column
+        - claim
+        properties:
+          column:
+            type: string
+            enum:
+            - visitorClaim
+          claim:
+            type: string
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAdDomain
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventAdPlacement
+      - type: object
+        required:
+        - column
+        properties:
+          column:
+            type: string
+            enum:
+            - eventTrademarkPlacement
+    SiteInsightsQueryEventsAggregationResult:
+      type: object
+      required:
+      - columns
+      properties:
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteInsightsQueryEventsValues'
+    SiteInsightsEventSession:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsSession'
+      - type: object
+        description: Analytics info on the GitBook's site session.
+        properties:
+          cookies:
+            type: object
+            description: The visitors cookies.
+            additionalProperties:
+              type: string
+          ip:
+            type: string
+            description: 'IP address of the visitor.
+
+              If not defined, it''ll default to the IP executing the request.
+
+              '
+          userAgent:
+            type: string
+            description: 'User-agent of the visitor.
+
+              https://developer.mozilla.org/en-US/docs/Web/API/Navigator/userAgent
+
+              '
+          language:
+            type:
+            - string
+            - 'null'
+            description: 'Language of the visitor.
+
+              https://developer.mozilla.org/en-US/docs/Web/API/Navigator/language
+
+              '
+          referrer:
+            description: Referrer of the session
+            oneOf:
+            - type: 'null'
+            - type: string
+              enum:
+              - ''
+            - $ref: '#/components/schemas/URL'
+          visitorAuthToken:
+            type:
+            - string
+            - 'null'
+            deprecated: true
+            description: Deprecated, use visitorAuthClaims instead.
+          visitorAuthClaims:
+            description: 'Claims of the visitor.
+
+              This is used to identify the visitor with adaptive content.
+
+              '
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - cookies
+        - userAgent
+        - language
+        - referrer
+    Timestamp:
+      type: string
+      format: date-time
+    ContentRefAnchor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - anchor
+        anchor:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+        page:
+          description: ID of the page the anchor is in. The anchor is considered as in the current page if none is provided.
+          type: string
+      required:
+      - kind
+      - anchor
+    SiteInsightsEventPageView:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - page_view
+        required:
+        - type
+    SiteInsightsEventSearchOpenResult:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - search_open_result
+          query:
+            type: string
+            description: Query of the search.
+          result:
+            description: Target of the opened search result.
+            oneOf:
+            - type: object
+              properties:
+                spaceId:
+                  type: string
+                  description: ID of the concerned space.
+                pageId:
+                  type: string
+                  description: ID of the concerned page.
+              required:
+              - spaceId
+              - pageId
+            - type: object
+              properties:
+                recordId:
+                  type: string
+                  description: ID of the concerned record.
+              required:
+              - recordId
+        required:
+        - type
+        - query
+        - result
+    SiteInsightsEventLinkClick:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - link_click
+          link:
+            type: object
+            properties:
+              target:
+                $ref: '#/components/schemas/ContentRef'
+              position:
+                $ref: '#/components/schemas/SiteInsightsLinkPosition'
+            required:
+            - target
+            - position
+        required:
+        - type
+        - link
+    ContentRefURL:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - url
+        url:
+          type: string
+      required:
+      - kind
+      - url
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    SiteInsightsEventAPIClientOpen:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - api_client_open
+          operation:
+            $ref: '#/components/schemas/OpenAPIOperationPointer'
+        required:
+        - type
+        - operation
+    SiteInsightsVisitorSegment:
+      type: object
+      description: A segment of visitors with the same characteristics.
+      properties:
+        title:
+          type: string
+          description: The title of the visitor profile.
+        claims:
+          $ref: '#/components/schemas/PlainObject'
+        events:
+          type: number
+          description: The number of events for this visitor profile.
+        visitors:
+          type: number
+          description: The number of visitors for this visitor profile.
+        sessions:
+          type: number
+          description: The number of sessions for this visitor profile.
+      required:
+      - title
+      - claims
+      - events
+      - visitors
+      - sessions
+    SiteInsightsEventSearchTypeQuery:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - search_type_query
+          query:
+            type: string
+            description: Query of the search.
+        required:
+        - type
+        - query
+    SiteInsightsTrademarkPlacement:
+      type: string
+      enum:
+      - sidebar
+      - ad
+      - footer
+      - pdf
+      - embed
+    SiteInsightsLinkPosition:
+      type: string
+      enum:
+      - announcement
+      - header
+      - footer
+      - sidebar
+      - content
+    SiteInsightsEventMCPRequest:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - mcp_request
+        required:
+        - type
+    ContentRefFile:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - file
+        file:
+          type: string
+        space:
+          description: ID of the space the file is in. The file is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - file
+    SiteInsightsAdPlacement:
+      type: string
+      enum:
+      - aside
+    SiteInsightsEventPagePostFeedback:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - page_post_feedback
+          feedback:
+            type: object
+            properties:
+              rating:
+                $ref: '#/components/schemas/PageFeedbackRating'
+            required:
+            - rating
+        required:
+        - type
+        - feedback
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    AgentFeedbackSource:
+      type: string
+      description: 'The surface the agent was running on when it submitted the feedback: the MCP server exposed by the site, or the site assistant.'
+      enum:
+      - mcp
+      - assistant
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    SiteInsightsEventAskTriggerClick:
+      description: Event when a user clicks an entry point that opens the ask UI.
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ask_trigger_click
+          trigger:
+            type: string
+            enum:
+            - hover
+            - selection
+            - site
+            - page
+            - code
+        required:
+        - type
+        - trigger
+    SiteInsightsEventSearchOpen:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - search_open
+        required:
+        - type
+    SiteInsightsEventAdClick:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - ad_click
+          ad:
+            $ref: '#/components/schemas/SiteInsightsAd'
+        required:
+        - type
+        - ad
+    SiteInsightsAd:
+      type: object
+      properties:
+        domain:
+          type: string
+        zoneId:
+          type: string
+        placement:
+          $ref: '#/components/schemas/SiteInsightsAdPlacement'
+      required:
+      - domain
+      - zoneId
+      - placement
+    SiteInsightsVisitorDevice:
+      type: string
+      enum:
+      - desktop
+      - tablet
+      - mobile
+      - unknown
+    AgentGoal:
+      type: string
+      maxLength: 1024
+      description: The end goal the agent is trying to accomplish on behalf of the user. Unlike the immediate query, the goal describes the broader task or outcome the agent is working towards.
+    PageFeedbackRating:
+      type: string
+      enum:
+      - bad
+      - ok
+      - good
+    SiteInsightsEventLocation:
+      type: object
+      description: Location of the event.
+      properties:
+        url:
+          description: URL of the location.
+          $ref: '#/components/schemas/URL'
+        previousUrl:
+          description: URL of the page of the site the visitor was on before this one, if any. Unlike the session referrer, it follows navigation within the site. Only recorded when it has the same origin as `url`; any other value is discarded.
+          oneOf:
+          - type: 'null'
+          - $ref: '#/components/schemas/URL'
+        displayContext:
+          description: Whether the event was tracked on the site, the server, or an embed widget.
+          $ref: '#/components/schemas/SiteInsightsDisplayContext'
+          default: site
+        siteSection:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned site section.
+        siteSpace:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned site space.
+        siteShareKey:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned site share key.
+        space:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned space.
+        revision:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned revision.
+        page:
+          type:
+          - string
+          - 'null'
+          description: ID of the concerned page.
+      required:
+      - url
+      - siteSection
+      - siteSpace
+      - siteShareKey
+      - page
+      - space
+      - revision
+    SiteInsightsEventPagePostFeedbackComment:
+      allOf:
+      - $ref: '#/components/schemas/SiteInsightsEventBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - page_post_feedback_comment
+          feedback:
+            type: object
+            properties:
+              rating:
+                $ref: '#/components/schemas/PageFeedbackRating'
+              comment:
+                type: string
+                minLength: 1
+                maxLength: 512
+            required:
+            - rating
+            - comment
+        required:
+        - type
+        - feedback
+    SiteInsightsEvent:
+      oneOf:
+      - $ref: '#/components/schemas/SiteInsightsEventPageView'
+      - $ref: '#/components/schemas/SiteInsightsEventPageMarkdownRequest'
+      - $ref: '#/components/schemas/SiteInsightsEventSearchOpen'
+      - $ref: '#/components/schemas/SiteInsightsEventSearchTypeQuery'
+      - $ref: '#/components/schemas/SiteInsightsEventSearchOpenResult'
+      - $ref: '#/components/schemas/SiteInsightsEventPagePostFeedback'
+      - $ref: '#/components/schemas/SiteInsightsEventPagePostFeedbackComment'
+      - $ref: '#/components/schemas/SiteInsightsEventAgentFeedback'
+      - $ref: '#/components/schemas/SiteInsightsEventAskQuestion'
+      - $ref: '#/components/schemas/SiteInsightsEventAskView'
+      - $ref: '#/components/schemas/SiteInsightsEventAskTriggerClick'
+      - $ref: '#/components/schemas/SiteInsightsEventAskRateResponse'
+      - $ref: '#/components/schemas/SiteInsightsEventLinkClick'
+      - $ref: '#/components/schemas/SiteInsightsEventAPIClientOpen'
+      - $ref: '#/components/schemas/SiteInsightsEventAPIClientRequest'
+      - $ref: '#/components/schemas/SiteInsightsEventTrademarkClick'
+      - $ref: '#/components/schemas/SiteInsightsEventAdClick'
+      - $ref: '#/components/schemas/SiteInsightsEventAdDisplay'
+      - $ref: '#/components/schemas/SiteInsightsEventLLMSRequest'
+      - $ref: '#/components/schemas/SiteInsightsEventMCPRequest'
+      - $ref: '#/components/schemas/SiteInsightsEventRSSRequest'
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

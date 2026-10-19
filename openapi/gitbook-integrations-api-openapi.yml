@@ -1,153 +1,5575 @@
 openapi: 3.2.0
 info:
   title: GitBook Integrations API
-  description: The GitBook REST API enables you to programmatically manage your GitBook content, organizations, spaces, collections, and integrations.
-  version: 1.0.0
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
   contact:
-    name: GitBook
-    url: https://www.gitbook.com
-  license:
-    name: Proprietary
-    url: https://www.gitbook.com/terms
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
 servers:
-- url: https://api.gitbook.com/v1
-  description: GitBook API v1
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
 security:
-- bearerAuth: []
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
 tags:
 - name: Integrations
-  description: Install and manage third-party integrations.
 paths:
-  /orgs/{organizationId}/integrations:
-    get:
-      operationId: listIntegrations
-      summary: GitBook List integrations
-      description: Returns the list of integrations installed in an organization.
-      tags:
-      - Integrations
+  /integrations/{integrationName}/installations/{installationId}/spaces:
+    post:
+      operationId: installIntegrationOnSpace
+      summary: Install an integration on a space
+      description: Enables an existing organization-level installation on one space. The organization must already have the integration installed.
+      x-gitbook-mcp: true
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:write
       parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/pageParam'
-      - $ref: '#/components/parameters/limitParam'
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - name: extended
+        in: query
+        description: If true, returns the space object in each items. If false, returns the space ID in each items.
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - space
+              properties:
+                space:
+                  type: string
+                  description: ID of the space to install the integration on
       responses:
-        '200':
-          description: A list of integrations.
+        '201':
+          headers:
+            Location:
+              description: URL for the installed integration
+              schema:
+                type: string
+          description: Integration installed successfully on space
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Integration'
-                  next:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                $ref: '#/components/schemas/IntegrationSpaceInstallation'
         '404':
-          $ref: '#/components/responses/NotFound'
-  /orgs/{organizationId}/integrations/{integrationId}:
+          $ref: '#/components/responses/NotFoundError'
+      tags:
+      - Integrations
     get:
-      operationId: getIntegration
-      summary: GitBook Get an integration
-      description: Returns details about an installed integration.
+      operationId: listIntegrationInstallationSpaces
+      summary: List all space integration installations
+      description: Returns a paginated list of the spaces an installation is enabled on, with the configuration of the integration for each of them. Pass extended to get the full space object instead of its ID.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:read
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: extended
+        in: query
+        description: If true, returns the space object in each items. If false, returns the space ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationSpaceInstallation'
+  /integrations:
+    get:
+      operationId: listIntegrations
+      summary: List all public integrations
+      description: Returns a paginated list of the integrations published in the GitBook marketplace. Use this to discover an integration by name, category, or the blocks and content sources it provides, before installing it on an organization, space or site.
+      x-gitbook-mcp: true
       tags:
       - Integrations
       parameters:
-      - $ref: '#/components/parameters/organizationId'
-      - $ref: '#/components/parameters/integrationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/integrationSearchQuery'
+      - $ref: '#/components/parameters/integrationSearchCategory'
+      - $ref: '#/components/parameters/integrationSearchBlockDomain'
+      - $ref: '#/components/parameters/integrationSearchBlocks'
+      - $ref: '#/components/parameters/integrationSearchContentSources'
+      - $ref: '#/components/parameters/integrationSearchOwner'
+      - $ref: '#/components/parameters/integrationSearchScope'
+      - $ref: '#/components/parameters/integrationSearchTarget'
       responses:
         '200':
-          description: The requested integration.
+          description: Paginated list of integrations
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Integration'
+  /integrations/{integrationName}:
+    get:
+      operationId: getIntegrationByName
+      summary: Get an integration by its name
+      description: Returns a single integration by its unique name, including the configuration it expects, the targets it can be installed on, and the permissions it requests. Private integrations are only readable by the organization that owns them.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '200':
+          description: Integration
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Integration'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '404':
-          $ref: '#/components/responses/NotFound'
+          description: No matching integration found for given name
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      operationId: publishIntegration
+      summary: Publish an integration
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:publish
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Integration'
+        '404':
+          description: Organization could not be found for the given hostname
+          $ref: '#/components/responses/NotFoundError'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishIntegration'
+    delete:
+      operationId: unpublishIntegration
+      summary: Unpublish an integration
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:delete
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '204':
+          description: Integration did not exist
+        '205':
+          description: Integration has been deleted
+  /integrations/{integrationName}/installations:
+    get:
+      operationId: listIntegrationInstallations
+      summary: List all integration installations
+      tags:
+      - Integrations
+      security:
+      - integration: []
+      - integration-installation: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: externalId
+        in: query
+        description: External Id to filter by
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationInstallation'
+    post:
+      operationId: installIntegration
+      summary: Install an integration
+      description: Installs an integration on an organization, creating the account-level installation that space and site installations hang off. Configure it with the update operation, then enable it on individual spaces or sites.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:installations:write
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationTarget'
+      responses:
+        '201':
+          headers:
+            Location:
+              description: URL for the installed integration
+              schema:
+                type: string
+          description: Integration installed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /integrations/{integrationName}/events:
+    get:
+      operationId: listIntegrationEvents
+      summary: List all integration events
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: Paginated list of integration events
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationEvent'
+  /integrations/{integrationName}/events/{eventId}:
+    get:
+      operationId: getIntegrationEvent
+      summary: Get an integration event by its ID
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/integrationEventId'
+      responses:
+        '200':
+          description: Integration event
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - event
+                properties:
+                  event:
+                    $ref: '#/components/schemas/IntegrationEvent'
+                  trace:
+                    $ref: '#/components/schemas/IntegrationEventTrace'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /integrations/{integrationName}/spaces:
+    get:
+      operationId: listIntegrationSpaceInstallations
+      summary: List all integration space installations
+      tags:
+      - Integrations
+      security:
+      - integration: []
+      - integration-installation: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: externalId
+        in: query
+        description: External Id to filter by
+        schema:
+          type: string
+      - name: extended
+        in: query
+        description: If true, returns the space object in each items. If false, returns the space ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationSpaceInstallation'
+  /integrations/{integrationName}/sites:
+    get:
+      operationId: listIntegrationSiteInstallations
+      summary: List all integration site installations
+      tags:
+      - Integrations
+      security:
+      - integration: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: externalId
+        in: query
+        description: External ID to filter by
+        schema:
+          type: string
+      - name: extended
+        in: query
+        description: If true, returns the site object in each items. If false, returns the site ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationSiteInstallation'
+  /integrations/{integrationName}/dev:
+    put:
+      operationId: setIntegrationDevelopmentMode
+      summary: Enable integration dev mode
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:publish
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tunnelUrl:
+                  type: string
+                  description: URL of the tunnel to dispatch integration events to
+                  minLength: 1
+                  maxLength: 256
+                all:
+                  type: boolean
+                  default: false
+                  description: 'If set to true, all requests will be forwarded to the tunnel, not just from the owning organization.
+
+                    '
+              required:
+              - tunnelUrl
+      responses:
+        '204':
+          description: Updated development mode successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: disableIntegrationDevelopmentMode
+      summary: Disable integration dev mode
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:publish
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '205':
+          description: Disabled development mode successfully
+  /integrations/{integrationName}/render:
+    get:
+      operationId: renderIntegrationUIWithGet
+      summary: Render an integration UI with GET method
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - name: request
+        in: query
+        required: true
+        description: LZ-string compressed JSON request
+        schema:
+          type: string
+      responses:
+        '200':
+          description: ContentKit element to render
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentKitRenderOutput'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+    post:
+      operationId: renderIntegrationUIWithPost
+      summary: Render an integration UI with POST method
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '200':
+          description: ContentKit element to render
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentKitRenderOutput'
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenderIntegrationUI'
+  /integrations/{integrationName}/tasks:
+    post:
+      operationId: queueIntegrationTask
+      summary: Queue an integration task
+      tags:
+      - Integrations
+      security:
+      - integration: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task:
+                  type: object
+                  description: Payload for the integration task
+                schedule:
+                  type: number
+                  description: Number of seconds to wait before executing the task, defaults to 0
+                  minimum: 0
+                  maximum: 86400
+              required:
+              - task
+      responses:
+        '204':
+          description: Integration task created successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /integrations/{integrationName}/installations/{installationId}:
+    get:
+      operationId: getIntegrationInstallationById
+      summary: Get an integration installation by its ID
+      description: Returns the organization-level installation of an integration, including its account configuration and how many spaces it manages. The configuration can contain credentials the integration stored for third-party services.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:read
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: Integration installation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateIntegrationInstallation
+      summary: Update an integration installation
+      description: Updates the account-level configuration of an installation, and which spaces or sites it applies to.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:write
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: The installation has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationInstallation'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIntegrationInstallation'
+    delete:
+      operationId: uninstallIntegration
+      summary: Uninstall an integration
+      tags:
+      - Integrations
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '204':
+          description: Integration installation did not exist
+        '205':
+          description: Integration uninstalled successfully
+  /integrations/{integrationName}/installations/{installationId}/tokens:
+    post:
+      operationId: createIntegrationInstallationToken
+      summary: Create an integration installation API token
+      description: Creates a temporary API token of an integration's installation that has access to the installation and it's scopes. You must be authenticated as the integration to obtain this token.
+      tags:
+      - Integrations
+      security:
+      - integration: []
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      responses:
+        '200':
+          description: The API token for the installation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APITemporaryToken'
+        '404':
+          description: Installation could not be found
+          $ref: '#/components/responses/NotFoundError'
+  /integrations/{integrationName}/installations/{installationId}/spaces/{spaceId}:
+    get:
+      operationId: getIntegrationSpaceInstallation
+      summary: Get an integration space installation
+      description: Returns the installation of an integration on one space, including the configuration of the integration for that space.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:read
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/spaceId'
+      - name: extended
+        in: query
+        description: If true, returns the space object in each items. If false, returns the space ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Integration space installation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSpaceInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateIntegrationSpaceInstallation
+      summary: Update an integration space installation
+      description: Updates the configuration of an integration for one space.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:write
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/spaceId'
+      - name: extended
+        in: query
+        description: If true, returns the space object in each items. If false, returns the space ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: The space installation has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSpaceInstallation'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIntegrationSpaceInstallation'
+    delete:
+      operationId: uninstallIntegrationFromSpace
+      summary: Uninstall an integration from a space
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/spaceId'
+      responses:
+        '204':
+          description: The space installation did not exist.
+        '205':
+          description: The space installation has been deleted.
+  /integrations/{integrationName}/installations/{installationId}/sites:
+    get:
+      operationId: listIntegrationInstallationSites
+      summary: List all site integration installations
+      description: Returns a paginated list of the sites an installation is enabled on, with the configuration of the integration for each of them. Pass extended to get the full site object instead of its ID.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:read
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: extended
+        in: query
+        description: If true, returns the site object in each items. If false, returns the site ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/IntegrationSiteInstallation'
+    post:
+      operationId: installIntegrationOnSite
+      summary: Install an integration on a site
+      description: Enables an existing organization-level installation on one site. The organization must already have the integration installed.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:write
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - name: extended
+        in: query
+        description: If true, returns the site object in each items. If false, returns the site ID in each items.
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - siteId
+              properties:
+                siteId:
+                  type: string
+                  description: ID of the site to install the integration on
+      responses:
+        '201':
+          headers:
+            Location:
+              description: URL for the installed integration on the site
+              schema:
+                type: string
+          description: Integration installed successfully on site
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSiteInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /integrations/{integrationName}/installations/{installationId}/sites/{siteId}:
+    get:
+      operationId: getIntegrationSiteInstallation
+      summary: Get an integration site installation
+      description: Returns the installation of an integration on one site, including the configuration of the integration for that site.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:read
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: extended
+        in: query
+        description: If true, returns the site object in each items. If false, returns the site ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Integration site installation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSiteInstallation'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateIntegrationSiteInstallation
+      summary: Update an integration site installation
+      description: Updates the configuration of an integration for one site.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:installations:write
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: extended
+        in: query
+        description: If true, returns the site object in each items. If false, returns the site ID in each items.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: The site installation has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationSiteInstallation'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIntegrationSiteInstallation'
+    delete:
+      operationId: uninstallIntegrationFromSite
+      summary: Uninstall an integration from a site
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/integrationName'
+      - $ref: '#/components/parameters/installationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '204':
+          description: The site installation did not exist.
+        '205':
+          description: The site installation has been deleted.
+  /orgs/{organizationId}/integrations:
+    get:
+      operationId: listOrganizationIntegrations
+      summary: List all public integrations along with private ones trusted by the specific org
+      description: 'Returns a paginated list of the integrations available to the organization: every publicly published integration plus the private ones the organization owns or is trusted with. Prefer this over the public listing when acting inside an organization.'
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/integrationSearchQuery'
+      - $ref: '#/components/parameters/integrationSearchCategory'
+      - $ref: '#/components/parameters/integrationSearchBlockDomain'
+      - $ref: '#/components/parameters/integrationSearchBlocks'
+      - $ref: '#/components/parameters/integrationSearchContentSources'
+      - $ref: '#/components/parameters/integrationSearchOwner'
+      - $ref: '#/components/parameters/integrationSearchScope'
+      - $ref: '#/components/parameters/integrationSearchTarget'
+      responses:
+        '200':
+          description: List of integrations.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Integration'
+  /orgs/{organizationId}/integrations/{integrationName}/installation_status:
+    get:
+      operationId: getOrganizationIntegrationStatus
+      summary: Get the status of an integration
+      description: Returns whether an integration is installed for the organization and the status of that installation. Use this for a single integration instead of listing every status.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - integration:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/integrationName'
+      responses:
+        '200':
+          description: Integration installation status
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    $ref: '#/components/schemas/IntegrationInstallationStatus'
+                required:
+                - status
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /orgs/{organizationId}/installations:
+    get:
+      operationId: listOrganizationInstallations
+      summary: List all integration installations
+      tags:
+      - Integrations
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/integrationSearchQuery'
+      responses:
+        '200':
+          description: List of integrations with the associated installations.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          installation:
+                            $ref: '#/components/schemas/IntegrationInstallation'
+                          integration:
+                            $ref: '#/components/schemas/Integration'
+                        required:
+                        - integration
+                        - installation
+  /orgs/{organizationId}/integrations/installations-status:
+    get:
+      operationId: listOrganizationIntegrationsStatus
+      summary: List all integration statuses
+      description: Returns integration installations in the organization. Use site or space with the matching target to efficiently scope the result to one resource. The target of each installation says whether it is installed on the organization, a space or a site.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - integration: []
+      - integration-installation: []
+      - oauth:
+        - integration:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: target
+        in: query
+        description: Filter installations by their target (organization, space, or site). When not provided, defaults to organization-level installations for backwards compatibility
+        schema:
+          type: string
+          default: organization
+          enum:
+          - organization
+          - space
+          - site
+      - name: site
+        in: query
+        description: Return installations for this site. Only valid when target is site.
+        schema:
+          type: string
+      - name: space
+        in: query
+        description: Return installations for this space. Only valid when target is space.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: List of installed integrations and their statuses
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/InstalledIntegration'
+  /orgs/{organizationId}/sites/{siteId}/integration-scripts:
+    get:
+      operationId: listSiteIntegrationScripts
+      summary: List custom scripts injected into a site's published pages
+      description: Returns all integration scripts configured to be injected into the published pages of a site, such as analytics trackers, chat widgets, or custom JavaScript. Use this to audit which third-party scripts are active on the site.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SiteIntegrationScript'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+  /orgs/{organizationId}/sites/{siteId}/integrations:
+    get:
+      operationId: listSiteIntegrations
+      summary: List third-party integrations enabled on a site
+      description: Returns a paginated list of integrations currently enabled on the site. Integrations extend site functionality with third-party services such as analytics, support, or authentication providers. Use this to audit which integrations are active, or to find an integration before updating its settings.
+      x-gitbook-mcp: true
+      tags:
+      - Integrations
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/integrationSearchQuery'
+      responses:
+        '200':
+          description: Listing of integrations enabled in the site.
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/Integration'
 components:
-  parameters:
-    organizationId:
-      name: organizationId
-      in: path
-      required: true
-      description: The unique identifier of the organization.
-      schema:
-        type: string
-    limitParam:
-      name: limit
-      in: query
-      description: Maximum number of items to return per page.
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-    integrationId:
-      name: integrationId
-      in: path
-      required: true
-      description: The unique identifier of the integration.
-      schema:
-        type: string
-    pageParam:
-      name: page
-      in: query
-      description: Pagination cursor for the next page of results.
-      schema:
-        type: string
-  responses:
-    NotFound:
-      description: The requested resource was not found.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    Unauthorized:
-      description: Authentication is required or the token is invalid.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    Pagination:
+    GitSyncOperationDirection:
+      type: string
+      enum:
+      - export
+      - import
+    IntegrationSpaceInstallation:
+      allOf:
+      - $ref: '#/components/schemas/IntegrationContentInstallationBase'
+      - type: object
+        properties:
+          space:
+            description: The space the integration is installed on. Using the string value is deprecated in favor of space.id
+            oneOf:
+            - type: string
+            - $ref: '#/components/schemas/Space'
+        required:
+        - space
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    DefaultLevel:
+      description: Default level for a piece of content
+      oneOf:
+      - $ref: '#/components/schemas/MemberRoleOrGuest'
+      - type: string
+        enum:
+        - inherit
+    Expression:
+      type: string
+      description: Expression to evaluate
+      minLength: 0
+      maxLength: 1024
+    IntegrationInstallationStatus:
+      type: string
+      enum:
+      - active
+      - pending
+      - paused
+    MergeRulesConfigurationInherit:
+      type: object
+      description: The merge rules inherits from the organization configuration.
+      properties:
+        type:
+          type: string
+          enum:
+          - inherit
+      required:
+      - type
+    IntegrationInstallationExternalIds:
+      type: array
+      description: External IDs assigned by the integration.
+      maxItems: 5
+      items:
+        type: string
+    PreviousGitSyncState:
+      type: object
+      description: What is still known about a target's Git Sync after its installation was removed. Never returned alongside `gitSync`, which describes a live installation.
+      required:
+      - url
+      properties:
+        url:
+          type: string
+          description: The URL to the directory of the repository tree the content synced with before its Git Sync installation was removed, at the branch it synced.
+    MergeRulesConfigurationRules:
+      type: object
+      description: The merge rules are composed of individual rules that must all pass.
+      properties:
+        type:
+          type: string
+          enum:
+          - rules
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/MergeRule'
+      required:
+      - type
+      - rules
+    MergeRule:
+      oneOf:
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_one_of_specific_reviewers
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - allow_bypass
+          users:
+            type: array
+            description: List of user IDs.
+            items:
+              type: string
+        required:
+        - rule
+        - users
+      - type: object
+        properties:
+          rule:
+            type: string
+            enum:
+            - require_at_least_one_review
+            - require_at_least_one_approved_review
+            - require_all_reviews_approved
+            - require_agent_review
+            - require_up_to_date_change_request
+            - require_change_request_subject
+            - require_change_request_description
+            - require_author_to_merge
+        required:
+        - rule
+      - type: object
+        description: The merge rule is written in the advanced custom expression syntax.
+        properties:
+          rule:
+            type: string
+            enum:
+            - custom
+          expression:
+            $ref: '#/components/schemas/Expression'
+          message:
+            type: string
+            description: Optional message to display when the expression evaluates to false.
+        required:
+        - rule
+        - expression
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    Space:
       type: object
       properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "space"
+          enum:
+          - space
+        id:
+          type: string
+          description: Unique identifier for the space
+        title:
+          $ref: '#/components/schemas/SpaceTitle'
+        emoji:
+          description: An emoji for this space. It'll match the emoji shown in the GitBook app.
+          $ref: '#/components/schemas/Emoji'
+        visibility:
+          $ref: '#/components/schemas/ContentVisibility'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        deletedAt:
+          $ref: '#/components/schemas/Timestamp'
+        editMode:
+          $ref: '#/components/schemas/SpaceEditMode'
+        type:
+          type: string
+          description: Kind of space. Only set to `styleguide` for spaces holding a team's writing style guide; omitted for regular spaces.
+          enum:
+          - styleguide
+        mergeRules:
+          $ref: '#/components/schemas/MergeRulesSpaceConfiguration'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the space in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the space in the application
+              format: uri
+            published:
+              type: string
+              description: URL of the published version of the space. Only defined when visibility is not "private."
+              format: uri
+            public:
+              type: string
+              description: URL of the public version of the space. Only defined when visibility is "public".
+              format: uri
+            icon:
+              description: URL of the icon of this space, if defined.
+              $ref: '#/components/schemas/URL'
+          required:
+          - app
+          - location
+        organization:
+          type: string
+          description: ID of the organization owning this space
+        parent:
+          type: string
+          description: ID of the parent collection.
+        language:
+          $ref: '#/components/schemas/TranslationLanguage'
+        gitSync:
+          $ref: '#/components/schemas/GitSyncState'
+        previousGitSync:
+          $ref: '#/components/schemas/PreviousGitSyncState'
+        imports:
+          description: 'Import runs targeting this space, still running or ended recently, most recent first. Only returned when fetching a single space.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentImportRun'
+        visitorAuth:
+          $ref: '#/components/schemas/VisitorAuth'
+        revision:
+          type: string
+          description: ID of the active revision in the space.
+        defaultLevel:
+          $ref: '#/components/schemas/DefaultLevel'
+        comments:
+          type: number
+          description: Count of opened comments on the space.
+        changeRequests:
+          type: number
+          description: Total count of change requests on the space.
+        changeRequestsOpen:
+          type: number
+          description: Count of open change requests on the space.
+        changeRequestsDraft:
+          type: number
+          description: Count of draft change requests on the space.
+        internal_poweredByV2:
+          type: boolean
+          description: Whether the space is powered by V2 of the content system.
+        internal_singleWebsocket:
+          type: boolean
+          description: Whether the space uses a single websocket connection for all real-time communication.
+        permissions:
+          type: object
+          description: The set of permissions for the space
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the space content.
+            access:
+              type: boolean
+              description: Can the user access the space in the application.
+            admin:
+              type: boolean
+              description: Can the user edit the title, install integrations, and manage the space.
+            viewInviteLinks:
+              type: boolean
+              description: Can the user view the invite links of the space.
+            edit:
+              type: boolean
+              description: Can the user edit the content of the space by creating a change request.
+            triggerGitSync:
+              type: boolean
+              description: Can the user trigger a git sync.
+            comment:
+              type: boolean
+              description: Can the user comment on the content.
+            merge:
+              type: boolean
+              description: Can the user merge change requests.
+            review:
+              type: boolean
+              description: Can the user review change requests.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations in the space.
+          required:
+          - view
+          - access
+          - admin
+          - viewInviteLinks
+          - edit
+          - triggerGitSync
+          - comment
+          - merge
+          - review
+          - installIntegration
+      required:
+      - object
+      - id
+      - title
+      - emoji
+      - organization
+      - visibility
+      - revision
+      - createdAt
+      - updatedAt
+      - comments
+      - changeRequests
+      - changeRequestsOpen
+      - changeRequestsDraft
+      - mergeRules
+      - urls
+      - defaultLevel
+      - permissions
+    VisitorAuth:
+      oneOf:
+      - $ref: '#/components/schemas/VisitorAuthCustomBackend'
+      - allOf:
+        - $ref: '#/components/schemas/VisitorAuthIntegrationBackend'
+        - type: object
+          properties:
+            integration:
+              type: string
+              description: Name of integration being used as the backend for authenticated access
+          required:
+          - integration
+    VisitorAuthCustomBackend:
+      type: object
+      title: Custom backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Custom backend for authenticated access
+          enum:
+          - custom
+      required:
+      - backend
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
+    GitSyncInstallationStatus:
+      type: string
+      enum:
+      - unauthenticated
+      - active
+      - pending
+    GitSyncProvider:
+      type: string
+      description: The provider of the Git Sync installation.
+      enum:
+      - github
+      - gitlab
+      - github-legacy
+    MergeRulesStandaloneConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationRules'
+      - $ref: '#/components/schemas/MergeRulesConfigurationNone'
+    Timestamp:
+      type: string
+      format: date-time
+    Emoji:
+      type: string
+      maxLength: 50
+      format: emoji
+      description: Unicode codepoint or character of the emoji
+      example: 🎉
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    ContentVisibility:
+      type: string
+      description: "* `public`: Anyone can access the content, and the content is indexed by search engines.\n* `unlisted`: Anyone can access the content, and the content is not indexed by search engines\n* `share-link`: Anyone with a secret token in the url can access the content.\n* `visitor-auth`: Anyone authenticated through a JWT token can access the content.\n* `in-collection`: Anyone who can access the parent collection can access the content.\n  Only available for spaces in a collection.\n* `private`: Authorized members can access the content.\n"
+      enum:
+      - public
+      - unlisted
+      - share-link
+      - visitor-auth
+      - in-collection
+      - private
+    GitSyncState:
+      type: object
+      properties:
+        repoName:
+          type: string
+          description: Repository name.
+        installationStatus:
+          $ref: '#/components/schemas/GitSyncInstallationStatus'
+        installationProvider:
+          $ref: '#/components/schemas/GitSyncProvider'
+        integration:
+          type: string
+          deprecated: true
+          description: The integration name providing the Git Sync.
+        installationId:
+          type: string
+          description: The ID of the Git Sync installation.
+        parentInstallationId:
+          type: string
+          description: The ID of the parent Git Sync installation, if any.
+        url:
+          type: string
+          description: The URL to the repository tree, used when rendering public content.
+        installationProjectDirectory:
+          type: string
+          description: Directory in the repository this content syncs from, resolved against the parent installation when the installation is managed by a site. Absent when the content syncs from the root of the repository.
+        operation:
+          type: object
+          description: The latest operation on the Git Sync installation.
+          properties:
+            state:
+              $ref: '#/components/schemas/GitSyncOperationState'
+            direction:
+              $ref: '#/components/schemas/GitSyncOperationDirection'
+            startedAt:
+              $ref: '#/components/schemas/Timestamp'
+            endedAt:
+              $ref: '#/components/schemas/Timestamp'
+            error:
+              type: string
+              description: Why the operation failed, when it did.
+            errorAction:
+              $ref: '#/components/schemas/GitSyncOperationErrorAction'
+          required:
+          - state
+          - direction
+          - startedAt
+        operationTimeout:
+          type: integer
+          description: How long an operation is allowed to run before it is terminated (in milliseconds).
+        updatedAt:
+          description: When the Git provider details were last updated
+          $ref: '#/components/schemas/Timestamp'
+      required:
+      - installationId
+      - installationProvider
+      - installationStatus
+    GitSyncOperationErrorAction:
+      type: object
+      description: An action the user can take to resolve a failed Git Sync operation.
+      properties:
+        label:
+          type: string
+          description: Label for the action.
+        url:
+          type: string
+          format: uri
+          description: URL where the user can resolve the failure.
+      required:
+      - label
+      - url
+    MergeRulesSpaceConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/MergeRulesConfigurationInherit'
+      - $ref: '#/components/schemas/MergeRulesStandaloneConfiguration'
+    SpaceTitle:
+      type: string
+      description: Title of the space
+      maxLength: 50
+    MergeRulesConfigurationNone:
+      type: object
+      description: The merge rules are disabled, change requests can be merged without review.
+      properties:
+        type:
+          type: string
+          enum:
+          - none
+      required:
+      - type
+    GitSyncOperationState:
+      type: string
+      description: '* `running`: The operation is still running
+
+        * `failure`: The operation failed
+
+        * `success`: The operation was successful
+
+        * `timeout`: The operation timed out
+
+        '
+      enum:
+      - running
+      - failure
+      - success
+      - timeout
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
         page:
           type: string
-          description: The cursor for the next page of results.
-    Error:
+          description: ID of the page to import in
+      required:
+      - space
+    SpaceEditMode:
+      type: string
+      description: 'Determines how a Space can be edited.
+
+        * `live`: Users can directly edit the space
+
+        * `locked`: All edits are locked for this space.
+
+        '
+      enum:
+      - live
+      - locked
+    TranslationLanguage:
+      type: string
+      enum:
+      - en
+      - fr
+      - de
+      - es
+      - it
+      - pt
+      - pt-br
+      - ru
+      - ja
+      - zh
+      - zh-tw
+      - yue
+      - ko
+      - ar
+      - hi
+      - nl
+      - pl
+      - tr
+      - sv
+      - 'no'
+      - da
+      - fi
+      - el
+      - cs
+      - hu
+      - ro
+      - th
+      - vi
+      - id
+      - ms
+      - he
+      - uk
+      - sk
+      - bg
+      - hr
+      - lt
+      - lv
+      - et
+      - sl
+      - fr-ca
+      - es-mx
+      - es-419
+    VisitorAuthIntegrationBackend:
+      type: object
+      title: Integration backend for authenticated access
+      properties:
+        backend:
+          type: string
+          description: Integration as backend for authenticated access
+          enum:
+          - integration
+      required:
+      - backend
+    IntegrationContentInstallationBase:
+      type: object
+      description: Base properties of an installation of an integration on a site or space.
+      properties:
+        integration:
+          description: Unique name identifier of the integration
+          type: string
+        installation:
+          description: ID of the integration installation
+          type: string
+        status:
+          $ref: '#/components/schemas/IntegrationInstallationStatus'
+        configuration:
+          description: Configuration of the integration for this site
+          type: object
+        externalIds:
+          $ref: '#/components/schemas/IntegrationInstallationExternalIds'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the integration's installation in the API
+              format: uri
+            publicEndpoint:
+              type: string
+              description: Public HTTP endpoint for the integration's installation
+              format: uri
+            publicContentEndpoint:
+              type: string
+              description: Public endpoint serving the integration's rendered content (e.g. WebFrames), isolated from the cookie-bearing publicEndpoint origin. Equals publicEndpoint when no separate content origin is configured.
+              format: uri
+          required:
+          - location
+          - publicEndpoint
+          - publicContentEndpoint
+      required:
+      - integration
+      - installation
+      - status
+      - configuration
+      - externalIds
+      - urls
+    SpaceEvent:
+      allOf:
+      - $ref: '#/components/schemas/InstallationEvent'
+      - type: object
+        description: Common properties for all events related to a specific space.
+        properties:
+          spaceId:
+            type: string
+            description: ID of the space
+        required:
+        - spaceId
+    ContentKitText:
+      type: object
+      description: Low level text element.
+      properties:
+        type:
+          type: string
+          enum:
+          - text
+        style:
+          type: string
+          enum:
+          - bold
+          - italic
+          - code
+          - strikethrough
+        children:
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              oneOf:
+              - type: string
+              - $ref: '#/components/schemas/ContentKitText'
+              - $ref: '#/components/schemas/ContentKitLink'
+      required:
+      - type
+      - children
+    BlockReason:
+      type: string
+      description: A short description giving context on the reason for the block.
+      minLength: 1
+      maxLength: 255
+    FetchEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - type: object
+        description: Event representing an incoming HTTP request.
+        properties:
+          spaceId:
+            type: string
+            description: The space ID, if requests are specific to a single space
+          siteId:
+            type: string
+            description: The site ID, if requests are specific to a single site
+          installationId:
+            type: string
+            description: The installation ID, if requests are specific to a single installation
+          auth:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: The user's ID.
+            required:
+            - userId
+          type:
+            type: string
+            enum:
+            - fetch
+          request:
+            $ref: '#/components/schemas/FetchRequest'
+        required:
+        - type
+        - request
+    BillingCreditsBundle:
+      type: string
+      description: The AI credit bundle to top up every month
+      enum:
+      - none
+      - '4750_250'
+      - '9000_1000'
+      - '12750_2250'
+      - '30000_10000'
+    IntegrationInstallationSiteSelection:
+      type: string
+      description: Describe whether all sites have been selected or there's a selection involved
+      enum:
+      - all
+      - selected
+    ContentKitConfirm:
+      type: object
+      description: A confirm object that defines an optional confirmation dialog after the input is clicked.
+      properties:
+        title:
+          type: string
+          description: A text value that defines the dialog's title.
+          maxLength: 100
+        text:
+          type: string
+          description: A text value that defines the explanatory text that appears in the confirm dialog.
+          maxLength: 300
+        confirm:
+          type: string
+          description: A text value to define the text of the button that confirms the action.
+          maxLength: 30
+        style:
+          type: string
+          enum:
+          - primary
+          - danger
+      required:
+      - title
+      - text
+      - confirm
+    SiteInstallationSetupEvent:
+      allOf:
+      - $ref: '#/components/schemas/SiteEvent'
+      - type: object
+        description: Event received when integration has been installed or updated on a site.
+        properties:
+          type:
+            type: string
+            enum:
+            - site_installation_setup
+          status:
+            $ref: '#/components/schemas/IntegrationInstallationStatus'
+          previous:
+            type: object
+            description: The state of the site installation before it was updated.
+            properties:
+              status:
+                $ref: '#/components/schemas/IntegrationInstallationStatus'
+              configuration:
+                type: object
+                description: The previous configuration of the site installation.
+            required:
+            - status
+        required:
+        - type
+        - status
+    BillingProduct:
+      type: string
+      description: Name of the product
+      enum:
+      - free_2024
+      - plus_2024
+      - pro_2024
+      - enterprise_2024
+      - community_2024
+      - internal
+    PageFeedbackEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - type: object
+        description: Event received when feedback has been submitted on a page.
+        properties:
+          type:
+            type: string
+            enum:
+            - page_feedback
+          installationId:
+            type: string
+            description: ID of the integration installation
+          spaceId:
+            type: string
+            description: Unique identifier of the space in the site.
+            deprecated: true
+          siteId:
+            type: string
+            description: Unique identifier of the site.
+          pageId:
+            type: string
+            description: Unique identifier of the page where feedback was submitted.
+          feedback:
+            type: object
+            description: The feedback data submitted by the visitor.
+            properties:
+              rating:
+                $ref: '#/components/schemas/PageFeedbackRating'
+              comment:
+                type: string
+                description: Optional comment provided with the feedback.
+                minLength: 1
+                maxLength: 512
+            required:
+            - rating
+          visitor:
+            $ref: '#/components/schemas/EventVisitor'
+          url:
+            type: string
+            description: The GitBook content's URL where feedback was submitted.
+          referrer:
+            type: string
+            description: The URL of referrer that linked to the page.
+        required:
+        - type
+        - installationId
+        - siteId
+        - feedback
+        - visitor
+        - url
+        - referrer
+    CustomizationThemedURL:
       type: object
       properties:
-        error:
+        light:
+          $ref: '#/components/schemas/URL'
+        dark:
+          $ref: '#/components/schemas/URL'
+      required:
+      - light
+      - dark
+    EventVisitor:
+      type: object
+      description: Analytics info on the GitBook's content visitor.
+      properties:
+        anonymousId:
+          type: string
+          description: GitBook's unique identifier of the visitor.
+        cookies:
+          type: object
+          description: The visitors cookies.
+          additionalProperties:
+            type: string
+        userAgent:
+          type: string
+          description: User-agent of the visitor.
+        ip:
+          type: string
+          description: IP address of the visitor.
+        language:
+          type: string
+          description: Language of the visitor.
+      required:
+      - anonymousId
+      - cookies
+      - userAgent
+      - ip
+    OrganizationSupportCost:
+      description: What support costs the organization, per ticket or per hour of agent time, used to estimate how much AI answers save in site insights.
+      oneOf:
+      - type: object
+        additionalProperties: false
+        properties:
+          perTicket:
+            type: number
+            minimum: 0.01
+            description: Cost of one support ticket, in `currency`.
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+            description: ISO 4217 currency code.
+        required:
+        - perTicket
+        - currency
+      - type: object
+        additionalProperties: false
+        properties:
+          perHour:
+            type: number
+            minimum: 0.01
+            description: Cost of one hour of support agent time, in `currency`.
+          currency:
+            type: string
+            pattern: ^[A-Z]{3}$
+            description: ISO 4217 currency code.
+        required:
+        - perHour
+        - currency
+    BillingInterval:
+      type: string
+      description: Interval for a billing subscription
+      enum:
+      - monthly
+      - yearly
+    IntegrationExternalLinks:
+      type: array
+      description: External urls configured by the developer of the integration
+      maxItems: 5
+      items:
+        type: object
+        properties:
+          url:
+            $ref: '#/components/schemas/URL'
+          label:
+            type: string
+        required:
+        - url
+        - label
+    ContentKitStepper:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - stepper
+        activeStep:
+          type: string
+          description: id of the currently active step
+        onStepChange:
+          $ref: '#/components/schemas/ContentKitAction'
+        onComplete:
+          $ref: '#/components/schemas/ContentKitAction'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitStepperStep'
+          minItems: 1
+      required:
+      - type
+      - activeStep
+      - onStepChange
+      - onComplete
+      - children
+    SpaceContentUpdatedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event when the primary content of a space has been updated.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_content_updated
+          revisionId:
+            type: string
+            description: Unique identifier of the new content revision
+          updatedBy:
+            type: array
+            description: Users who updated the content
+            items:
+              $ref: '#/components/schemas/User'
+        required:
+        - type
+        - revisionId
+        - updatedBy
+    OrganizationPricePair:
+      type: object
+      description: Pricing pair for monthly and yearly intervals
+      properties:
+        monthly:
+          type: number
+          description: Monthly price in USD
+          minimum: 0
+        yearly:
+          type: number
+          description: Yearly price in USD (per month)
+          minimum: 0
+      required:
+      - monthly
+      - yearly
+    ContentKitContextConfigurationAccount:
+      allOf:
+      - $ref: '#/components/schemas/ContentKitContextBase'
+      - type: object
+        description: Context while rendering in an account installation's configuration.
+        properties:
+          type:
+            type: string
+            enum:
+            - configuration_account
+          organizationId:
+            type: string
+            description: ID of the organization the account installation configuration is in.
+        required:
+        - type
+        - organizationId
+    ContentKitCodeBlock:
+      type: object
+      description: Code block with syntax highlighting
+      properties:
+        type:
+          type: string
+          enum:
+          - codeblock
+        content:
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitDynamicBinding'
+          - type: string
+            description: Code content to display
+        syntax:
+          description: 'Syntax to use for highlighting (ex: javascript, python)'
+          type: string
+        lineNumbers:
+          oneOf:
+          - type: boolean
+          - type: number
+            description: Line number to start at.
+        buttons:
+          type: array
+          description: Controls button shown as an overlay in a corner of the code block.
+          items:
+            $ref: '#/components/schemas/ContentKitButton'
+        state:
+          description: State binding when editable. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        onContentChange:
+          $ref: '#/components/schemas/ContentKitAction'
+        header:
+          type: array
+          description: Header displayed before the code lines
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+        footer:
+          type: array
+          description: Footer displayed after the code lines
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+      required:
+      - type
+      - content
+    SiteTitle:
+      type: string
+      description: Title of the site
+      minLength: 2
+      maxLength: 128
+    IntegrationConfigurations:
+      type: object
+      properties:
+        account:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+        space:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+        site:
+          $ref: '#/components/schemas/IntegrationConfiguration'
+    InstallationSetupEvent:
+      allOf:
+      - $ref: '#/components/schemas/InstallationEvent'
+      - type: object
+        description: Event received when integration has been installed or updated.
+        properties:
+          type:
+            type: string
+            enum:
+            - installation_setup
+          status:
+            $ref: '#/components/schemas/IntegrationInstallationStatus'
+          previous:
+            type: object
+            description: The state of the installation at the account level before it was updated.
+            properties:
+              status:
+                $ref: '#/components/schemas/IntegrationInstallationStatus'
+              configuration:
+                type: object
+                description: The previous configuration of the installation at the account level.
+            required:
+            - status
+        required:
+        - type
+        - status
+    ComputedContentDependencySpace:
+      type: object
+      properties:
+        ref:
+          $ref: '#/components/schemas/ContentRefSpace'
+        value:
+          type:
+          - object
+          - 'null'
+          description: See `Space` schema component.
+          properties:
+            object:
+              type: string
+              enum:
+              - space
+            id:
+              type: string
+            revision:
+              type: string
+          required:
+          - object
+          - id
+          - revision
+      required:
+      - ref
+      - value
+    ContentKitIcon:
+      type: string
+      enum:
+      - close
+      - edit
+      - github
+      - gitlab
+      - maximize
+      - email
+      - settings
+      - search
+      - delete
+      - star
+      - warning
+      - link
+      - link-external
+      - eye
+      - eye-off
+      - lock
+      - check
+      - check-circle
+    ContentKitContext:
+      description: Object representing the context in which a ContentKit component is rendered.
+      oneOf:
+      - $ref: '#/components/schemas/ContentKitContextConfigurationAccount'
+      - $ref: '#/components/schemas/ContentKitContextConfigurationSpace'
+      - $ref: '#/components/schemas/ContentKitContextConfigurationSite'
+      - $ref: '#/components/schemas/ContentKitContextConfigurationContentSource'
+      - $ref: '#/components/schemas/ContentKitContextDocument'
+    ContentKitContextConfigurationContentSource:
+      allOf:
+      - $ref: '#/components/schemas/ContentKitContextBase'
+      - type: object
+        description: Context while rendering the configuration flow of a content source.
+        properties:
+          type:
+            type: string
+            enum:
+            - configuration_contentsource
+          organizationId:
+            type: string
+            description: ID of the organization the content source installation configuration is in.
+          spaceId:
+            type: string
+            description: Optional ID of the space the content source installation configuration is in.
+        required:
+        - type
+        - organizationId
+    InstalledIntegrationTarget:
+      description: The resource on which an integration is installed.
+      oneOf:
+      - type: object
+        required:
+        - type
+        - organizationId
+        properties:
+          type:
+            type: string
+            enum:
+            - organization
+          organizationId:
+            type: string
+      - type: object
+        required:
+        - type
+        - siteId
+        properties:
+          type:
+            type: string
+            enum:
+            - site
+          siteId:
+            type: string
+      - type: object
+        required:
+        - type
+        - spaceId
+        properties:
+          type:
+            type: string
+            enum:
+            - space
+          spaceId:
+            type: string
+    SpaceGitSyncCompletedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event when a GitSync operation has been completed.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_gitsync_completed
+          state:
+            type: string
+            enum:
+            - success
+            - failure
+          revisionId:
+            type: string
+            description: Unique identifier of the new content revision
+          commitId:
+            type: string
+            description: Unique identifier for the commit (sha)
+        required:
+        - type
+        - state
+        - revisionId
+        - commitId
+    Site:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site
+        id:
+          type: string
+          description: Unique identifier of the site
+        type:
+          $ref: '#/components/schemas/SiteType'
+        appliedType:
+          $ref: '#/components/schemas/SiteType'
+          description: The currently applied type of the site. For example, frozen sites will have this set to Basic.
+        unpublishedBy:
+          type: string
+          enum:
+          - user
+          - system
+          description: Who unpublished this site last. Cleared when the site is published again.
+        title:
+          $ref: '#/components/schemas/SiteTitle'
+        icon:
+          oneOf:
+          - $ref: '#/components/schemas/CustomizationFavicon'
+          - type: 'null'
+        hostname:
+          $ref: '#/components/schemas/SiteHostname'
+        basename:
+          $ref: '#/components/schemas/SiteBasename'
+        proxy:
+          $ref: '#/components/schemas/SiteProxy'
+        visibility:
+          $ref: '#/components/schemas/SiteVisibility'
+        defaultLevel:
+          $ref: '#/components/schemas/DefaultLevel'
+        permissions:
+          type: object
+          description: The set of permissions for the site.
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the site.
+            access:
+              type: boolean
+              description: Can the user access the site in the application.
+            edit:
+              type: boolean
+              description: Can the user edit content and create draft content in the site.
+            create:
+              type: boolean
+              description: Can the user create draft content, publish content, and manage the site's content structure.
+            admin:
+              type: boolean
+              description: Can the user manage the site content, settings and publish the site.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations on the site.
+            viewAdaptiveSchema:
+              type: boolean
+              description: Can the user view the adaptive schema of the site.
+            editAdaptiveSchema:
+              type: boolean
+              description: Can the user edit the adaptive schema of the site.
+          required:
+          - view
+          - access
+          - edit
+          - create
+          - admin
+          - installIntegration
+          - viewAdaptiveSchema
+          - editAdaptiveSchema
+        published:
+          type: boolean
+          description: Whether the site is live or not. If true, the site is accessible to the audience defined by the visibility setting.
+        siteSpaces:
+          type: number
+        gitSync:
+          $ref: '#/components/schemas/GitSyncState'
+        createdAt:
+          type: string
+          format: date-time
+        lastScanAt:
+          type: string
+          format: date-time
+          description: 'When GitBook last completed a scan of the site''s content
+
+            gaps. Absent until the site has been scanned at least once.
+
+            '
+        adaptiveContent:
+          $ref: '#/components/schemas/SiteAdaptiveContent'
+        ads:
+          $ref: '#/components/schemas/SiteAds'
+        styleguide:
+          $ref: '#/components/schemas/ContentRefSpace'
+          description: 'Reference to a GitBook space holding the team''s writing style guide.
+
+            When present on a site, the editing agent receives the style guide
+
+            table of contents in its system prompt and can fetch sections on
+
+            demand to check edits against the rules.
+
+            '
+        features:
+          description: 'A list of all premium features enabled on this site. For each feature we list the plan they belong to and whether the feature is frozen. A frozen feature is still enabled but cannot be changed or modified.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteFeature'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the site in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the site in the application
+              format: uri
+            published:
+              type: string
+              description: URL of the published version of the site. Only defined when site is published.
+              format: uri
+            preview:
+              type: string
+              description: URL of the preview version of the site.
+              format: uri
+            login:
+              type: string
+              description: 'URL of the login endpoint for visitors to authenticate with the site auth backend.
+
+                '
+              format: uri
+            logout:
+              type: string
+              description: 'URL of the logout endpoint for visitors to sign out from the site auth backend.
+
+                '
+              format: uri
+          required:
+          - app
+          - location
+          - preview
+      required:
+      - object
+      - id
+      - type
+      - appliedType
+      - title
+      - visibility
+      - defaultLevel
+      - permissions
+      - published
+      - createdAt
+      - siteSpaces
+      - features
+      - urls
+    UIRenderEvent:
+      allOf:
+      - oneOf:
+        - $ref: '#/components/schemas/SpaceEvent'
+        - $ref: '#/components/schemas/SiteEvent'
+        - $ref: '#/components/schemas/InstallationEvent'
+      - type: object
+        description: Event generated when rendering a UI
+        properties:
+          auth:
+            type: object
+            properties:
+              userId:
+                type: string
+                description: The user's ID.
+            required:
+            - userId
+          type:
+            type: string
+            enum:
+            - ui_render
+          componentId:
+            type: string
+          props:
+            description: Properties to render the UI.
+            type: object
+          state:
+            description: State of the UI.
+            type: object
+          context:
+            $ref: '#/components/schemas/ContentKitContext'
+          action:
+            type: object
+        required:
+        - type
+        - componentId
+        - props
+        - context
+    OrganizationCommunityType:
+      type: string
+      enum:
+      - nonProfit
+      - openSource
+      - education
+    ContentKitContextDocument:
+      allOf:
+      - $ref: '#/components/schemas/ContentKitContextBase'
+      - type: object
+        description: Context while rendering in a document.
+        properties:
+          type:
+            type: string
+            enum:
+            - document
+          spaceId:
+            type: string
+            description: ID of the space content the document is in.
+          editable:
+            type: boolean
+        required:
+        - type
+        - spaceId
+        - editable
+    SiteAds:
+      oneOf:
+      - type: object
+        required:
+        - status
+        - submittable
+        properties:
+          status:
+            type: string
+            enum:
+            - pending
+          submittable:
+            type: boolean
+            description: True if the user can submit the site for review.
+      - type: object
+        required:
+        - status
+        - topic
+        properties:
+          status:
+            type: string
+            enum:
+            - in-review
+          topic:
+            $ref: '#/components/schemas/SiteAdsTopic'
+      - type: object
+        required:
+        - status
+        properties:
+          status:
+            type: string
+            enum:
+            - rejected
+          reason:
+            type: string
+            description: Reason for the rejection
+      - type: object
+        required:
+        - status
+        - topic
+        - zoneId
+        properties:
+          status:
+            type: string
+            enum:
+            - live
+            - disabled
+          topic:
+            $ref: '#/components/schemas/SiteAdsTopic'
+          zoneId:
+            type: string
+            description: The ad network zone ID
+    IntegrationCategory:
+      type: string
+      enum:
+      - analytics
+      - collaboration
+      - content
+      - marketing
+      - visitor-auth
+      - other
+    ContentKitHStack:
+      type: object
+      description: Horizontal stack of boxes.
+      properties:
+        type:
+          type: string
+          enum:
+          - hstack
+        align:
+          type: string
+          default: start
+          enum:
+          - start
+          - center
+          - end
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+      required:
+      - type
+      - children
+    IntegrationSummary:
+      type: string
+      description: Long form markdown summary of the integration
+      maxLength: 2048
+    ContentKitWebFrame:
+      type: object
+      description: Frame for a webpage
+      properties:
+        type:
+          type: string
+          enum:
+          - webframe
+        aspectRatio:
+          type: number
+          description: Ratio between width and height. Used to size the webframe.
+        source:
+          type: object
+          description: Content to load in the frame.
+          properties:
+            url:
+              type: string
+          required:
+          - url
+        buttons:
+          type: array
+          description: Controls button shown as an overlay in a corner of the frame.
+          items:
+            $ref: '#/components/schemas/ContentKitButton'
+        data:
+          type: object
+          description: Data to communicated to the webframe's content. Each state update will cause the webframe to receive a message.
+          additionalProperties:
+            oneOf:
+            - type: string
+            - $ref: '#/components/schemas/ContentKitDynamicBinding'
+      required:
+      - type
+      - source
+    BillingTrialStatus:
+      type: string
+      description: '- notapplicable, no trial can be started for this organization. - none, no trial has been started yet. - active, trial is active. - ended, the trial has ended and the user has choosen to stay on the free plan or has upgraded to a paid plan. - expired, the trial has ended but the user hasn''t deciced yet what to do.
+
+        '
+      enum:
+      - notapplicable
+      - none
+      - active
+      - ended
+      - expired
+    IntegrationNetwork:
+      type: object
+      description: Network configuration for the installation
+      properties:
+        proxy:
+          type: boolean
+          description: Whether the installation is proxied through the backend
+    ContentKitSelect:
+      type: object
+      description: Creates a drop down menu with a list of options for a user to choose.
+      properties:
+        type:
+          type: string
+          enum:
+          - select
+        disabled:
+          type: boolean
+        state:
+          description: State binding. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        initialValue:
+          description: Value to initialize the select with.
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+        onValueChange:
+          $ref: '#/components/schemas/ContentKitAction'
+        placeholder:
+          description: Text that appears in the form control when it has no value set
+          type: string
+        multiple:
+          description: Should the select accept the selection of multiple options. If true, the state will be an array.
+          type: boolean
+        acceptInput:
+          description: Should the filter input be allowed to be selected as an option.
+          type: boolean
+        options:
+          description: Options to be displayed in the select.
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitBuiltInSource'
+          - type: array
+            description: Static list of options
+            items:
+              $ref: '#/components/schemas/ContentKitSelectOption'
+          - type: object
+            properties:
+              url:
+                oneOf:
+                - type: string
+                  description: External source of options. The URL should respond with an array of options.
+                - $ref: '#/components/schemas/ContentKitURL'
+            required:
+            - url
+      required:
+      - type
+      - state
+      - options
+    OrganizationType:
+      type: string
+      enum:
+      - business
+      - community
+    OrganizationTarget:
+      type: object
+      required:
+      - organization
+      properties:
+        organization:
+          type: string
+    FetchRequest:
+      type: object
+      properties:
+        method:
+          type: string
+          enum:
+          - post
+          - get
+          - put
+          - delete
+        url:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - method
+      - url
+      - headers
+    InstalledIntegration:
+      type: object
+      description: An integration installation, its current status, and the resource it targets.
+      required:
+      - status
+      - integration
+      - target
+      properties:
+        status:
+          $ref: '#/components/schemas/IntegrationInstallationStatus'
+        integration:
+          $ref: '#/components/schemas/Integration'
+        target:
+          $ref: '#/components/schemas/InstalledIntegrationTarget'
+    IntegrationEventTrace:
+      type: object
+      required:
+      - logs
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationEventLog'
+    SpaceGitSyncStartedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event when a GitSync operation has been started.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_gitsync_started
+          revisionId:
+            type: string
+            description: Unique identifier of the new content revision
+          commitId:
+            type: string
+            description: Unique identifier for the commit (sha)
+        required:
+        - type
+        - revisionId
+        - commitId
+    IntegrationConfigurationSchema:
+      type: object
+      description: Schema for a configuration
+      properties:
+        properties:
+          type: object
+          additionalProperties:
+            allOf:
+            - type: object
+              properties:
+                title:
+                  $ref: '#/components/schemas/IntegrationPropertyTitle'
+                description:
+                  type: string
+                  maxLength: 100
+            - oneOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - string
+                  default:
+                    type: string
+                  completion_url:
+                    description: If specified, this URL will be called to fetch suggestions for auto-completing the property.
+                    type: string
+                  enum:
+                    type: array
+                    description: If specified, only values from this array are allowed as inputs.
+                    items:
+                      type: string
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - number
+                  default:
+                    type: number
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - boolean
+                  default:
+                    type: boolean
+                required:
+                - type
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                    - button
+                  callback_url:
+                    type: string
+                  button_text:
+                    type: string
+                required:
+                - type
+                - callback_url
+                - button_text
+        required:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+      required:
+      - properties
+    IntegrationEventLog:
+      type: object
+      properties:
+        message:
+          description: The message of the log entry.
+          type: string
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        level:
+          description: The level of the log entry.
+          type: string
+          enum:
+          - debug
+          - info
+          - warn
+          - error
+    ComputedContentDependencyTranslation:
+      type: object
+      properties:
+        ref:
+          $ref: '#/components/schemas/TranslationRef'
+        value:
+          oneOf:
+          - $ref: '#/components/schemas/TranslationResult'
+          - type: 'null'
+            description: Translation has not been run yet
+      required:
+      - ref
+      - value
+    ContentKitURL:
+      type: object
+      description: Specification for an URL in ContentKit.
+      properties:
+        host:
+          type: string
+          description: Hostname of the URL along with the port number if required.
+          example: api.example.com
+        pathname:
+          type: string
+          description: Path of the URL prefixed with a `/`.
+          example: /v1/options
+        query:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - $ref: '#/components/schemas/ContentKitDynamicBinding'
+      required:
+      - host
+      - pathname
+    ContentKitRenderOutput:
+      type: object
+      description: Output of the integration when rendering a UI.
+      oneOf:
+      - $ref: '#/components/schemas/ContentKitRenderOutputElement'
+      - $ref: '#/components/schemas/ContentKitRenderOutputComplete'
+    ContentKitLink:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - link
+        target:
           type: object
           properties:
-            code:
-              type: integer
-              description: The HTTP error code.
-            message:
+            url:
+              oneOf:
+              - type: string
+              - $ref: '#/components/schemas/ContentKitURL'
+          required:
+          - url
+        children:
+          oneOf:
+          - type: string
+          - type: array
+            items:
               type: string
-              description: A description of the error.
-    Integration:
+      required:
+      - type
+      - target
+      - children
+    IntegrationScope:
+      type: string
+      enum:
+      - space:content:read
+      - space:content:write
+      - space:metadata:read
+      - space:metadata:write
+      - space:git:sync
+      - page:feedback:read
+      - site:metadata:read
+      - site:views:read
+      - site:script:inject
+      - site:script:cookies
+      - site:visitor:auth
+      - site:visitor:claims
+      - site:adaptive:read
+      - site:adaptive:write
+      - conversations:ingest
+      - openapi:read
+      - openapi:write
+    IntegrationTitle:
+      type: string
+      description: Title of the integration
+      minLength: 2
+      maxLength: 30
+    SiteIntegrationScript:
+      type: object
+      properties:
+        script:
+          description: Script URL to load.
+          $ref: '#/components/schemas/URL'
+        contentSecurityPolicy:
+          description: Content Security Policy to secure the loading of this script.
+          type: string
+        cookies:
+          type: boolean
+          description: If true, the script will potentially load use cookies and visitors should be aware.
+      required:
+      - script
+      - cookies
+    TranslationResult:
+      type: object
+      description: Result of a translation.
+      properties:
+        space:
+          type: string
+          description: ID of the space containing the result of the translation
+        revision:
+          type: string
+          description: ID of the revision generated by the translation
+        language:
+          $ref: '#/components/schemas/TranslationLanguage'
+      required:
+      - space
+      - revision
+      - language
+    ContentKitInput:
+      type: object
+      description: Field for an input.
+      properties:
+        type:
+          type: string
+          enum:
+          - input
+        label:
+          type: string
+          description: Text label displayed next to the input.
+        hint:
+          oneOf:
+          - type: string
+          - $ref: '#/components/schemas/ContentKitInlineElement'
+        element:
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitTextInput'
+          - $ref: '#/components/schemas/ContentKitSelect'
+          - $ref: '#/components/schemas/ContentKitSwitch'
+          - $ref: '#/components/schemas/ContentKitRadio'
+          - $ref: '#/components/schemas/ContentKitCheckbox'
+          - $ref: '#/components/schemas/ContentKitButton'
+          - $ref: '#/components/schemas/ContentKitCodeBlock'
+      required:
+      - type
+      - label
+      - element
+    SiteAdsTopic:
+      type: string
+      description: Topic of the content
+      enum:
+      - webdev
+      - crypto
+    SitePointer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - site
+        site:
+          type: string
+          description: Unique identifier for the site
+      required:
+      - type
+      - site
+    ContentKitVStack:
+      type: object
+      description: Vertical stack of boxes.
+      properties:
+        type:
+          type: string
+          enum:
+          - vstack
+        align:
+          type: string
+          default: start
+          enum:
+          - start
+          - center
+          - end
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+      required:
+      - type
+      - children
+    ContentKitRootElement:
+      description: Element used as root
+      oneOf:
+      - $ref: '#/components/schemas/ContentKitBlock'
+      - $ref: '#/components/schemas/ContentKitModal'
+      - $ref: '#/components/schemas/ContentKitConfiguration'
+      discriminator:
+        propertyName: type
+    IntegrationBlockMarkdown:
+      oneOf:
+      - type: object
+        description: Format the custom block as a codeblock
+        properties:
+          codeblock:
+            description: Code block syntax to use to identify the block.
+            type: string
+          body:
+            description: Key of the property to use as body of the codeblock.
+            type: string
+        required:
+        - codeblock
+        - body
+    SiteInstallationDeletedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SiteEvent'
+      - type: object
+        description: Event received when integration has been uninstalled from a site.
+        properties:
+          type:
+            type: string
+            enum:
+            - site_installation_deleted
+          previous:
+            type: object
+            description: The state of the site installation before it was deleted.
+            properties:
+              configuration:
+                type: object
+                description: The previous configuration of the site installation.
+        required:
+        - type
+        - previous
+    SpaceInstallationSetupEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event received when integration has been installed or updated on a space.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_installation_setup
+          status:
+            $ref: '#/components/schemas/IntegrationInstallationStatus'
+          previous:
+            type: object
+            description: The state of the Space installation before it was updated.
+            properties:
+              status:
+                $ref: '#/components/schemas/IntegrationInstallationStatus'
+              configuration:
+                type: object
+                description: The previous configuration of the Space installation.
+            required:
+            - status
+        required:
+        - type
+        - status
+    FetchVisitorAuthenticationEvent:
+      allOf:
+      - $ref: '#/components/schemas/SiteEvent'
+      - type: object
+        description: Common properties for all events related to authenticated access from an installation
+        properties:
+          type:
+            type: string
+            enum:
+            - fetch_visitor_authentication
+          location:
+            type: string
+          searchParams:
+            type: object
+            additionalProperties:
+              type: string
+            description: Whitelisted search parameters from the visitor authentication request.
+          cookies:
+            type: object
+            additionalProperties:
+              type: string
+            description: Whitelisted cookies from the visitor authentication request.
+          action:
+            type: string
+            enum:
+            - logout
+            description: The visitor authentication action to resolve. If omitted, integrations resolve to the existing login redirect.
+        required:
+        - type
+    IntegrationSecrets:
+      type: object
+      description: Secrets stored on the integration and passed at runtime.
+      properties: {}
+      maxProperties: 20
+      additionalProperties:
+        type: string
+    IntegrationTarget:
+      type: string
+      description: The target on which the integration can operate and needs to be configured for
+      enum:
+      - all
+      - site
+      - space
+      - organization
+    IntegrationBlock:
       type: object
       properties:
         id:
           type: string
-          description: The unique identifier of the integration.
-        name:
+          description: Unique ID in the integration for the block. It also represents the UI component used.
+        title:
           type: string
-          description: The name of the integration.
+          description: Short descriptive title for the block.
+          minLength: 2
+          maxLength: 40
         description:
           type: string
-          description: A description of the integration.
-        installedAt:
+          description: Long descriptive text for the block.
+          minLength: 0
+          maxLength: 150
+        icon:
           type: string
-          format: date-time
+          description: URL of the icon to represent this block.
+        urlUnfurl:
+          type: array
+          description: URLs patterns to convert as this block.
+          items:
+            type: string
+        markdown:
+          $ref: '#/components/schemas/IntegrationBlockMarkdown'
+      required:
+      - id
+      - title
+    IntegrationVisibility:
+      type: string
+      enum:
+      - public
+      - private
+      - unlisted
+    TaskEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - type: object
+        description: Event representing a background task trigger for an integration.
+        properties:
+          type:
+            type: string
+            enum:
+            - task
+          task:
+            type: object
+            description: Payload associated with the integration task.
+        required:
+        - type
+        - task
+    IntegrationBlocks:
+      type: array
+      description: Custom blocks defined by this integration.
+      items:
+        $ref: '#/components/schemas/IntegrationBlock'
+    ContentKitBox:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - box
+        grow:
+          description: specifies how much of the remaining space in the container should be assigned to the element
+          type: number
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+      required:
+      - type
+      - children
+    ContentKitContextConfigurationSite:
+      allOf:
+      - $ref: '#/components/schemas/ContentKitContextBase'
+      - type: object
+        description: Context while rendering in a site-installation's configuration.
+        properties:
+          type:
+            type: string
+            enum:
+            - configuration_site
+          siteId:
+            type: string
+            description: ID of the site the site-installation configuration is in.
+        required:
+        - type
+        - siteId
+    IntegrationConfiguration:
+      oneOf:
+      - $ref: '#/components/schemas/IntegrationConfigurationSchema'
+      - $ref: '#/components/schemas/IntegrationConfigurationComponent'
+    OrganizationHostname:
+      type: string
+      description: Default hostname for the organization's public content, e.g. <org-hostname>.gitbook.io
+      minLength: 3
+      maxLength: 32
+    IntegrationConfigurationComponent:
+      type: object
+      description: ContentKit component for configuration
+      properties:
+        componentId:
+          type: string
+          description: ID of the ContentKit component defined in the integration
+      required:
+      - componentId
+    IntegrationCategories:
+      type: array
+      description: Categories for which the integration is listed in the marketplace
+      items:
+        $ref: '#/components/schemas/IntegrationCategory'
+    ContentKitRadio:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - radio
+        disabled:
+          type: boolean
+        state:
+          description: State binding. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        value:
+          description: Value to store in th state when the checkbox is selected.
+          oneOf:
+          - type: string
+          - type: number
+        confirm:
+          $ref: '#/components/schemas/ContentKitConfirm'
+      required:
+      - type
+      - state
+      - value
+    SiteCustomizationFeature:
+      type: string
+      description: A list of all premium customizations.
+      enum:
+      - header-logo
+      - header-primary-link
+      - theme-preset
+      - premium-fonts
+      - custom-icons
+      - footer-logo
+      - footer-links
+      - footer-copyright
+      - semantic-colors
+    IntegrationInstallation:
+      type: object
+      description: Installation of an integration on an account
+      properties:
+        id:
+          type: string
+        status:
+          $ref: '#/components/schemas/IntegrationInstallationStatus'
+        space_selection:
+          $ref: '#/components/schemas/IntegrationInstallationSpaceSelection'
+        site_selection:
+          $ref: '#/components/schemas/IntegrationInstallationSiteSelection'
+        spaces:
+          type: number
+          description: Count of spaces, the installation is managing
+        configuration:
+          $ref: '#/components/schemas/IntegrationInstallationConfiguration'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the installation in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the integration's installation in the application
+              format: uri
+            publicEndpoint:
+              type: string
+              description: Public HTTP endpoint for the integration's installation
+              format: uri
+            publicContentEndpoint:
+              type: string
+              description: Public endpoint serving the integration's rendered content (e.g. WebFrames), isolated from the cookie-bearing publicEndpoint origin. Equals publicEndpoint when no separate content origin is configured.
+              format: uri
+          required:
+          - location
+          - app
+          - publicEndpoint
+          - publicContentEndpoint
+        externalIds:
+          $ref: '#/components/schemas/IntegrationInstallationExternalIds'
+        target:
+          $ref: '#/components/schemas/IntegrationInstallationTarget'
+          description: Target of the integration installation
+        network:
+          $ref: '#/components/schemas/IntegrationNetwork'
+          description: Network configuration for the installation
+      required:
+      - id
+      - status
+      - space_selection
+      - site_selection
+      - spaces
+      - configuration
+      - urls
+      - externalIds
+      - target
+      - createdAt
+      - updatedAt
+    ContentKitMarkdown:
+      type: object
+      description: Block with rich text formatting of a markdown content.
+      properties:
+        type:
+          type: string
+          enum:
+          - markdown
+        content:
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitDynamicBinding'
+          - type: string
+            description: Markdown content to display
+      required:
+      - type
+      - content
+    ContentKitContextBase:
+      type: object
+      description: Common properties for ContentKit context.
+      properties:
+        theme:
+          type: string
+          enum:
+          - dark
+          - light
+      required:
+      - theme
+    SpaceVisibilityUpdatedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event when the visibility of the space has been changed.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_visibility_updated
+          previousVisibility:
+            $ref: '#/components/schemas/ContentVisibility'
+          visibility:
+            $ref: '#/components/schemas/ContentVisibility'
+        required:
+        - type
+        - previousVisibility
+        - visibility
+    BaseEvent:
+      description: Common properties for all events.
+      type: object
+      properties:
+        eventId:
+          description: Unique identifier for the event.
+          type: string
+        type:
+          description: Type of the event.
+          type: string
+      required:
+      - eventId
+      - type
+    RenderIntegrationUI:
+      type: object
+      properties:
+        componentId:
+          type: string
+          description: ID of the component to render in the integration.
+        props:
+          description: Current properties of the UI.
+          $ref: '#/components/schemas/PlainObject'
+        state:
+          type: object
+          description: Current local state of the UI.
+        context:
+          $ref: '#/components/schemas/ContentKitContext'
+        action:
+          $ref: '#/components/schemas/ContentKitAction'
+      required:
+      - componentId
+      - props
+      - context
+    IntegrationContentSource:
+      type: object
+      description: Definition of a content source provided by the integration.
+      properties:
+        id:
+          type: string
+          description: Unique ID in the integration for the source.
+        title:
+          type: string
+          description: Short descriptive title for the source.
+          minLength: 2
+          maxLength: 40
+        description:
+          type: string
+          description: Long descriptive text for the source.
+          minLength: 0
+          maxLength: 150
+        icon:
+          type: string
+          description: URL of the icon to represent this source.
+        configuration:
+          $ref: '#/components/schemas/IntegrationConfigurationComponent'
+      required:
+      - id
+      - title
+      - configuration
+    IntegrationSiteInstallation:
+      allOf:
+      - $ref: '#/components/schemas/IntegrationContentInstallationBase'
+      - type: object
+        properties:
+          site:
+            description: The site the integration is installed on. Using the string value is deprecated in favor of site.id
+            oneOf:
+            - type: string
+            - $ref: '#/components/schemas/Site'
+        required:
+        - site
+    OpenAPISpecVisibility:
+      type: string
+      description: 'The visibility setting of the OpenAPI spec.
+
+        * `private`: The spec is not publicly available.
+
+        * `public`: The spec is available to anyone with a public link.
+
+        '
+      enum:
+      - private
+      - public
+    SiteFeatureKey:
+      type: string
+      description: The site feature identifier
+      enum:
+      - sites-adaptive-content
+      - sites-advanced-customization
+      - sites-advanced-insights
+      - sites-ads
+      - sites-ai-search
+      - sites-ai-assistant
+      - sites-ai-insights
+      - sites-fix-broken-links
+      - sites-connections
+      - sites-content-gaps
+      - sites-channels
+      - sites-embed
+      - sites-api-playground
+      - sites-basic-customization
+      - sites-broken-links
+      - sites-custom-domain
+      - sites-custom-subdirectory
+      - sites-full-text-search
+      - sites-multivariant-site
+      - sites-no-custom-domain
+      - sites-page-feedback
+      - sites-page-traffic-insights
+      - sites-pdf-export
+      - sites-preview-deployments
+      - sites-public-visibility
+      - sites-redirects
+      - sites-search-insights
+      - sites-sections
+      - sites-seo
+      - sites-share-links
+      - sites-style-guide
+      - sites-unlisted-visibility
+      - sites-user-contribution
+      - sites-visitor-authentication
+      - sites-visitors
+    AICreditThreshold:
+      description: An AI credit threshold from 5% to 50%, or null when disabled.
+      oneOf:
+      - type: number
+        minimum: 5
+        maximum: 50
+      - type: 'null'
+    ContentKitModal:
+      type: object
+      description: Overlay modal.
+      properties:
+        type:
+          type: string
+          enum:
+          - modal
+        title:
+          type: string
+        subtitle:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitInlineElement'
+        size:
+          type: string
+          enum:
+          - medium
+          - xlarge
+          - fullscreen
+        returnValue:
+          description: Data passed back to the parent view when the modal is closed. These data are accessible in the "@ui.modal.close"
+          type: object
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+        submit:
+          $ref: '#/components/schemas/ContentKitButton'
+      required:
+      - type
+      - children
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    UpdateIntegrationInstallation:
+      type: object
+      properties:
+        externalIds:
+          $ref: '#/components/schemas/IntegrationInstallationExternalIds'
+        configuration:
+          $ref: '#/components/schemas/IntegrationInstallationConfiguration'
+        space_selection:
+          $ref: '#/components/schemas/IntegrationInstallationSpaceSelection'
+        site_selection:
+          $ref: '#/components/schemas/IntegrationInstallationSiteSelection'
+    OrganizationEmailDomains:
+      type: array
+      items:
+        type: string
+    IntegrationDescription:
+      type: string
+      description: Description of the integration
+      maxLength: 100
+    IntegrationInstallationConfiguration:
+      type: object
+      description: Configuration of the integration at the account level
+      additionalProperties: true
+    OrganizationBilling:
+      type: object
+      properties:
+        interval:
+          $ref: '#/components/schemas/BillingInterval'
+        endDate:
+          oneOf:
+          - $ref: '#/components/schemas/Timestamp'
+          - type: 'null'
+        hasPaymentFailed:
+          description: If true, we were unable to collect the last payment
+          type: boolean
+        canCheckout:
+          description: "If true, organization can create a checkout session to subscribe/update billing. \nIf false, organization must resolve other billing issues before a checkout can be done.\n"
+          type: boolean
+        isScheduledToCancel:
+          description: If true, the billing is set to cancel at the end of its current period
+          type: boolean
+        pricing:
+          description: Pricing information for the organization
+          $ref: '#/components/schemas/OrganizationPricing'
+        usageAddons:
+          description: Configuration for the usage-based addons
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/BillingMeterAddon'
+        minUsers:
+          description: The minimum number of members allowed for this organization.
+          type: number
+        maxUsers:
+          description: The maximum number of members allowed for this organization
+          type: number
+        minPremiumSites:
+          description: The minimum number of premium sites allowed for this organization.
+          type: number
+        maxPremiumSites:
+          description: The maximum number of premium sites allowed for this organization.
+          type: number
+        minUltimateSites:
+          description: The minimum number of ultimate sites allowed for this organization.
+          type: number
+        maxUltimateSites:
+          description: The maximum number of ultimate sites allowed for this organization.
+          type: number
+        paidMembers:
+          description: The number of paid members on the current subscription.
+          type: number
+        paidPremiumSites:
+          description: The number of paid premium sites on the current subscription.
+          type: number
+        paidUltimateSites:
+          description: The number of paid ultimate sites on the current subscription.
+          type: number
+        canChangeInterval:
+          description: Whether changing billing interval is allowed
+          type: boolean
+        canUseSAML:
+          description: Whether configuring SAML is allowed
+          type: boolean
+        canUseAI:
+          description: Whether AI can be enabled for the organization
+          type: boolean
+        creditsBundle:
+          description: The AI credit bundle the organization tops up every month, or null when the organization is not billed for AI usage. `none` means pay as you go.
+          oneOf:
+          - $ref: '#/components/schemas/BillingCreditsBundle'
+          - type: 'null'
+        aiCreditAllowance:
+          description: The yearly AI credit allowance agreed in the organization's contract, or null when none is set.
+          oneOf:
+          - type: integer
+          - type: 'null'
+        aiCreditRollover:
+          description: The percentage of unused paid bundle credits carried over to the next monthly AI billing period.
+          type: integer
+          minimum: 0
+          maximum: 100
+      required:
+      - interval
+      - endDate
+      - hasPaymentFailed
+      - canCheckout
+      - isScheduledToCancel
+      - pricing
+      - usageAddons
+      - canChangeInterval
+      - canUseSAML
+      - canUseAI
+      - creditsBundle
+      - aiCreditAllowance
+      - aiCreditRollover
+    ContentKitButton:
+      type: object
+      description: Pressable button triggering an action.
+      properties:
+        type:
+          type: string
+          enum:
+          - button
+        style:
+          type: string
+          enum:
+          - primary
+          - secondary
+          - danger
+        onPress:
+          $ref: '#/components/schemas/ContentKitAction'
+        icon:
+          $ref: '#/components/schemas/ContentKitIcon'
+        trailingIcon:
+          $ref: '#/components/schemas/ContentKitIcon'
+        label:
+          type: string
+        tooltip:
+          type: string
+        confirm:
+          $ref: '#/components/schemas/ContentKitConfirm'
+        disabled:
+          type: boolean
+      required:
+      - type
+      - onPress
+    ContentComputeRevisionEvent:
+      allOf:
+      - $ref: '#/components/schemas/ContentComputeEvent'
+      - type: object
+        description: 'Event generated when computing revision in a content.
+
+          The integration should respond with an array of pages and files.
+
+          '
+        properties:
+          type:
+            type: string
+            enum:
+            - content_compute_revision
+        required:
+        - type
+    Organization:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "organization"
+          enum:
+          - organization
+        id:
+          type: string
+          description: Unique identifier for the organization
+        title:
+          $ref: '#/components/schemas/OrganizationTitle'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        emailDomains:
+          $ref: '#/components/schemas/OrganizationEmailDomains'
+        hostname:
+          $ref: '#/components/schemas/OrganizationHostname'
+        type:
+          $ref: '#/components/schemas/OrganizationType'
+        useCase:
+          $ref: '#/components/schemas/OrganizationUseCase'
+        communityType:
+          $ref: '#/components/schemas/OrganizationCommunityType'
+        defaultRole:
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+        defaultContent:
+          $ref: '#/components/schemas/OrganizationDefaultContent'
+        sso:
+          description: Whether SSO is enforced organization-wide
+          type: boolean
+        ai:
+          description: If true, the organization is configured to use all our AI features.
+          type: boolean
+        aiPreference:
+          description: Whether the master AI setting is turned on, regardless of plan availability. Contract overrides forcing AI off take precedence.
+          type: boolean
+        aiSettings:
+          $ref: '#/components/schemas/OrganizationAISettings'
+        aiPaused:
+          description: Whether AI features have been paused automatically due to lack of AI credits.
+          type: boolean
+        inviteLinks:
+          description: If true, invite links are enabled for this organization.
+          type: boolean
+        auditLogs:
+          description: Whether audit logs can currently be accessed for this organization.
+          type: boolean
+        plan:
+          $ref: '#/components/schemas/BillingProduct'
+        billing:
+          description: Billing details, only available for org members.
+          $ref: '#/components/schemas/OrganizationBilling'
+        mergeRules:
+          $ref: '#/components/schemas/MergeRulesStandaloneConfiguration'
+        supportCost:
+          description: Support cost set by the organization, only available for org members.
+          $ref: '#/components/schemas/OrganizationSupportCost'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the organization in the API
+              format: uri
+            app:
+              type: string
+              description: URL of the organization in the application
+              format: uri
+            logo:
+              description: URL of the logo of this organization, if defined.
+              $ref: '#/components/schemas/URL'
+          required:
+          - app
+          - location
+        trial:
+          type: object
+          properties:
+            status:
+              $ref: '#/components/schemas/BillingTrialStatus'
+            count:
+              type: integer
+              description: Number of trials the organization has consumed.
+            endDate:
+              description: The trial's end date, if the organization has or had a trial.
+              $ref: '#/components/schemas/Timestamp'
+            decision:
+              type: string
+              description: The decision taken by the user at the end of the trial
+              enum:
+              - downgrade
+          required:
+          - status
+          - count
+        customHostname:
+          description: Custom hostname linked to this organization
+          type: string
+        blocked:
+          type: object
+          description: If the organization is blocked, information about the block will appear here
+          properties:
+            source:
+              $ref: '#/components/schemas/BlockSource'
+            reason:
+              $ref: '#/components/schemas/BlockReason'
+          required:
+          - reason
+        permissions:
+          type: object
+          description: The set of permissions for the organization
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the organization.
+            access:
+              type: boolean
+              description: Can the user view the organization in the application.
+            admin:
+              type: boolean
+              description: Can the user manage the title, members, etc.
+            ownTeam:
+              type: boolean
+              description: Is the user a team owner.
+            createContent:
+              type: boolean
+              description: Can the user create new spaces/collections in the organization.
+            createOpenAPISpec:
+              type: boolean
+              description: Can the user create new OpenAPI specifications.
+            viewBilling:
+              type: boolean
+              description: Can the user view the billing details of the organization.
+            listMembers:
+              type: boolean
+              description: Can the user list the members of the organization.
+            listTeams:
+              type: boolean
+              description: Can the user list the teams in the organization.
+            listIntegrations:
+              type: boolean
+              description: Can the user list the integrations in the organization.
+            listInstallations:
+              type: boolean
+              description: Can the user list the integration installations in the organization.
+            installIntegration:
+              type: boolean
+              description: Can the user install integrations in the organization.
+          required:
+          - view
+          - access
+          - admin
+          - ownTeam
+          - createContent
+          - createOpenAPISpec
+          - viewBilling
+          - listMembers
+          - listTeams
+          - listIntegrations
+          - listInstallations
+          - installIntegration
+      required:
+      - object
+      - id
+      - plan
+      - title
+      - createdAt
+      - inviteLinks
+      - type
+      - emailDomains
+      - mergeRules
+      - urls
+      - trial
+      - permissions
+    IntegrationPropertyTitle:
+      type: string
+      description: Property title for an integration configuration property
+      minLength: 2
+      maxLength: 50
+    SiteProxy:
+      type: object
+      properties:
+        origin:
+          $ref: '#/components/schemas/SiteProxyOrigin'
+        target:
+          type: string
+          description: The target URL to which the requests at the origin URL should be proxied to.
+      required:
+      - origin
+      - target
+    Integration:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - integration
+        name:
+          type: string
+          description: Unique named identifier for the integration
+        version:
+          type: number
+          description: Version of the integration
+        title:
+          $ref: '#/components/schemas/IntegrationTitle'
+        description:
+          $ref: '#/components/schemas/IntegrationDescription'
+        summary:
+          $ref: '#/components/schemas/IntegrationSummary'
+        previewImages:
+          type: array
+          description: URLs of images to showcase the integration
+          maxItems: 3
+          items:
+            type: string
+        target:
+          $ref: '#/components/schemas/IntegrationTarget'
+        verified:
+          type: boolean
+          description: If true, the integration has been verified by the GitBook team
+        visibility:
+          $ref: '#/components/schemas/IntegrationVisibility'
+        scopes:
+          $ref: '#/components/schemas/IntegrationScopes'
+        categories:
+          $ref: '#/components/schemas/IntegrationCategories'
+        blocks:
+          $ref: '#/components/schemas/IntegrationBlocks'
+        contentSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationContentSource'
+        configurations:
+          $ref: '#/components/schemas/IntegrationConfigurations'
+        externalLinks:
+          $ref: '#/components/schemas/IntegrationExternalLinks'
+        owner:
+          $ref: '#/components/schemas/Organization'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the integration in the API
+              format: uri
+            icon:
+              type: string
+              description: URL of the icon associated to the integration
+              format: uri
+            app:
+              type: string
+              description: URL of the integration in the application
+              format: uri
+            assets:
+              type: string
+              description: URL of the integration's assets.
+              format: uri
+            publicEndpoint:
+              type: string
+              description: Public HTTP endpoint for the integration
+              format: uri
+            publicContentEndpoint:
+              type: string
+              description: Public endpoint serving the integration's rendered content (e.g. WebFrames), isolated from the cookie-bearing publicEndpoint origin. Equals publicEndpoint when no separate content origin is configured.
+              format: uri
+          required:
+          - location
+          - app
+          - assets
+          - publicEndpoint
+          - publicContentEndpoint
+        permissions:
+          type: object
+          description: The set of permissions for the integration
+          properties:
+            admin:
+              type: boolean
+          required:
+          - admin
+        contentSecurityPolicy:
+          $ref: '#/components/schemas/IntegrationContentSecurityPolicy'
+      required:
+      - object
+      - name
+      - version
+      - title
+      - scopes
+      - categories
+      - visibility
+      - target
+      - verified
+      - previewImages
+      - externalLinks
+      - owner
+      - permissions
+      - urls
+    IntegrationScopes:
+      type: array
+      description: Permissions that should be granted to the integration
+      items:
+        $ref: '#/components/schemas/IntegrationScope'
+    ContentKitDefaultAction:
+      oneOf:
+      - type: object
+        description: Action to open an overlay modal defined by "componentId".
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.open'
+          componentId:
+            type: string
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - componentId
+        - props
+      - type: object
+        description: Action when a modal overlay is closed, with a return value to the higher level component in the stack. This action will be triggered on the parent component instance.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.close'
+          returnValue:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - returnValue
+      - type: object
+        description: Action to open an url.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.url.open'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action when a link is being unfurled into a block.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@link.unfurl'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action to update the properties stored in the related node.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@editor.node.updateProps'
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - props
+    OrganizationPricing:
+      type: object
+      description: Pricing information for an organization
+      properties:
+        members:
+          type: object
+          description: Pricing for members (organization plan)
+          properties:
+            plus_2024:
+              $ref: '#/components/schemas/OrganizationPricePair'
+            pro_2024:
+              $ref: '#/components/schemas/OrganizationPricePair'
+          required:
+          - plus_2024
+          - pro_2024
+          additionalProperties: false
+        sites:
+          type: object
+          description: Pricing for site types (site plans)
+          properties:
+            premium:
+              $ref: '#/components/schemas/OrganizationPricePair'
+            ultimate:
+              $ref: '#/components/schemas/OrganizationPricePair'
+          required:
+          - premium
+          - ultimate
+          additionalProperties: false
+      required:
+      - members
+      - sites
+    ContentKitHint:
+      type: object
+      description: Element used to contextualize other elements or info.
+      properties:
+        type:
+          type: string
+          enum:
+          - hint
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitInlineElement'
+      required:
+      - type
+      - children
+    ContentKitRenderOutputComplete:
+      type: object
+      description: Output of completed lifecycle of the component.
+      properties:
+        type:
+          type: string
+          enum:
+          - complete
+        returnValue:
+          type: object
+      required:
+      - type
+    ContentKitContextConfigurationSpace:
+      allOf:
+      - $ref: '#/components/schemas/ContentKitContextBase'
+      - type: object
+        description: Context while rendering in a space-installation's configuration.
+        properties:
+          type:
+            type: string
+            enum:
+            - configuration_space
+          spaceId:
+            type: string
+            description: ID of the space the space-installation configuration is in.
+        required:
+        - type
+        - spaceId
+    InstallationEvent:
+      allOf:
+      - $ref: '#/components/schemas/BaseEvent'
+      - type: object
+        description: Common properties for all events related to an installation
+        properties:
+          installationId:
+            type: string
+            description: ID of the integration installation
+        required:
+        - installationId
+    ContentKitTextInput:
+      type: object
+      description: Text input to prompt the user.
+      properties:
+        type:
+          type: string
+          enum:
+          - textinput
+        disabled:
+          type: boolean
+        state:
+          description: State binding. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        initialValue:
+          description: Text value to initialize the input with.
+          type: string
+        placeholder:
+          description: Text that appears in the form control when it has no value set
+          type: string
+        multiline:
+          type: boolean
+        inputType:
+          type: string
+          enum:
+          - text
+          - password
+          - email
+          default: text
+      required:
+      - type
+      - state
+    ContentKitDescendantElement:
+      description: Any element that can be used as children.
+      oneOf:
+      - $ref: '#/components/schemas/ContentKitButton'
+      - $ref: '#/components/schemas/ContentKitTextInput'
+      - $ref: '#/components/schemas/ContentKitHStack'
+      - $ref: '#/components/schemas/ContentKitVStack'
+      - $ref: '#/components/schemas/ContentKitBox'
+      - $ref: '#/components/schemas/ContentKitDivider'
+      - $ref: '#/components/schemas/ContentKitWebFrame'
+      - $ref: '#/components/schemas/ContentKitCodeBlock'
+      - $ref: '#/components/schemas/ContentKitMarkdown'
+      - $ref: '#/components/schemas/ContentKitCard'
+      - $ref: '#/components/schemas/ContentKitImage'
+      - $ref: '#/components/schemas/ContentKitInput'
+      - $ref: '#/components/schemas/ContentKitSelect'
+      - $ref: '#/components/schemas/ContentKitSwitch'
+      - $ref: '#/components/schemas/ContentKitCheckbox'
+      - $ref: '#/components/schemas/ContentKitRadio'
+      - $ref: '#/components/schemas/ContentKitText'
+      - $ref: '#/components/schemas/ContentKitHint'
+      - $ref: '#/components/schemas/ContentKitLink'
+      - $ref: '#/components/schemas/ContentKitStepperStep'
+      discriminator:
+        propertyName: type
+    IntegrationInstallationTarget:
+      oneOf:
+      - $ref: '#/components/schemas/OrganizationTarget'
+    ContentKitSelectOption:
+      type: object
+      description: An individual option in a select element
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        icon:
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitIcon'
+          - $ref: '#/components/schemas/ContentKitImage'
+      required:
+      - id
+      - label
+    ContentKitInlineElement:
+      description: Any element that is inline.
+      oneOf:
+      - $ref: '#/components/schemas/ContentKitText'
+      - $ref: '#/components/schemas/ContentKitImage'
+      - $ref: '#/components/schemas/ContentKitLink'
+      discriminator:
+        propertyName: type
+    OrganizationAISettings:
+      type: object
+      description: AI preferences. Missing feature keys leave features enabled, subject to the master AI setting and feature eligibility.
+      additionalProperties: false
+      properties:
+        ai-agent:
+          type: boolean
+          enum:
+          - false
+        ai-assistant:
+          type: boolean
+          enum:
+          - false
+        ai-broken-links:
+          type: boolean
+          enum:
+          - false
+        ai-content-gap:
+          type: boolean
+          enum:
+          - false
+        ai-insight:
+          type: boolean
+          enum:
+          - false
+        ai-import:
+          type: boolean
+          enum:
+          - false
+        ai-platform:
+          type: boolean
+          enum:
+          - false
+        ai-style-guide:
+          type: boolean
+          enum:
+          - false
+        ai-translation:
+          type: boolean
+          enum:
+          - false
+        aiCreditAlertThreshold:
+          $ref: '#/components/schemas/AICreditThreshold'
+        aiCreditPauseEnabled:
+          description: Whether AI features pause automatically once all AI credits are used, before usage is billed as overage.
+          type: boolean
+        aiAlertNotificationAlertId:
+          type: string
+          readOnly: true
+        aiPauseNotificationAlertId:
+          type: string
+          readOnly: true
+    ContentKitAction:
+      anyOf:
+      - type: object
+        description: Custom action to re-render the block.
+        properties:
+          action:
+            type: string
+        additionalProperties: true
+        required:
+        - action
+      - $ref: '#/components/schemas/ContentKitDefaultAction'
+    OrganizationTitle:
+      type: string
+      description: Name of the organization
+      minLength: 2
+      maxLength: 255
+      pattern: \S.*\S
+    ContentComputeDocumentEvent:
+      allOf:
+      - $ref: '#/components/schemas/ContentComputeEvent'
+      - type: object
+        description: 'Event generated when computing the document of a pages.
+
+          The integration should respond with a `Document`.
+
+          '
+        properties:
+          type:
+            type: string
+            enum:
+            - content_compute_document
+        required:
+        - type
+    SiteFeature:
+      type: object
+      description: A site feature and the plan it is available on.
+      properties:
+        id:
+          $ref: '#/components/schemas/SiteFeatureKey'
+        plan:
+          $ref: '#/components/schemas/SiteType'
+        frozen:
+          description: A frozen feature is still enabled but cannot be changed or modified.
+          type: boolean
+        customizations:
+          description: A list of the actual advanced customizations used (only applicable for sites-advanced-customization)
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteCustomizationFeature'
+      required:
+      - id
+      - plan
+      - frozen
+    BlockSource:
+      type: string
+      description: Source for an organization block
+      enum:
+      - backoffice
+      - external
+      - internal
+    SiteBasename:
+      type: string
+      description: Basename for the site. For e.g. api
+      minLength: 1
+      maxLength: 100
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    OrganizationDefaultContent:
+      description: The default content for the organization
+      oneOf:
+      - $ref: '#/components/schemas/SitePointer'
+    ContentKitRenderOutputElement:
+      type: object
+      description: Output of type element in the lifecycle of the component.
+      properties:
+        type:
+          type: string
+          enum:
+          - element
+        element:
+          $ref: '#/components/schemas/ContentKitRootElement'
+        state:
+          type: object
+        props:
+          $ref: '#/components/schemas/PlainObject'
+        canAccessVisitorClaims:
+          type: boolean
+          description: Whether the rendered integration UI can receive visitor claims.
+      required:
+      - element
+      - state
+      - props
+    ContentKitDynamicBinding:
+      type: object
+      description: Binding between a property and a state value.
+      properties:
+        $state:
+          type: string
+          description: Key in the state
+      required:
+      - $state
+    SiteHostname:
+      type: string
+      description: Custom hostname for the site, for e.g. docs.mycompany.com
+      pattern: ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?[.]){2,}[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$
+      maxLength: 512
+    UpdateIntegrationSiteInstallation:
+      type: object
+      properties:
+        externalIds:
+          $ref: '#/components/schemas/IntegrationInstallationExternalIds'
+        configuration:
+          $ref: '#/components/schemas/IntegrationInstallationConfiguration'
+    ContentKitBlock:
+      type: object
+      description: Higher level element to represent a custom block.
+      properties:
+        type:
+          type: string
+          enum:
+          - block
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+        controls:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/ContentKitBlockControl'
+            - type: array
+              items:
+                $ref: '#/components/schemas/ContentKitBlockControl'
+      required:
+      - type
+      - children
+    InstallationDeletedEvent:
+      allOf:
+      - $ref: '#/components/schemas/InstallationEvent'
+      - type: object
+        description: Event received when integration has been uninstalled from an organization.
+        properties:
+          type:
+            type: string
+            enum:
+            - installation_deleted
+          previous:
+            type: object
+            description: The state of the installation before it was deleted.
+            properties:
+              configuration:
+                type: object
+                description: The previous configuration of the installation.
+        required:
+        - type
+        - previous
+    FetchPublishedScriptEvent:
+      allOf:
+      - $ref: '#/components/schemas/SiteEvent'
+      - type: object
+        description: Common properties for all events related to fetching a published script from an installation
+        properties:
+          type:
+            type: string
+            enum:
+            - fetch_published_script
+        required:
+        - type
+    UpdateIntegrationSpaceInstallation:
+      type: object
+      properties:
+        externalIds:
+          $ref: '#/components/schemas/IntegrationInstallationExternalIds'
+        configuration:
+          $ref: '#/components/schemas/IntegrationInstallationConfiguration'
+    ContentKitCard:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - card
+        title:
+          type: string
+        hint:
+          oneOf:
+          - type: string
+          - type: array
+            items:
+              $ref: '#/components/schemas/ContentKitInlineElement'
+        icon:
+          oneOf:
+          - $ref: '#/components/schemas/ContentKitIcon'
+          - $ref: '#/components/schemas/ContentKitImage'
+        onPress:
+          $ref: '#/components/schemas/ContentKitAction'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+        buttons:
+          type: array
+          description: Buttons displayed in the top right corner of the card.
+          items:
+            $ref: '#/components/schemas/ContentKitButton'
+      required:
+      - type
+    IntegrationEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique ID of the event.
+        integrationId:
+          type: string
+          description: Unique ID of the integration.
+        installationId:
+          type: string
+          description: Unique ID of the integration installation.
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        payload:
+          $ref: '#/components/schemas/Event'
+        status:
+          type: string
+          description: Status of the event.
+          enum:
+          - success
+          - failed
+      required:
+      - id
+      - integrationId
+      - createdAt
+      - payload
+      - status
+    ContentKitCheckbox:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - checkbox
+        state:
+          description: State binding. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        value:
+          description: Value to store in a state array when the checkbox is selected.
+          oneOf:
+          - type: string
+          - type: number
+        confirm:
+          $ref: '#/components/schemas/ContentKitConfirm'
+      required:
+      - type
+      - state
+      - value
+    PublishIntegration:
+      type: object
+      properties:
+        runtime:
+          type: string
+          description: The runtime version to use for the integration. If not specified, the integration will use the default runtime.
+          default: v1
+          enum:
+          - v1
+          - v2
+        icon:
+          type: string
+          format: byte
+          description: Base64 content of the icon
+        title:
+          $ref: '#/components/schemas/IntegrationTitle'
+        description:
+          $ref: '#/components/schemas/IntegrationDescription'
+        summary:
+          $ref: '#/components/schemas/IntegrationSummary'
+        previewImages:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            format: byte
+            description: Base64 content of the image
+        visibility:
+          $ref: '#/components/schemas/IntegrationVisibility'
+        target:
+          description: Allowed installation target for the integration. If not specified, the integration can be installed at `all` targets (org, spaces etc)
+          $ref: '#/components/schemas/IntegrationTarget'
+        scopes:
+          $ref: '#/components/schemas/IntegrationScopes'
+        categories:
+          $ref: '#/components/schemas/IntegrationCategories'
+        blocks:
+          $ref: '#/components/schemas/IntegrationBlocks'
+        contentSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationContentSource'
+        externalLinks:
+          $ref: '#/components/schemas/IntegrationExternalLinks'
+        configurations:
+          $ref: '#/components/schemas/IntegrationConfigurations'
+        script:
+          type: string
+          description: Content of the script to use
+        organization:
+          type: string
+          description: The ID or subdomain of the organization under which the integration should be published
+        secrets:
+          $ref: '#/components/schemas/IntegrationSecrets'
+        contentSecurityPolicy:
+          $ref: '#/components/schemas/IntegrationContentSecurityPolicy'
+      required:
+      - organization
+      - title
+      - description
+      - script
+      - scopes
+    ContentKitImage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - image
+        source:
+          type: object
+          properties:
+            url:
+              type: string
+              format: uri
+          required:
+          - url
+        aspectRatio:
+          type: number
+      required:
+      - type
+      - source
+      - aspectRatio
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    CustomizationFavicon:
+      oneOf:
+      - type: object
+        properties:
+          icon:
+            $ref: '#/components/schemas/CustomizationThemedURL'
+        required:
+        - icon
+      - type: object
+        properties:
+          emoji:
+            $ref: '#/components/schemas/Emoji'
+        required:
+        - emoji
+      - type: object
+        properties: {}
+        additionalProperties: false
+    OrganizationUseCase:
+      type: string
+      enum:
+      - internalDocs
+      - docsSite
+      - audienceControlledSite
+      - productDocs
+      - teamKnowledgeBase
+      - designSystem
+      - openSourceDocs
+      - notes
+      - other
+    SiteVisibility:
+      type: string
+      description: 'The visibility setting of the site determines the audience of the site.
+
+        * `public`: Anyone can access the site, and the site is indexed by search engines.
+
+        * `unlisted`: Anyone can access the site, and the site is not indexed by search engines
+
+        * `share-link`: Anyone with a secret token in the url can access the site.
+
+        * `visitor-auth`: Anyone authenticated through a JWT token can access the site.
+
+        '
+      enum:
+      - public
+      - unlisted
+      - share-link
+      - visitor-auth
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    SiteProxyOrigin:
+      type: string
+      description: Proxy URL for the site, for e.g. company.com/docs or www.company.com/developer/docs etc.
+      pattern: ^([\w-]+\.)*[\w-]+\.[a-zA-Z]{2,}(\/[\w-]+)+$
+      maxLength: 512
+    ComputedContentDependencyResolved:
+      description: Dependency for a computation, with its resolved value.
+      oneOf:
+      - $ref: '#/components/schemas/ComputedContentDependencySpace'
+      - $ref: '#/components/schemas/ComputedContentDependencyOpenAPI'
+      - $ref: '#/components/schemas/ComputedContentDependencyTranslation'
+    SiteAdaptiveContent:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Whether adaptive content should be enabled on the site.
+      required:
+      - enabled
+    ComputedContentDependencyOpenAPI:
+      type: object
+      properties:
+        ref:
+          $ref: '#/components/schemas/ContentRefOpenAPI'
+        value:
+          type:
+          - object
+          - 'null'
+          description: See `OpenAPI` schema component.
+          properties:
+            object:
+              type: string
+              enum:
+              - openapi-spec
+            id:
+              type: string
+            slug:
+              type: string
+            lastVersion:
+              type: string
+            visibility:
+              $ref: '#/components/schemas/OpenAPISpecVisibility'
+          required:
+          - object
+          - id
+          - slug
+      required:
+      - ref
+      - value
+    ContentKitSwitch:
+      type: object
+      description: Renders a boolean input.
+      properties:
+        type:
+          type: string
+          enum:
+          - switch
+        disabled:
+          type: boolean
+        state:
+          description: State binding. The value of the input will be stored as a property in the state named after this ID.
+          type: string
+        initialValue:
+          description: Value to initialize the switch with.
+          type: boolean
+        onValueChange:
+          $ref: '#/components/schemas/ContentKitAction'
+        confirm:
+          $ref: '#/components/schemas/ContentKitConfirm'
+      required:
+      - type
+      - state
+    ContentComputeEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Generic event when computing the content of a space
+        properties:
+          sourceId:
+            type: string
+          props:
+            description: Properties passed to the rendering.
+            $ref: '#/components/schemas/PlainObject'
+          dependencies:
+            description: Dependencies of the computation.
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/ComputedContentDependencyResolved'
+        required:
+        - sourceId
+        - props
+        - dependencies
+    APITemporaryToken:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Temporary access token to authenticate with the API
+      required:
+      - token
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    ContentKitBuiltInSource:
+      type: object
+      description: Built-in sources that can be used to provide a ContentKitSelect.
+      properties:
+        source:
+          type: string
+          enum:
+          - openapi
+      required:
+      - source
+    ContentKitDivider:
+      type: object
+      description: Divider between 2 boxes in a stack.
+      properties:
+        type:
+          type: string
+          enum:
+          - divider
+        size:
+          type: string
+          enum:
+          - small
+          - medium
+          - large
+      required:
+      - type
+    SpaceInstallationDeletedEvent:
+      allOf:
+      - $ref: '#/components/schemas/SpaceEvent'
+      - type: object
+        description: Event received when integration has been uninstalled from a space.
+        properties:
+          type:
+            type: string
+            enum:
+            - space_installation_deleted
+          previous:
+            type: object
+            description: The state of the Space installation before it was deleted.
+            properties:
+              configuration:
+                type: object
+                description: The previous configuration of the Space installation.
+        required:
+        - type
+        - previous
+    SiteEvent:
+      allOf:
+      - $ref: '#/components/schemas/InstallationEvent'
+      - type: object
+        description: Common properties for all events related to a specific site.
+        properties:
+          siteId:
+            type: string
+            description: ID of the site
+        required:
+        - siteId
+    ContentKitConfiguration:
+      type: object
+      description: Higher level element to define a configuration block. Does not add any UI elements or wrappers. Must be used as a top level element for any configuration component.
+      properties:
+        type:
+          type: string
+          enum:
+          - configuration
+        children:
+          oneOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ContentKitStepper'
+            minItems: 1
+            maxItems: 1
+          - type: array
+            items:
+              $ref: '#/components/schemas/ContentKitDescendantElement'
+            minItems: 1
+      required:
+      - type
+      - children
+    ContentKitStepperStep:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - step
+        id:
+          description: unique identifier for the step
+          type: string
+        title:
+          description: title of the step
+          type: string
+          maxLength: 50
+        next:
+          description: indicates if the user can progress to the next step based on some internal validation or condition
+          type: boolean
+          default: false
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentKitDescendantElement'
+          minItems: 1
+      required:
+      - type
+      - id
+      - children
+    Event:
+      description: Any event that can be received from GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/InstallationSetupEvent'
+      - $ref: '#/components/schemas/InstallationDeletedEvent'
+      - $ref: '#/components/schemas/SpaceInstallationSetupEvent'
+      - $ref: '#/components/schemas/SpaceInstallationDeletedEvent'
+      - $ref: '#/components/schemas/SiteInstallationSetupEvent'
+      - $ref: '#/components/schemas/SiteInstallationDeletedEvent'
+      - $ref: '#/components/schemas/SiteViewEvent'
+      - $ref: '#/components/schemas/SpaceContentUpdatedEvent'
+      - $ref: '#/components/schemas/SpaceGitSyncCompletedEvent'
+      - $ref: '#/components/schemas/SpaceGitSyncStartedEvent'
+      - $ref: '#/components/schemas/SpaceVisibilityUpdatedEvent'
+      - $ref: '#/components/schemas/TaskEvent'
+      - $ref: '#/components/schemas/FetchEvent'
+      - $ref: '#/components/schemas/FetchPublishedScriptEvent'
+      - $ref: '#/components/schemas/FetchVisitorAuthenticationEvent'
+      - $ref: '#/components/schemas/UIRenderEvent'
+      - $ref: '#/components/schemas/ContentComputeDocumentEvent'
+      - $ref: '#/components/schemas/ContentComputeRevisionEvent'
+      - $ref: '#/components/schemas/PageFeedbackEvent'
+      discriminator:
+        propertyName: type
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    PageFeedbackRating:
+      type: string
+      enum:
+      - bad
+      - ok
+      - good
+    SiteType:
+      type: string
+      description: The type of the site
+      enum:
+      - basic
+      - premium
+      - ultimate
+      - sponsored
+    ContentKitBlockControl:
+      type: object
+      description: Control menu item displayed for the block.
+      properties:
+        icon:
+          $ref: '#/components/schemas/ContentKitIcon'
+        label:
+          type: string
+        onPress:
+          $ref: '#/components/schemas/ContentKitAction'
+        confirm:
+          $ref: '#/components/schemas/ContentKitConfirm'
+      required:
+      - label
+      - onPress
+    IntegrationContentSecurityPolicy:
+      description: "Security policy to validate the content of the integrations scripts and Contentkit. Will be sent as \nheaders when processing the script fetch event and the blocks fetch events.\n"
+      oneOf:
+      - type: string
+      - type: object
+        properties:
+          base-uri:
+            type: string
+          block-all-mixed-content:
+            type: string
+          child-src:
+            type: string
+          connect-src:
+            type: string
+          default-src:
+            type: string
+          font-src:
+            type: string
+          form-action:
+            type: string
+          frame-ancestors:
+            type: string
+          frame-src:
+            type: string
+          img-src:
+            type: string
+          manifest-src:
+            type: string
+          media-src:
+            type: string
+          navigate-to:
+            type: string
+          object-src:
+            type: string
+          plugin-types:
+            type: string
+          prefetch-src:
+            type: string
+          referrer:
+            type: string
+          report-to:
+            type: string
+          report-uri:
+            type: string
+          require-sri-for:
+            type: string
+          require-trusted-types-for:
+            type: string
+          sandbox:
+            type: string
+          script-src:
+            type: string
+          script-src-attr:
+            type: string
+          script-src-elem:
+            type: string
+          style-src:
+            type: string
+          style-src-attr:
+            type: string
+          style-src-elem:
+            type: string
+          trusted-types:
+            type: string
+          upgrade-insecure-requests:
+            type: string
+          worker-src:
+            type: string
+    TranslationRef:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - translation
+        translation:
+          type: string
+          description: ID of the translation sync
+      required:
+      - kind
+      - translation
+    IntegrationInstallationSpaceSelection:
+      type: string
+      description: Describe whether all spaces have been selected or there's a selection involved
+      enum:
+      - all
+      - selected
+    BillingMeterAddon:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+      required:
+      - enabled
+    SiteViewEvent:
+      allOf:
+      - $ref: '#/components/schemas/SiteEvent'
+      - type: object
+        description: Event received when a page has been visited on a site.
+        properties:
+          type:
+            type: string
+            enum:
+            - site_view
+          spaceId:
+            type: string
+            description: Unique identifier of the visited space in the site.
+            deprecated: true
+          siteSpaceId:
+            description: The site-space that was viewed
+            type: string
+          pageId:
+            type: string
+            description: Unique identifier of the visited page.
+          visitor:
+            $ref: '#/components/schemas/EventVisitor'
+          url:
+            type: string
+            description: The GitBook content's URL visited (including URL params).
+          referrer:
+            type: string
+            description: The URL of referrer that linked to the page.
+        required:
+        - type
+        - visitor
+        - url
+        - referrer
+  parameters:
+    integrationName:
+      name: integrationName
+      in: path
+      required: true
+      description: Name of the integration.
+      schema:
+        type: string
+        pattern: ^[a-zA-Z0-9-_.]+$
+        maxLength: 100
+    installationId:
+      name: installationId
+      in: path
+      required: true
+      description: Identifier of the installation
+      schema:
+        type: string
+    integrationSearchTarget:
+      name: target
+      in: query
+      description: Filter the integrations by target
+      schema:
+        $ref: '#/components/schemas/IntegrationTarget'
+    integrationSearchCategory:
+      name: category
+      in: query
+      description: Filter the integrations by category
+      schema:
+        $ref: '#/components/schemas/IntegrationCategory'
+    integrationSearchBlockDomain:
+      name: blockDomain
+      in: query
+      description: Filter the integrations by block's domains
+      schema:
+        type: string
+        pattern: ^[a-zA-Z0-9-_.]+$
+        maxLength: 100
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    integrationSearchContentSources:
+      name: contentSources
+      in: query
+      description: If true, returns only integrations with contentSources. If false, returns only integrations without contentSources.
+      schema:
+        type: boolean
+    integrationSearchBlocks:
+      name: blocks
+      in: query
+      description: If true, returns only integrations with blocks. If false, returns only integrations without blocks.
+      schema:
+        type: boolean
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    integrationEventId:
+      name: eventId
+      in: path
+      required: true
+      description: ID of the integration event
+      schema:
+        type: string
+    integrationSearchScope:
+      name: scope
+      in: query
+      description: Filter the integrations by scope
+      schema:
+        $ref: '#/components/schemas/IntegrationScope'
+    spaceId:
+      name: spaceId
+      in: path
+      required: true
+      description: The unique id of the space
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    integrationSearchOwner:
+      name: owner
+      in: query
+      description: If defined, only list integrations owned by the given organization.
+      schema:
+        type: string
+    integrationSearchQuery:
+      name: search
+      in: query
+      description: 'A search string to filter integrations by name
+
+        '
+      schema:
+        type: string
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
   securitySchemes:
-    bearerAuth:
+    user:
       type: http
       scheme: bearer
-      bearerFormat: token
-      description: API access token. Generate one from the Developer settings of your GitBook user account.
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

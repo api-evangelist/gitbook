@@ -1,0 +1,195 @@
+openapi: 3.2.0
+info:
+  title: GitBook Storage API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: Storage
+  x-page-icon: database
+  x-page-title: Storage
+  x-page-description: Upload and store files directly within your GitBook organization.
+  description: Whether you're hosting images, documents, or other assets, Storage endpoints allow you to integrate those files into your documentation and spaces seamlessly.
+paths:
+  /orgs/{organizationId}/storage/upload:
+    post:
+      operationId: generateStorageUploadURL
+      summary: Create a signed URL to upload a file
+      description: Generate a pre-signed URL that can be used to upload a file to storage
+      tags:
+      - Storage
+      security:
+      - user-internal: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - file
+              - kind
+              properties:
+                file:
+                  $ref: '#/components/schemas/StorageFileMetadata'
+                kind:
+                  $ref: '#/components/schemas/StorageUploadKind'
+      responses:
+        '201':
+          description: Successfully generated signed URL for file upload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageUploadURL'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+components:
+  schemas:
+    StorageUploadURL:
+      type: object
+      properties:
+        object:
+          type: string
+          description: The kind of file to upload
+          enum:
+          - storage-signed-url
+        url:
+          $ref: '#/components/schemas/URL'
+          description: Presigned URL for uploading the file
+        key:
+          type: string
+          description: The bucket object key for the file
+      required:
+      - object
+      - url
+      - key
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    StorageFileMetadata:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Original filename
+        type:
+          type: string
+          description: MIME type of the file
+        size:
+          type: number
+          description: Size of the file in bytes
+      required:
+      - name
+      - type
+      - size
+    StorageUploadKind:
+      type: string
+      enum:
+      - customization_font
+      - import_file
+      - organization_file
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

@@ -1,0 +1,513 @@
+openapi: 3.2.0
+info:
+  title: GitBook OpenAPI API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: Open API
+  x-page-icon: code
+  x-page-title: OpenAPI
+  x-page-description: Upload, access, or version-control your OpenAPI specifications directly in GitBook.
+  description: 'The OpenAPI endpoints let you integrate your existing or newly generated OpenAPI definitions into GitBook. This includes uploading, updating, and retrieving specs.
+
+
+    {% openapi-schemas spec="gitbook" schemas="OpenAPISpec" grouped="false" %}
+
+    The OpenAPISpec object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/openapi:
+    get:
+      operationId: listOpenAPISpecs
+      summary: List all OpenAPI spec
+      x-gitbook-mcp: true
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/OpenAPISpec'
+    post:
+      operationId: createOpenAPISpec
+      summary: Create an OpenAPI spec
+      description: 'Adds an OpenAPI spec to the organization, from a URL or from its text. The spec is processed asynchronously and no page is created: to publish its API reference in a space, insert a page that renders it with an `insert_computed_page` change, through the `updateChangeRequestContent` operation. That reference fills in once processing completes and is regenerated each time the spec is updated.'
+      x-gitbook-mcp: true
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                slug:
+                  $ref: '#/components/schemas/OpenAPISpecSlug'
+                source:
+                  $ref: '#/components/schemas/OpenAPISpecSource'
+              required:
+              - source
+              - slug
+      responses:
+        '201':
+          description: OpenAPI specification has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+  /orgs/{organizationId}/openapi/{specSlug}:
+    get:
+      operationId: getOpenAPISpecBySlug
+      summary: Get an OpenAPI spec by its slug
+      x-gitbook-mcp: true
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/openapiSpecSlug'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '404':
+          description: No matching OpenAPI specification found
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      operationId: createOrUpdateOpenAPISpecBySlug
+      summary: Create or update an OpenAPI spec
+      description: 'Creates the organization''s OpenAPI spec with this slug, or replaces its source with a new version. The spec is processed asynchronously, and pages that already render it are regenerated once it is. Creating a spec adds no page: to publish its API reference in a space, insert a page that renders it with an `insert_computed_page` change, through the `updateChangeRequestContent` operation.'
+      x-gitbook-mcp: true
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/openapiSpecSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  $ref: '#/components/schemas/OpenAPISpecSource'
+              required:
+              - source
+      responses:
+        '200':
+          description: OpenAPI specification has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '201':
+          description: OpenAPI specification has been created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+    patch:
+      operationId: updateOpenAPISpecBySlug
+      summary: Update OpenAPI spec visibility
+      x-gitbook-mcp: true
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/openapiSpecSlug'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                visibility:
+                  $ref: '#/components/schemas/OpenAPISpecVisibility'
+              required:
+              - visibility
+      responses:
+        '200':
+          description: OpenAPI specification visibility has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenAPISpec'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          description: No matching OpenAPI specification found
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      operationId: deleteOpenAPISpecBySlug
+      summary: Delete an OpenAPI spec
+      tags:
+      - Open API
+      security:
+      - user: []
+      - oauth:
+        - openapi:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/openapiSpecSlug'
+      responses:
+        '204':
+          description: Specification did not exist
+        '205':
+          description: OpenAPI specification has been deleted
+components:
+  schemas:
+    OpenAPISpecSource:
+      oneOf:
+      - description: Create a specification from an URL
+        type: object
+        properties:
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - url
+      - description: Create a specification from a text string
+        type: object
+        properties:
+          text:
+            description: OpenAPI specification as text
+            type: string
+            minLength: 1
+        required:
+        - text
+    OpenAPISpecSlug:
+      description: Slug used as reference
+      type: string
+      minLength: 1
+      maxLength: 100
+      pattern: ^[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*$
+    Timestamp:
+      type: string
+      format: date-time
+    OpenAPISpecVisibility:
+      type: string
+      description: 'The visibility setting of the OpenAPI spec.
+
+        * `private`: The spec is not publicly available.
+
+        * `public`: The spec is available to anyone with a public link.
+
+        '
+      enum:
+      - private
+      - public
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    OpenAPISpecProcessingErrorCode:
+      description: OpenAPI processing error code
+      enum:
+      - FETCH_TIMEOUT
+      - FETCH_ERROR
+      - PARSE_ERROR
+    OpenAPISpecProcessingState:
+      description: Processing state
+      enum:
+      - pending
+      - progress
+      - complete
+    OpenAPIErrorObject:
+      type: object
+      description: OpenAPI error object.
+      properties:
+        message:
+          type: string
+          description: Description of the error.
+        code:
+          type: string
+          description: Unique code of the error.
+      required:
+      - message
+    OpenAPISpec:
+      type: object
+      properties:
+        object:
+          description: The object type, which is always "openapi-spec"
+          type: string
+          enum:
+          - openapi-spec
+        id:
+          description: Unique identifier
+          type: string
+        createdAt:
+          description: Date of creation
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date of the last update
+          $ref: '#/components/schemas/Timestamp'
+        slug:
+          $ref: '#/components/schemas/OpenAPISpecSlug'
+        sourceURL:
+          $ref: '#/components/schemas/URL'
+        processingState:
+          $ref: '#/components/schemas/OpenAPISpecProcessingState'
+        visibility:
+          $ref: '#/components/schemas/OpenAPISpecVisibility'
+        lastVersion:
+          type: string
+          description: ID of the latest version of the OpenAPI specification
+        lastProcessedAt:
+          description: Date of the last processing
+          $ref: '#/components/schemas/Timestamp'
+        lastProcessErrorCode:
+          $ref: '#/components/schemas/OpenAPISpecProcessingErrorCode'
+        lastProcessedErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenAPIErrorObject'
+        lastProcessedErrorCount:
+          type: integer
+          minimum: 0
+          description: Total number of processing errors before truncation of lastProcessedErrors.
+        permissions:
+          type: object
+          description: The set of permissions for the OpenAPI specification.
+          required:
+          - view
+          - edit
+          properties:
+            view:
+              type: boolean
+              description: Can the user view the specification.
+            edit:
+              type: boolean
+              description: Can the user edit the specification.
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the OpenAPI specification in the API
+              $ref: '#/components/schemas/URL'
+            app:
+              description: URL of the OpenAPI specification in the application
+              $ref: '#/components/schemas/URL'
+            published:
+              type: string
+              description: URL of the published spec. Only defined when visibility is "published."
+              format: uri
+          required:
+          - app
+          - location
+      required:
+      - object
+      - id
+      - createdAt
+      - updatedAt
+      - slug
+      - processingState
+      - lastProcessedErrorCount
+      - permissions
+      - urls
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  parameters:
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    openapiSpecSlug:
+      name: specSlug
+      in: path
+      required: true
+      description: Slug of the OpenAPI specification
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

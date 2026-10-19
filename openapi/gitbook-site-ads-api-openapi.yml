@@ -1,0 +1,313 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Ads API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-ads
+  x-page-title: Site ads
+  x-page-description: Control and customize ad placements on your docs site.
+  x-parent: sites
+  description: Manage the advertisement strategy within your docs. You can specify ad placements, track usage, and adjust settings to best fit your organization's needs.
+paths:
+  /orgs/{organizationId}/sites/{siteId}/ads:
+    post:
+      operationId: updateSiteAdsById
+      summary: Update the advertising settings for a site
+      description: Updates the advertising configuration for a site, including the review status and topic category used to select relevant ads. This controls GitBook's monetization feature for sites opted into the ads program.
+      x-gitbook-mcp:
+        destructive: true
+        idempotent: true
+      tags:
+      - site-ads
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum:
+                  - in-review
+                  - disabled
+                topic:
+                  $ref: '#/components/schemas/SiteAdsTopic'
+      responses:
+        '204':
+          description: OK
+  /ads/sites:
+    get:
+      operationId: adsListSites
+      summary: List all the sites with ads configured
+      tags:
+      - site-ads
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/xGitBookPartnerKey'
+      - name: status
+        in: query
+        description: Filter sites by their ads review status
+        required: false
+        schema:
+          type: string
+          default: in-review
+          enum:
+          - in-review
+          - live
+          - rejected
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        allOf:
+                        - type: object
+                          required:
+                          - id
+                          - url
+                          - email
+                          - topic
+                          properties:
+                            id:
+                              type: string
+                            url:
+                              type: string
+                            email:
+                              type: string
+                            topic:
+                              $ref: '#/components/schemas/SiteAdsTopic'
+                        - oneOf:
+                          - type: object
+                            required:
+                            - status
+                            properties:
+                              status:
+                                type: string
+                                enum:
+                                - in-review
+                          - type: object
+                            required:
+                            - status
+                            - zoneId
+                            properties:
+                              status:
+                                type: string
+                                enum:
+                                - live
+                              zoneId:
+                                type: string
+                                description: The ad network zone ID
+                          - type: object
+                            required:
+                            - status
+                            properties:
+                              status:
+                                type: string
+                                enum:
+                                - rejected
+                              reason:
+                                type: string
+                                description: Reason for the rejection
+  /ads/sites/{siteId}:
+    patch:
+      operationId: adsUpdateSite
+      summary: Update the Ads configuration for a site
+      tags:
+      - site-ads
+      parameters:
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/xGitBookPartnerKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                required:
+                - status
+                - zoneId
+                - reportingId
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - live
+                  zoneId:
+                    type: string
+                    description: ID of the zone
+                  reportingId:
+                    type: string
+                    description: ID to fetch reporting data
+              - type: object
+                required:
+                - status
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - rejected
+                  reason:
+                    type: string
+                    description: Reason for the rejection
+                    maxLength: 512
+              - type: object
+                required:
+                - status
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - pending
+      responses:
+        '204':
+          description: OK
+components:
+  parameters:
+    xGitBookPartnerKey:
+      in: header
+      name: X-GitBook-Partner-Key
+      schema:
+        type: string
+      required: true
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  schemas:
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    SiteAdsTopic:
+      type: string
+      description: Topic of the content
+      enum:
+      - webdev
+      - crypto
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

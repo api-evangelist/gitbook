@@ -1,0 +1,513 @@
+openapi: 3.2.0
+info:
+  title: GitBook SSO API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: SSO
+  x-page-icon: lock
+  x-page-title: SSO
+  x-page-description: Configure Single Sign-On solutions to unify your organization's authentication.
+  description: 'Tie GitBook into your corporate identity management and authentication providers (like SAML or OAuth). This centralizes user authentication and improves security.
+
+
+    {% openapi-schemas spec="gitbook" schemas="Subdomain" grouped="false" %}
+
+    The Subdomain object
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/saml:
+    get:
+      operationId: listSAMLProvidersInOrganizationById
+      summary: List all SAML providers
+      description: Lists SAML providers configured for the specified organization.
+      tags:
+      - SSO
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/OrganizationSAMLProvider'
+    post:
+      operationId: createOrganizationSAMLProvider
+      summary: Create a new SAML provider
+      tags:
+      - SSO
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  $ref: '#/components/schemas/SAMLProviderLabel'
+                entityID:
+                  $ref: '#/components/schemas/SAMLProviderEntityID'
+                certificate:
+                  $ref: '#/components/schemas/SAMLProviderCertificate'
+                ssoURL:
+                  $ref: '#/components/schemas/URL'
+                defaultTeam:
+                  type: string
+                defaultRole:
+                  $ref: '#/components/schemas/MemberRoleOrGuest'
+              required:
+              - label
+      responses:
+        '201':
+          description: SAML Provider created
+          headers:
+            Location:
+              description: API URL for the newly created SAML Provider
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSAMLProvider'
+  /orgs/{organizationId}/saml/{samlProviderId}:
+    get:
+      operationId: getOrganizationSAMLProviderById
+      summary: Get a SAML provider by its ID
+      tags:
+      - SSO
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/samlProviderId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSAMLProvider'
+        '404':
+          description: No matching provider found
+          $ref: '#/components/responses/NotFoundError'
+    patch:
+      operationId: updateOrganizationSAMLProvider
+      summary: Update a SAML provider
+      tags:
+      - SSO
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/samlProviderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  $ref: '#/components/schemas/SAMLProviderLabel'
+                entityID:
+                  $ref: '#/components/schemas/SAMLProviderEntityID'
+                certificate:
+                  $ref: '#/components/schemas/SAMLProviderCertificate'
+                ssoURL:
+                  $ref: '#/components/schemas/URL'
+                defaultTeam:
+                  type: string
+                defaultRole:
+                  $ref: '#/components/schemas/MemberRoleOrGuest'
+      responses:
+        '200':
+          description: SAML provider has been updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSAMLProvider'
+    delete:
+      operationId: deleteOrganizationSAMLProvider
+      summary: Delete a SAML provider
+      tags:
+      - SSO
+      security:
+      - user: []
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/samlProviderId'
+      responses:
+        '204':
+          description: SAML provider did not exist
+        '205':
+          description: SAML provider has been deleted
+  /orgs/{organizationId}/sso:
+    get:
+      operationId: listSSOProviderLoginsInOrganization
+      summary: List all SSO provider login infos
+      tags:
+      - SSO
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrganizationSSOProviderLogin'
+components:
+  schemas:
+    MemberRoleOrGuest:
+      description: The role of a member in an organization, null for guests
+      oneOf:
+      - $ref: '#/components/schemas/MemberRole'
+      - type: 'null'
+    OrganizationTeam:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "team"
+          enum:
+          - team
+        id:
+          type: string
+          description: Unique identifier for the team.
+        title:
+          $ref: '#/components/schemas/OrganizationTeamTitle'
+        members:
+          type: integer
+          description: Count of members in this team.
+        spaces:
+          type: number
+          description: Count of spaces this team has access to.
+        createdAt:
+          description: Date at which the team was created.
+          $ref: '#/components/schemas/Timestamp'
+        permissions:
+          type: object
+          description: The set of permissions for the team
+          properties:
+            admin:
+              type: boolean
+              description: Can the user manage the team
+            view:
+              type: boolean
+              description: Can the user view the team and list its members
+          required:
+          - admin
+          - view
+      required:
+      - object
+      - id
+      - title
+      - members
+      - spaces
+      - createdAt
+      - permissions
+    MemberRole:
+      type: string
+      description: '"The role of a member in an organization.
+
+        "admin": Can administrate the content: create, delete spaces, ...
+
+        "create": Can create content.
+
+        "review": Can review content.
+
+        "edit": Can edit the content (live or change requests).
+
+        "comment": Can access the content and its discussions.
+
+        "read": Can access the content, but cannot update it in any way.
+
+        '
+      enum:
+      - admin
+      - create
+      - edit
+      - review
+      - comment
+      - read
+    OrganizationTeamTitle:
+      type: string
+      description: Title of the team
+      minLength: 1
+      maxLength: 64
+    OrganizationSAMLProvider:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "saml-provider"
+          enum:
+          - saml-provider
+        id:
+          type: string
+          description: Unique identifier for the provider.
+        label:
+          $ref: '#/components/schemas/SAMLProviderLabel'
+        ssoURL:
+          $ref: '#/components/schemas/URL'
+        entityID:
+          $ref: '#/components/schemas/SAMLProviderEntityID'
+        certificate:
+          $ref: '#/components/schemas/SAMLProviderCertificate'
+        defaultTeam:
+          $ref: '#/components/schemas/OrganizationTeam'
+        defaultRole:
+          $ref: '#/components/schemas/MemberRoleOrGuest'
+        createdAt:
+          description: Date at which the provider was created.
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          $ref: '#/components/schemas/SAMLProviderStatus'
+        service:
+          description: Metadata about the service provider.
+          properties:
+            acsURL:
+              type: string
+              description: Assertion Consumer Service (ACS) URL
+              format: uri
+            startURL:
+              type: string
+              description: Start URL for the Identity Provider
+              format: uri
+            entityID:
+              $ref: '#/components/schemas/SAMLProviderEntityID'
+          required:
+          - acsURL
+          - startURL
+          - entityID
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the SAML Provider in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - label
+      - ssoURL
+      - entityID
+      - certificate
+      - defaultRole
+      - createdAt
+      - status
+      - service
+      - urls
+    Timestamp:
+      type: string
+      format: date-time
+    SAMLProviderEntityID:
+      type: string
+      maxLength: 1024
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    SAMLProviderStatus:
+      type: string
+      description: 'Status of the provider.
+
+        - `active`: The provider is active and can be used to authenticate users.
+
+        - `pending`: The provider is pending and is not yet fully configured.
+
+        '
+      enum:
+      - active
+      - pending
+    SAMLProviderCertificate:
+      type: string
+      maxLength: 10000
+    SAMLProviderLabel:
+      type: string
+      minLength: 1
+      maxLength: 30
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    OrganizationSSOProviderLogin:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the provider.
+        label:
+          $ref: '#/components/schemas/SAMLProviderLabel'
+        startURL:
+          type: string
+          description: The starting login URL for the Identity Provider
+          format: uri
+      required:
+      - id
+      - label
+      - startURL
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+  parameters:
+    samlProviderId:
+      name: samlProviderId
+      in: path
+      required: true
+      description: The unique id of the SAML provider
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+  responses:
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 404
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.

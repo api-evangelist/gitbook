@@ -1,0 +1,5915 @@
+openapi: 3.2.0
+info:
+  title: GitBook Site Context API
+  description: The GitBook API
+  termsOfService: https://policies.gitbook.com
+  contact:
+    name: API Support
+    url: https://gitbook.com/support
+    email: support@gitbook.com
+  version: 0.0.1-beta
+servers:
+- url: '{host}/v1'
+  variables:
+    host:
+      default: https://api.gitbook.com
+security:
+- user: []
+- user-internal: []
+- user-staff: []
+- integration: []
+- integration-installation: []
+tags:
+- name: site-context
+  x-page-title: Site context
+  x-page-description: Manage context records, connections, and topics for a docs site.
+  x-parent: sites
+  description: 'Manage the contextual records and topics used by your site to power AI experiences and insights.
+
+
+    {% openapi-schemas spec="gitbook" schemas="ContextRecord,ContextConnection,SiteTopic,SiteFinding,SiteFindingPage" grouped="false" %}
+
+    The Site Context objects
+
+    {% endopenapi-schemas %}'
+paths:
+  /orgs/{organizationId}/sites/{siteId}/context-records:
+    get:
+      operationId: listSiteContextRecords
+      summary: List all context records
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: type
+        in: query
+        description: Filter context records by type.
+        schema:
+          $ref: '#/components/schemas/ContextRecordType'
+      - name: connector
+        in: query
+        description: Filter context records by connector type.
+        schema:
+          $ref: '#/components/schemas/ContextConnector'
+      - name: connection
+        in: query
+        description: Filter context records by connection id.
+        schema:
+          type: string
+      - name: topic
+        in: query
+        description: Filter context records by associated site topic ID.
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContextRecord'
+    put:
+      operationId: upsertSiteContextRecords
+      summary: Create or update context records
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ContextRecordInput'
+      responses:
+        '204':
+          description: The context records have been created or updated
+  /orgs/{organizationId}/sites/{siteId}/context-records/{siteContextRecordId}:
+    get:
+      operationId: getSiteContextRecordById
+      summary: Get a context record
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextRecordId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRecord'
+  /orgs/{organizationId}/sites/{siteId}/scans:
+    get:
+      operationId: listSiteScans
+      summary: List all site scans
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: topic
+        in: query
+        description: Filter scans by associated site topic ID.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter scans by status.
+        schema:
+          $ref: '#/components/schemas/SiteScanStatus'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteScan'
+  /orgs/{organizationId}/sites/{siteId}/scans/{siteScanId}:
+    get:
+      operationId: getSiteScanById
+      summary: Get a site scan by ID
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteScanId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteScan'
+  /orgs/{organizationId}/sites/{siteId}/findings:
+    get:
+      operationId: listSiteFindings
+      summary: List documentation issues GitBook has found on a site
+      description: 'Lists the quality issues GitBook''s AI has identified on a site by comparing its content against real usage and external sources — content gaps, outdated or incorrect content, and broken or outbound links. Use this when asked to find, audit, or fix problems in a site''s docs. Only findings with status "open" need work; "candidate" ones have not been confirmed yet. A "broken-link" finding is fixed by a redirect rather than a content edit: pass its `brokenLinkAction` to createSiteRedirect. Fix the rest by opening a change request with its `siteFindingId` set, so merging the change request resolves it.'
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - name: topic
+        in: query
+        description: Filter findings by associated site topic ID.
+        schema:
+          type: string
+      - name: question
+        in: query
+        description: Filter findings that reference the given site question ID as evidence.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter findings by status.
+        schema:
+          $ref: '#/components/schemas/SiteFindingStatus'
+      - name: type
+        in: query
+        description: Filter findings by type. When multiple types are given, findings matching any of them are returned.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteFindingType'
+      - name: url
+        in: query
+        description: 'Filter link findings whose URL contains this text: the broken path of a `broken-link` finding, or the checked URL of an `outbound-link-error` one. Findings of any other type never match, so this narrows the list to link findings on its own.'
+        schema:
+          type: string
+      - name: severity
+        in: query
+        description: Filter findings by estimated severity.
+        schema:
+          $ref: '#/components/schemas/SiteFindingSeverity'
+      - name: hasChangeRequests
+        in: query
+        description: Filter findings that have at least one associated change request.
+        schema:
+          type: boolean
+      - name: state
+        in: query
+        description: Filter link findings by where they stand, for example `awaiting-approval` for broken links with a redirect GitBook drafted.
+        schema:
+          $ref: '#/components/schemas/SiteFindingState'
+      - name: source
+        in: query
+        description: Filter findings by the source of their evidence. Each entry is either `connection:<connectionId>` (findings with at least one piece of evidence coming from the given connection) or `questions` (findings with at least one piece of evidence coming from a site question). When multiple entries are given, findings matching any of them are returned.
+        schema:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/SiteTriageFilterQuestions'
+            - $ref: '#/components/schemas/SiteTriageFilterConnections'
+      - name: updatedAfter
+        in: query
+        description: Only return findings last updated at or after this date.
+        schema:
+          type: string
+          format: date-time
+      - name: updatedBefore
+        in: query
+        description: Only return findings last updated before this date.
+        schema:
+          type: string
+          format: date-time
+      - name: orderBy
+        in: query
+        description: Sort findings by the given field.
+        schema:
+          $ref: '#/components/schemas/SiteFindingOrderBy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteFinding'
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}:
+    get:
+      operationId: getSiteFindingById
+      summary: Get details of a single documentation issue
+      description: Retrieves the full detail of one documentation issue found by GitBook's AI. Use this after `listSiteFindings` to inspect a specific issue before deciding to fix, dismiss, or investigate it further.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteFinding'
+    patch:
+      operationId: updateSiteFindingById
+      summary: Resolve, dismiss, or reopen a documentation issue
+      description: 'Changes the status of a documentation issue found by GitBook''s AI, typically after fixing it (for example via `triggerChangeRequestsForSiteFinding`) or dismissing it as not worth acting on. This does not edit any content itself — it only records the outcome. For a `broken-link` finding, use `applySiteFindingAction` instead: its status follows the redirects at its path.'
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/SiteFindingStatus'
+              required:
+              - status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteFinding'
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}/change-requests:
+    get:
+      operationId: listChangeRequestsForSiteFinding
+      summary: List content fixes already proposed for a documentation issue
+      description: Lists the change requests created to fix a documentation issue. Use this to check whether an issue already has a pending or merged fix before triggering a new one.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '200':
+          description: List of change requests linked to the site finding
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChangeRequest'
+    post:
+      operationId: triggerChangeRequestsForSiteFinding
+      summary: Fix a documentation issue by generating a change request
+      description: 'Starts GitBook''s AI on fixing a documentation issue directly: it drafts the content change and opens it as a change request for review, rather than editing content in place. This is the primary way to act on "fix issues/gaps/broken links in my docs" requests once `listSiteFindings` has surfaced the relevant findings. Processing is asynchronous; poll `listChangeRequestsForSiteFinding` for the resulting change request, then review and merge it with `submitOrMergeChangeRequest`.'
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '202':
+          description: Site finding processing has been started
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}/pages:
+    get:
+      operationId: listPagesForSiteFinding
+      summary: List the pages affected by a documentation issue
+      description: Lists the site pages a documentation issue relates to. Use this to locate which page(s) to edit when fixing an issue manually instead of via `triggerChangeRequestsForSiteFinding`.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '200':
+          description: List of pages linked to the site finding
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteFindingPage'
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}/questions:
+    get:
+      operationId: listQuestionsForSiteFinding
+      summary: List the Ask-AI questions evidencing a documentation issue
+      description: Lists the questions end users asked GitBook's Ask-AI assistant that were used as evidence for a documentation issue. Use this to see what users actually wanted to know before deciding how to fix the issue.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '200':
+          description: List of questions linked to the site finding
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/SiteQuestion'
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}/records:
+    get:
+      operationId: listRecordsForSiteFinding
+      summary: List the source content evidencing a documentation issue
+      description: Lists the context records that GitBook's AI used as evidence for a documentation issue. Use this to see what real-world signal led to the finding before deciding how to fix it.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      responses:
+        '200':
+          description: List of records linked to the site finding
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContextRecord'
+  /orgs/{organizationId}/sites/{siteId}/findings/{siteFindingId}/actions:
+    post:
+      operationId: applySiteFindingAction
+      summary: Apply an action to a broken link
+      description: Applies one of the `actions` a `broken-link` finding lists, with the site permission it gives. Returns 409 when the finding doesn't allow the action now.
+      x-gitbook-mcp:
+        destructive: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteFindingId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  $ref: '#/components/schemas/SiteFindingAction'
+              required:
+              - action
+      responses:
+        '200':
+          description: Action applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteFinding'
+  /orgs/{organizationId}/sites/{siteId}/stats/findings:
+    get:
+      operationId: getSiteFindingStats
+      summary: Get a summary of documentation issues found on a site
+      description: Returns aggregate statistics about the documentation issues GitBook identified on a site. Accepts the same filters as `listSiteFindings`. Use this to answer "how healthy are my docs" before drilling into individual findings.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: topic
+        in: query
+        description: Filter findings by associated site topic ID.
+        schema:
+          type: string
+      - name: status
+        in: query
+        description: Filter findings by status.
+        schema:
+          $ref: '#/components/schemas/SiteFindingStatus'
+      - name: type
+        in: query
+        description: Filter findings by type. When multiple types are given, findings matching any of them are returned.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteFindingType'
+      - name: severity
+        in: query
+        description: Filter findings by estimated severity.
+        schema:
+          $ref: '#/components/schemas/SiteFindingSeverity'
+      - name: hasChangeRequests
+        in: query
+        description: Filter findings that have at least one associated change request.
+        schema:
+          type: boolean
+      - name: source
+        in: query
+        description: Filter findings by the source of their evidence. Each entry is either `connection:<connectionId>` (findings with at least one piece of evidence coming from the given connection) or `questions` (findings with at least one piece of evidence coming from a site question). When multiple entries are given, findings matching any of them are counted.
+        schema:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/SiteTriageFilterQuestions'
+            - $ref: '#/components/schemas/SiteTriageFilterConnections'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteFindingStats'
+  /orgs/{organizationId}/sites/{siteId}/context-connections:
+    get:
+      operationId: listSiteContextConnections
+      summary: List all context connections
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/listPage'
+      - $ref: '#/components/parameters/listLimit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/List'
+                - type: object
+                  required:
+                  - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ContextConnection'
+    post:
+      operationId: createSiteContextConnection
+      summary: Create a context connection
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/ContextConnectorSetup'
+              - type: object
+                properties:
+                  usageSettings:
+                    $ref: '#/components/schemas/ContextUsageSettings'
+                  filter:
+                    $ref: '#/components/schemas/ContextConnectionFilter'
+      responses:
+        '201':
+          description: Created connection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextConnection'
+  /orgs/{organizationId}/sites/{siteId}/context-connections/{siteContextConnectionId}:
+    get:
+      operationId: getSiteContextConnectionById
+      summary: Get a context connection
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextConnectionId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextConnection'
+    patch:
+      operationId: updateSiteContextConnectionById
+      summary: Update a context connection
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextConnectionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/ContextConnectorSetup'
+              - type: object
+                description: Update a Jira connection. Omit `setupSettings.apiToken` to keep the stored token.
+                required:
+                - connector
+                - setupSettings
+                properties:
+                  connector:
+                    type: string
+                    enum:
+                    - builtin:jira
+                  label:
+                    $ref: '#/components/schemas/ContextConnectionLabel'
+                  setupSettings:
+                    type: object
+                    required:
+                    - baseUrl
+                    - apiEmail
+                    properties:
+                      baseUrl:
+                        $ref: '#/components/schemas/baseUrl'
+                      apiEmail:
+                        $ref: '#/components/schemas/apiEmail'
+                      apiToken:
+                        $ref: '#/components/schemas/apiToken'
+                      projectKeys:
+                        $ref: '#/components/schemas/projectKeys'
+                      statusMapping:
+                        $ref: '#/components/schemas/statusMapping'
+              - type: object
+                properties:
+                  usageSettings:
+                    $ref: '#/components/schemas/ContextUsageSettings'
+                  label:
+                    $ref: '#/components/schemas/ContextConnectionLabel'
+                  filter:
+                    $ref: '#/components/schemas/ContextConnectionFilter'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextConnection'
+    delete:
+      operationId: deleteSiteContextConnectionById
+      summary: Delete a context connection
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextConnectionId'
+      responses:
+        '204':
+          description: Context connection did not exist
+        '205':
+          description: Context connection deleted
+  /orgs/{organizationId}/sites/{siteId}/context-connections/{siteContextConnectionId}/sync:
+    post:
+      operationId: syncSiteContextConnection
+      summary: Trigger a sync for a context connection
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextConnectionId'
+      responses:
+        '204':
+          description: Sync started
+        '400':
+          description: Connection was synced less than an hour ago or invalid connector
+          $ref: '#/components/responses/BadRequestError'
+  /orgs/{organizationId}/sites/{siteId}/context-connections/{siteContextConnectionId}/test:
+    post:
+      operationId: testSiteContextConnection
+      summary: Test a context connection's stored credentials
+      description: 'Verifies the stored credentials of a context connection against the external service, without changing anything. A failed verification is reported in the response body with `success` set to `false` rather than as an HTTP error. Connectors that have nothing to verify report `success: true`.'
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteContextConnectionId'
+      responses:
+        '200':
+          description: The connection test completed (see `success` for the outcome).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextConnectionTestResult'
+  /orgs/{organizationId}/sites/{siteId}/topics:
+    get:
+      operationId: listSiteTopics
+      summary: List all topics
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - name: from
+        in: query
+        description: Filter stats to answers created at or after this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: to
+        in: query
+        description: Filter stats to answers created at or before this timestamp.
+        schema:
+          $ref: '#/components/schemas/Timestamp'
+      - name: relevance
+        in: query
+        description: Filter stats by question relevance.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerRelevance'
+      - name: channelType
+        in: query
+        description: Filter stats by answer channel type.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteChannelType'
+      - name: answered
+        in: query
+        description: Filter stats by answer resolution.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SiteQuestionAnswerResolution'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SiteTopic'
+  /orgs/{organizationId}/sites/{siteId}/topics/{siteTopicId}:
+    get:
+      operationId: getSiteTopicById
+      summary: Get a topic
+      description: Retrieves a single topic of a site by its ID, including its label, its parent topic when it is a subtopic, its summary and usage settings, and its page, record, finding and Ask AI question counts. Use this when you have a topic ID and need the topic's label or its stats.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:read
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteTopicId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteTopic'
+    patch:
+      operationId: updateSiteTopicById
+      summary: Update a topic
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteTopicId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usageSettings:
+                  $ref: '#/components/schemas/SiteTopicUsageSettings'
+              required:
+              - usageSettings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteTopic'
+  /orgs/{organizationId}/sites/{siteId}/topics/{siteTopicId}/findings:
+    delete:
+      operationId: deleteSiteTopicFindings
+      summary: Delete all documentation issues found under a topic
+      description: Permanently deletes every finding associated with a site topic, regardless of status. This is a bulk, irreversible cleanup operation — use `updateSiteFindingById` to resolve or dismiss individual issues instead unless the intent is to wipe every issue under a topic, for example when the topic itself is being removed.
+      x-gitbook-mcp: true
+      tags:
+      - site-context
+      security:
+      - user: []
+      - oauth:
+        - site:write
+      parameters:
+      - $ref: '#/components/parameters/organizationId'
+      - $ref: '#/components/parameters/siteId'
+      - $ref: '#/components/parameters/siteTopicId'
+      responses:
+        '204':
+          description: Topic had no findings or did not exist
+        '205':
+          description: Topic findings deleted
+components:
+  schemas:
+    ChangeRequestChangeCounts:
+      type: object
+      description: Exact semantic entity and page-document block counts for a change request at its current head and base revisions.
+      properties:
+        pages:
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        library:
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        blocks:
+          description: Nested user-visible page-document block counts. Absent when `blocksOmittedReason` is set.
+          $ref: '#/components/schemas/ChangeRequestChangeCountsByType'
+        blocksOmittedReason:
+          type: string
+          enum:
+          - too-many-pages
+          - too-many-blocks
+          - timeout
+          description: 'Why `blocks` is absent: too many pages changed (`too-many-pages`), the changed pages hold too many blocks to compare within the counting budget (`too-many-blocks`; this is not a count of changed blocks), or counting ran out of time (`timeout`). Page and library counts are still exact.'
+      required:
+      - pages
+      - library
+    ContextConnectorSetup:
+      oneOf:
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:email
+        required:
+        - connector
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:api
+        required:
+        - connector
+      - type: object
+        properties:
+          connector:
+            type: string
+            pattern: ^integration:[^:]+$
+            x-typescript: '`integration:${string}`'
+        required:
+        - connector
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:website
+          setupSettings:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+            required:
+            - url
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:youtube
+          setupSettings:
+            type: object
+            properties:
+              channelId:
+                $ref: '#/components/schemas/YoutubeChannelPattern'
+            required:
+            - channelId
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:github-discussions
+          setupSettings:
+            type: object
+            properties:
+              repository:
+                type: string
+                pattern: ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$
+              token:
+                type: string
+                minLength: 1
+            required:
+            - repository
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:github-issues
+          setupSettings:
+            type: object
+            properties:
+              repository:
+                type: string
+                pattern: ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$
+              token:
+                type: string
+                minLength: 1
+            required:
+            - repository
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:intercom
+          setupSettings:
+            type: object
+            properties:
+              token:
+                type: string
+                minLength: 1
+            required:
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:front
+          setupSettings:
+            type: object
+            properties:
+              token:
+                type: string
+                minLength: 1
+            required:
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:zendesk
+          setupSettings:
+            type: object
+            properties:
+              subdomain:
+                type: string
+                minLength: 1
+              email:
+                type: string
+                minLength: 1
+              apiToken:
+                type: string
+                minLength: 1
+            required:
+            - subdomain
+            - email
+            - apiToken
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:zoho-desk
+          setupSettings:
+            type: object
+            properties:
+              dataCenter:
+                type: string
+                minLength: 1
+                description: Zoho data center hosting the account, given as its API domain suffix (e.g. `com`, `eu`, `in`, `com.au`). Zoho scopes both the accounts and desk API hosts by data center.
+              orgId:
+                type: string
+                minLength: 1
+                description: Zoho Desk organization id the tickets belong to.
+              clientId:
+                type: string
+                minLength: 1
+              clientSecret:
+                type: string
+                minLength: 1
+              refreshToken:
+                type: string
+                minLength: 1
+            required:
+            - dataCenter
+            - orgId
+            - clientId
+            - clientSecret
+            - refreshToken
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:freshdesk
+          setupSettings:
+            type: object
+            properties:
+              domain:
+                type: string
+                minLength: 1
+                description: Freshdesk domain hosting the account, e.g. `mycompany.freshdesk.com` or just `mycompany`. Tickets and the API are scoped by this domain.
+              apiKey:
+                type: string
+                minLength: 1
+                description: Freshdesk API key with permission to read tickets. Sent as HTTP Basic auth and redacted when read back.
+            required:
+            - domain
+            - apiKey
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:pylon
+          setupSettings:
+            type: object
+            properties:
+              token:
+                type: string
+                minLength: 1
+            required:
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:hubspot
+          setupSettings:
+            type: object
+            properties:
+              token:
+                type: string
+                minLength: 1
+            required:
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:linear
+          setupSettings:
+            type: object
+            properties:
+              token:
+                type: string
+                minLength: 1
+            required:
+            - token
+        required:
+        - connector
+        - setupSettings
+      - type: object
+        properties:
+          connector:
+            type: string
+            enum:
+            - builtin:jira
+          setupSettings:
+            $ref: '#/components/schemas/JiraConnectorSetupSettings'
+        required:
+        - connector
+        - setupSettings
+    DocumentBlockDivider:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - divider
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - isVoid
+      - data
+    SiteConfigurableChannelType:
+      type: string
+      enum:
+      - builtin:slack
+      - builtin:discord
+      - builtin:github
+      - builtin:linear
+    SiteQuestionAnswerRelevance:
+      type: string
+      description: Relevance classification of the user question.
+      enum:
+      - relevant
+      - spam
+      - off-topic
+      - unclear
+    DocumentBlockIf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - if
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentRefPage:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - page
+        page:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - page
+    DocumentBlockDrawing:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - drawing
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionStatsFeedback:
+      type: object
+      description: Aggregated feedback for answers linked to a site question.
+      properties:
+        positive:
+          type: number
+          description: Count of answers with positive feedback.
+        negative:
+          type: number
+          description: Count of answers with negative feedback.
+        unrated:
+          type: number
+          description: Count of answers without feedback.
+      required:
+      - positive
+      - negative
+      - unrated
+    CardsImageObjectFit:
+      type: string
+      description: Object fit for image display in card views
+      enum:
+      - contain
+      - fill
+      - cover
+    DocumentBlocksEssentials:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+    SiteScan:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-scan
+        id:
+          type: string
+          description: The ID of the scan
+        status:
+          $ref: '#/components/schemas/SiteScanStatus'
+        topic:
+          type:
+          - string
+          - 'null'
+          description: The site topic ID associated with the scan. It is null for scans that are not associated with a current topic in the site.
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        startedAt:
+          $ref: '#/components/schemas/Timestamp'
+        finishedAt:
+          $ref: '#/components/schemas/Timestamp'
+        findings:
+          $ref: '#/components/schemas/SiteScanFindings'
+        failureMessage:
+          type: string
+          description: Failure message for failed scans
+        urls:
+          type: object
+          description: URLs associated with the scan
+          properties:
+            location:
+              type: string
+              description: URL of the scan endpoint in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - status
+      - topic
+      - createdAt
+      - findings
+      - urls
+    DocumentTableDefinitionCheckbox:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - checkbox
+        required:
+        - type
+    ContextConnectionStatus:
+      type: string
+      enum:
+      - pending
+      - syncing
+      - succeeded
+      - failed
+      - skipped
+    DocumentFragment:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - fragment
+        key:
+          type: string
+        fragment:
+          type: string
+        type:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlock'
+      required:
+      - object
+      - nodes
+    DocumentInlineExpression:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - expression
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            expression:
+              type: string
+          required:
+          - expression
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteFindingTitle:
+      type: string
+      description: Short finding title
+      maxLength: 256
+    SiteQuestionType:
+      type: string
+      description: Type classification of the user question.
+      enum:
+      - exploring
+      - how-to
+      - troubleshooting
+      - reference
+      - unknown
+    DocumentTableDefinitionUsers:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - users
+          multiple:
+            type: boolean
+        required:
+        - type
+        - multiple
+    DocumentBlockStepper:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockStepperStep'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    ContentRef:
+      description: A relative reference to content in GitBook.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - $ref: '#/components/schemas/ContentRefPage'
+      - $ref: '#/components/schemas/ContentRefAnchor'
+      - $ref: '#/components/schemas/ContentRefUser'
+      - $ref: '#/components/schemas/ContentRefCollection'
+      - $ref: '#/components/schemas/ContentRefSpace'
+      - $ref: '#/components/schemas/ContentRefReusableContent'
+      - $ref: '#/components/schemas/ContentRefTag'
+      - $ref: '#/components/schemas/ContentRefOpenAPI'
+    SiteTriageFilterQuestions:
+      type: string
+      description: 'Findings source filter matching evidence coming from site questions.
+
+        '
+      enum:
+      - questions
+    DocumentText:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - text
+        key:
+          type: string
+        leaves:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextLeaf'
+      required:
+      - object
+      - leaves
+    AISkipReason:
+      type: string
+      description: "Why an AI task was skipped before execution.\n\n- `ai_unavailable_for_organization`: The organization's effective plan does not include AI or a\n  required feature. Takes precedence when both the organization and site plans block the task.\n- `ai_unavailable_for_site`: The site's effective plan does not include the required feature.\n  The site's applied plan takes precedence over its own plan.\n- `ai_paused`: AI usage is temporarily paused by automatic usage controls.\n- `ai_disabled`: AI or a required AI feature has been turned off in the organization's settings.\n- `ai_restricted`: AI is blocked by GitBook or a contractual restriction and cannot be enabled\n  through organization settings."
+      enum:
+      - ai_unavailable_for_organization
+      - ai_unavailable_for_site
+      - ai_disabled
+      - ai_restricted
+      - ai_paused
+    SiteTopic:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - context-topic
+        id:
+          type: string
+          description: The ID of the topic
+        label:
+          type: string
+          description: The label of the topic
+        parent:
+          type: object
+          description: The parent topic when this topic is nested under another one
+          properties:
+            id:
+              type: string
+              description: The ID of the parent topic
+            label:
+              type: string
+              description: The label of the parent topic
+          required:
+          - id
+          - label
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        icon:
+          $ref: '#/components/schemas/Icon'
+        summary:
+          $ref: '#/components/schemas/JSONDocument'
+        usageSettings:
+          $ref: '#/components/schemas/SiteTopicUsageSettings'
+        pages:
+          type: number
+          description: The number of pages associated with the topic
+        records:
+          type: number
+          description: The number of records in the topic
+        findings:
+          type: object
+          description: The number of findings linked to the topic
+          properties:
+            open:
+              type: number
+              description: The number of open findings linked to the topic
+            total:
+              type: number
+              description: The total number of findings linked to the topic
+          required:
+          - open
+          - total
+        questions:
+          $ref: '#/components/schemas/SiteQuestionStats'
+        urls:
+          type: object
+          description: URLs associated with the topic
+          properties:
+            location:
+              type: string
+              description: URL of the topic in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - label
+      - summary
+      - icon
+      - usageSettings
+      - pages
+      - records
+      - findings
+      - questions
+      - createdAt
+      - updatedAt
+      - urls
+    ContextRecordDescription:
+      type: string
+      description: Optional short description of the context record
+      maxLength: 512
+    DocumentMarkBold:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - bold
+      required:
+      - object
+      - type
+    DocumentBlockHint:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - hint
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            style:
+              type: string
+              enum:
+              - info
+              - warning
+              - danger
+              - success
+            icon:
+              $ref: '#/components/schemas/Icon'
+          required:
+          - style
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    ContentRefURL:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - url
+        url:
+          type: string
+      required:
+      - kind
+      - url
+    DocumentInlineIcon:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - icon
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+            color:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - icon
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionSelect:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - select
+          multiple:
+            type: boolean
+          options:
+            type: array
+            items:
+              $ref: '#/components/schemas/DocumentTableSelectOption'
+        required:
+        - type
+        - multiple
+        - options
+    SiteChannelType:
+      oneOf:
+      - $ref: '#/components/schemas/SiteCoreChannelType'
+      - $ref: '#/components/schemas/SiteConfigurableChannelType'
+    DocumentBlockFile:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - file
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefFile'
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockIntegration:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - integration
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            integration:
+              type: string
+              description: Name of the integration
+            block:
+              type: string
+              description: ID of the block in the integration
+            props:
+              description: Properties passed to the block during rendering
+              $ref: '#/components/schemas/PlainObject'
+            action:
+              $ref: '#/components/schemas/ContentKitAction'
+            url:
+              type: string
+              description: 'URL associated with the content represented by the block.
+
+                This property is set when creating a block from a URL (unfurl) to ensure
+
+                we can convert the block back to an embed.
+
+                '
+            fullWidth:
+              type: boolean
+          required:
+          - integration
+          - block
+          - props
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              type: string
+              description: A content token that can be used to authenticate requests for cross-space integration blocks.
+            spaceId:
+              type: string
+              description: ID of the space the integration block originates from
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    URL:
+      type: string
+      format: uri
+      maxLength: 2048
+    SiteQuestionStatsTypes:
+      type: object
+      properties:
+        exploring:
+          type: number
+        how-to:
+          type: number
+        troubleshooting:
+          type: number
+        reference:
+          type: number
+        unknown:
+          type: number
+      required:
+      - exploring
+      - how-to
+      - troubleshooting
+      - reference
+      - unknown
+    DocumentBlock:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlockParagraph'
+      - $ref: '#/components/schemas/DocumentBlockHeading'
+      - $ref: '#/components/schemas/DocumentBlockListOrdered'
+      - $ref: '#/components/schemas/DocumentBlockListUnordered'
+      - $ref: '#/components/schemas/DocumentBlockListTasks'
+      - $ref: '#/components/schemas/DocumentBlockListItem'
+      - $ref: '#/components/schemas/DocumentBlockDivider'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockImage'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockCodeLine'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTabsItem'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockStepperStep'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockColumn'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+      - $ref: '#/components/schemas/DocumentBlockUpdate'
+    SiteFindingOutboundLink:
+      type: object
+      description: 'Details of an `outbound-link-error` finding: the failing external URL, or the domain when it doesn''t resolve, and the observed failure, sourced from the site''s outbound link checks. A resolved finding has either `url` or `host` and no other field. Absent on findings of any other type.'
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The external URL that fails. Absent when `host` is set.
+        host:
+          type: string
+          description: The domain that doesn't resolve, set instead of `url` when the finding covers every link to that domain on the site.
+        status:
+          type: string
+          description: Current health status of the URL or domain for this site.
+          enum:
+          - pending
+          - healthy
+          - suspect
+          - failed
+          - recovering
+          - canceled
+        failureKind:
+          type: string
+          description: Classification of the confirmed failure.
+          enum:
+          - client-error
+          - server-error
+          - redirect
+          - dns
+          - tls
+          - connection
+          - timeout
+        httpStatus:
+          type: number
+          description: HTTP status code of the last observation, when one was received.
+        checkedAt:
+          $ref: '#/components/schemas/Timestamp'
+          description: When the URL or domain was last observed.
+    apiToken:
+      type: string
+      minLength: 1
+      maxLength: 1024
+      description: Atlassian API token used for outbound writes. Redacted when read back. Omit it when updating a connection to keep the stored token; required when the site URL or account email changes.
+    DocumentInlineAnnotation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - annotation
+        key:
+          type: string
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                  - annotation-body
+                nodes:
+                  type: array
+                  items:
+                    oneOf:
+                    - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                    - $ref: '#/components/schemas/DocumentBlockCode'
+                  minItems: 1
+              required:
+              - nodes
+              - type
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - fragments
+      - isVoid
+      - nodes
+    SiteFindingServingRedirect:
+      type: object
+      title: Serving redirect
+      description: The live redirect serving a `broken-link` finding's path.
+      properties:
+        redirect:
+          type: string
+          description: ID of the redirect.
+        wildcard:
+          type: boolean
+          description: Whether a wildcard redirect covers the path rather than one at the path itself. Reopening the finding would delete it, so `reopen` isn't offered.
+        createdByAgent:
+          type: boolean
+          description: Whether GitBook created the redirect on its own.
+      required:
+      - redirect
+      - wildcard
+      - createdByAgent
+    projectKeys:
+      type: array
+      maxItems: 100
+      uniqueItems: true
+      description: Projects where GitBook handles issues. Empty means all accessible projects.
+      items:
+        type: string
+        minLength: 1
+        maxLength: 255
+    DocumentBlocksTopLevels:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+      - $ref: '#/components/schemas/DocumentBlockQuote'
+      - $ref: '#/components/schemas/DocumentBlockHint'
+      - $ref: '#/components/schemas/DocumentBlockPrompt'
+      - $ref: '#/components/schemas/DocumentBlockImages'
+      - $ref: '#/components/schemas/DocumentBlockFile'
+      - $ref: '#/components/schemas/DocumentBlockDrawing'
+      - $ref: '#/components/schemas/DocumentBlockEmbed'
+      - $ref: '#/components/schemas/DocumentBlockCode'
+      - $ref: '#/components/schemas/DocumentBlockMath'
+      - $ref: '#/components/schemas/DocumentBlockExpandable'
+      - $ref: '#/components/schemas/DocumentBlockTabs'
+      - $ref: '#/components/schemas/DocumentBlockTable'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPI'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIOperation'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPISchemas'
+      - $ref: '#/components/schemas/DocumentBlockOpenAPIWebhook'
+      - $ref: '#/components/schemas/DocumentBlockContentRef'
+      - $ref: '#/components/schemas/DocumentBlockIntegration'
+      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+      - $ref: '#/components/schemas/DocumentBlockStepper'
+      - $ref: '#/components/schemas/DocumentBlockIf'
+      - $ref: '#/components/schemas/DocumentBlockColumns'
+      - $ref: '#/components/schemas/DocumentBlockUpdates'
+    DocumentBlockEmbed:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - embed
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            url:
+              type: string
+            fullWidth:
+              type: boolean
+          required:
+          - url
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockReusableContent:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - reusable-content
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRefReusableContent'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the reusable content from the API.
+              type: string
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteFindingStatsBrokenLinks:
+      type: object
+      description: Breakdown of the broken-link findings included in the aggregation.
+      properties:
+        redirectSuggested:
+          type: number
+          description: Broken URLs the audit found a page to redirect to.
+        noMatchingPage:
+          type: number
+          description: Broken URLs the audit judged and found no page to redirect to.
+      required:
+      - redirectSuggested
+      - noMatchingPage
+    DocumentTableDefinitionFiles:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - files
+        required:
+        - type
+    DocumentMarkSubscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - subscript
+      required:
+      - object
+      - type
+    ContentRefTag:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - tag
+        tag:
+          type: string
+          description: The slug of the tag, also used as the ID, and references the tags defined on a revision.
+        space:
+          type: string
+          description: The space in which the tag is defined. If undefined, the tag is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - tag
+    OpenAPIWebhookPointer:
+      type: object
+      description: Pointer to a webhook in the OpenAPI spec.
+      properties:
+        name:
+          type: string
+          description: Name of the webhook in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the webhook in the OpenAPI spec.
+      required:
+      - name
+      - method
+    DocumentBlockOpenAPI:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - swagger
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                oneOf:
+                - $ref: '#/components/schemas/ContentRefFile'
+                - $ref: '#/components/schemas/ContentRefURL'
+              expanded:
+                type: boolean
+                description: If true, the block is opened by default.
+              fullWidth:
+                type: boolean
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteFindingAvailableAction:
+      type: object
+      title: Available action
+      description: An action a finding allows now, with the site permission it needs.
+      properties:
+        action:
+          $ref: '#/components/schemas/SiteFindingAction'
+        permission:
+          type: string
+          description: Site permission the action needs.
+          enum:
+          - edit
+          - admin
+      required:
+      - action
+      - permission
+    SiteQuestionStatsChannels:
+      type: object
+      description: Count of answers by site channel ID.
+      additionalProperties:
+        type: number
+    SiteTopicUsageSettings:
+      type: object
+      properties:
+        changeRequests:
+          type: boolean
+          description: Whether to use context to propose change requests
+      required:
+      - changeRequests
+    ContentRefCollection:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - collection
+        collection:
+          type: string
+      required:
+      - kind
+      - collection
+    SiteFindingStatsSeverities:
+      type: object
+      description: Count of findings by estimated end-user severity.
+      properties:
+        low:
+          type: number
+          description: Count of findings with a low estimated severity.
+        medium:
+          type: number
+          description: Count of findings with a medium estimated severity.
+        high:
+          type: number
+          description: Count of findings with a high estimated severity.
+      required:
+      - low
+      - medium
+      - high
+    DocumentTableDefinitionContentRef:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - content-ref
+        required:
+        - type
+    ContextConnectionFailureReason:
+      type: string
+      description: Why a synchronization failed, indicating who can resolve it. `authentication` and `misconfigured` need the connection to be reconfigured; `rate_limited` and `upstream_unavailable` are the source's own limits or downtime and are retried; `unknown` could not be attributed to the source's response.
+      enum:
+      - authentication
+      - misconfigured
+      - rate_limited
+      - upstream_unavailable
+      - unknown
+    DocumentBlockQuote:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - blockquote
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    ContextConnectionTestResult:
+      type: object
+      required:
+      - object
+      - success
+      properties:
+        object:
+          type: string
+          enum:
+          - context-connection-test-result
+        success:
+          type: boolean
+          description: Whether the stored credentials authenticated successfully.
+        error:
+          type: string
+          description: A human-readable reason for the failure, when the test failed.
+    ChangeRequestChangeCountsByType:
+      type: object
+      description: Counts of entities grouped by how they changed relative to the change request base.
+      properties:
+        added:
+          type: integer
+          minimum: 0
+        modified:
+          type: integer
+          minimum: 0
+        deleted:
+          type: integer
+          minimum: 0
+      required:
+      - added
+      - modified
+      - deleted
+    SiteRedirectInputDestinationPath:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - path
+        spaceId:
+          type: string
+          description: Unique identifier for the space containing the page referenced by the path.
+        path:
+          type: string
+          description: Path to the page within the space revision to resolve.
+      required:
+      - kind
+      - spaceId
+      - path
+    ContextConnector:
+      oneOf:
+      - type: string
+        description: Integration source
+        pattern: ^integration:[^:]+$
+        x-typescript: '`integration:${string}`'
+      - type: string
+        description: Builtin sources
+        enum:
+        - builtin:email
+        - builtin:api
+        - builtin:website
+        - builtin:youtube
+        - builtin:github-discussions
+        - builtin:github-issues
+        - builtin:intercom
+        - builtin:front
+        - builtin:zendesk
+        - builtin:zoho-desk
+        - builtin:freshdesk
+        - builtin:pylon
+        - builtin:hubspot
+        - builtin:linear
+        - builtin:jira
+    ChangeRequestLinks:
+      type: array
+      description: External links associated with the change request.
+      items:
+        $ref: '#/components/schemas/ChangeRequestLink'
+      maxItems: 10
+    ContextSearchBoost:
+      type: string
+      description: Relative score adjustment applied to records from a connection when searching.
+      enum:
+      - x0.8
+      - x1.0
+      - x1.2
+    JiraConnectorSetupSettings:
+      type: object
+      properties:
+        baseUrl:
+          type: string
+          format: uri
+          minLength: 1
+          maxLength: 2048
+          description: Base URL of the Jira Cloud site, e.g. https://your-team.atlassian.net.
+        apiEmail:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+          description: Email of the Atlassian account whose API token is used.
+        apiToken:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          description: Atlassian API token used for outbound writes. Redacted when read back. Omit it when updating a connection to keep the stored token; required when the site URL or account email changes.
+        projectKeys:
+          type: array
+          maxItems: 100
+          uniqueItems: true
+          description: Projects where GitBook handles issues. Empty means all accessible projects.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 255
+        statusMapping:
+          type: object
+          description: 'Jira status to move the linked issue to when the change request reaches a given status, e.g. `{ "merged": "Done" }`. A status left out is not synced.'
+          propertyNames:
+            $ref: '#/components/schemas/ChangeRequestStatus'
+          additionalProperties:
+            type: string
+            minLength: 1
+            maxLength: 255
+      required:
+      - baseUrl
+      - apiEmail
+      - apiToken
+    SiteCoreChannelType:
+      type: string
+      enum:
+      - site
+      - embed
+      - api
+    DocumentBlockTable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - table
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            view:
+              oneOf:
+              - $ref: '#/components/schemas/DocumentTableViewGrid'
+              - $ref: '#/components/schemas/DocumentTableViewCards'
+            records:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableRecord'
+            definition:
+              type: object
+              additionalProperties:
+                $ref: '#/components/schemas/DocumentTableDefinition'
+            cellMerges:
+              type: array
+              description: Positional table cell merge ranges. The current document model retains only non-overlapping horizontal or vertical merges between adjacent Text or Number body cells. Anchors and spans are resolved against the table's current sorted record order and visible column order.
+              items:
+                $ref: '#/components/schemas/DocumentTableCellMerge'
+            fullWidth:
+              type: boolean
+              description: Whether to render the block as a full width one
+            search:
+              type: boolean
+              description: Whether to show the search bar on the table. When unset, search is shown automatically on grid tables once they have enough rows.
+          required:
+          - view
+          - records
+          - definition
+        fragments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFragment'
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+      - fragments
+    DocumentAction:
+      description: Action to perform when an inline button is clicked.
+      type: object
+      oneOf:
+      - type: object
+        description: Open a search input, optionally prefilled with a search query.
+        properties:
+          action:
+            type: string
+            enum:
+            - search
+          query:
+            type: string
+            description: The search query to prefill.
+          scope:
+            type: string
+            description: 'Where to search. `site` searches the whole site; `space` limits the search to the space the visitor is reading.
+
+              '
+            enum:
+            - site
+            - space
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open an AI input, optionally prefilled with a question.
+        properties:
+          action:
+            type: string
+            enum:
+            - ask
+          query:
+            type: string
+            description: The question to prefill.
+        required:
+        - action
+        additionalProperties: false
+      - type: object
+        description: Open a selection input for the option identified by its slug.
+        properties:
+          action:
+            type: string
+            enum:
+            - select
+          slug:
+            type: string
+            description: The slug of the option to select.
+        required:
+        - action
+        - slug
+        additionalProperties: false
+    DocumentBlockTabs:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockTabsItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentBlockParagraph:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - paragraph
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    DocumentInlineEmoji:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - emoji
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+          required:
+          - code
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ContentImportSource:
+      oneOf:
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - website
+          url:
+            $ref: '#/components/schemas/URL'
+        required:
+        - type
+        - url
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - file
+          files:
+            description: Files to import
+            type: array
+            maxItems: 50
+            items:
+              description: Key of file
+              type: string
+        required:
+        - type
+        - files
+    DocumentMarkKeyboard:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - keyboard
+      required:
+      - object
+      - type
+    RevisionPageType:
+      type: string
+      enum:
+      - document
+      - group
+      - link
+      - computed
+    SiteRedirectSourcePath:
+      type: string
+      description: The source path to redirect from.
+      maxLength: 512
+      pattern: ^\/(?!\*)(?!.*\*.+)(?:[A-Za-z0-9\-._~+]|%[0-9A-Fa-f]{2})+(?:\/(?:[A-Za-z0-9\-._~+]|%[0-9A-Fa-f]{2})+)*(?:\/\*|\*)?$
+    DocumentTableSelectOption:
+      type: object
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        color:
+          type: string
+      required:
+      - value
+      - label
+      - color
+    DocumentTableCellSpan:
+      description: Number of rows or columns covered by a table cell merge
+      type: integer
+      minimum: 1
+      maximum: 50
+    ContextRecord:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - context-record
+        id:
+          type: string
+          description: The ID of the record
+        title:
+          $ref: '#/components/schemas/ContextRecordTitle'
+        description:
+          $ref: '#/components/schemas/ContextRecordDescription'
+        type:
+          $ref: '#/components/schemas/ContextRecordType'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        processedAt:
+          $ref: '#/components/schemas/Timestamp'
+        connection:
+          type: string
+          description: The connection ID associated with the record
+        connector:
+          description: The connector type associated with the record
+          $ref: '#/components/schemas/ContextConnector'
+        topics:
+          type: array
+          description: The associated topics of the record
+          items:
+            type: string
+        urls:
+          type: object
+          description: URLs associated with the record
+          properties:
+            location:
+              type: string
+              description: URL of the record in the API
+              format: uri
+            source:
+              type: string
+              description: URL of the record in the source
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - title
+      - type
+      - createdAt
+      - connection
+      - connector
+      - urls
+    ContentImportTarget:
+      type: object
+      properties:
+        space:
+          type: string
+          description: ID of the space to import in
+        changeRequest:
+          type: string
+          description: ID of the change request to import in
+        page:
+          type: string
+          description: ID of the page to import in
+      required:
+      - space
+    ContextUsageSettings:
+      type: object
+      properties:
+        changeRequests:
+          type: boolean
+          description: Whether to use context to propose change requests
+        search:
+          type: boolean
+          description: Whether to expose records in search results
+        sync:
+          type: boolean
+          description: Whether the connection syncs GitBook change-request state outward to the connected external system (outbound write). Requires a write-capable token or role.
+        searchBoost:
+          $ref: '#/components/schemas/ContextSearchBoost'
+      required:
+      - changeRequests
+      - search
+      - searchBoost
+    SiteFindingStatus:
+      type: string
+      description: "Status of a site finding.\n  - `candidate` is a finding that has been raised but not yet confirmed. Typically these are not shown to users.\n  - `open` is a finding that has been surfaced to users and is still under investigation.\n  - `done` is a finding that has been resolved and is no longer under investigation.\n  - `canceled` is a finding that has been canceled and is no longer under investigation.\n"
+      enum:
+      - candidate
+      - open
+      - done
+      - canceled
+    SiteQuestionStats:
+      type: object
+      description: Aggregated stats for questions and linked answers.
+      properties:
+        total:
+          type: number
+          description: Total count of questions included in the aggregation.
+        answers:
+          type: number
+          description: Total count of answers linked to the questions.
+        feedback:
+          $ref: '#/components/schemas/SiteQuestionStatsFeedback'
+        answered:
+          $ref: '#/components/schemas/SiteQuestionStatsAnswered'
+        relevance:
+          $ref: '#/components/schemas/SiteQuestionStatsRelevance'
+        types:
+          $ref: '#/components/schemas/SiteQuestionStatsTypes'
+        channelTypes:
+          $ref: '#/components/schemas/SiteQuestionStatsChannelTypes'
+        channels:
+          $ref: '#/components/schemas/SiteQuestionStatsChannels'
+        weeklyPulse:
+          type: array
+          minItems: 13
+          maxItems: 13
+          description: Weekly count of related question answers for the past 3 months.
+          items:
+            type: number
+      required:
+      - total
+      - answers
+      - feedback
+      - answered
+      - relevance
+      - types
+      - channelTypes
+      - channels
+      - weeklyPulse
+    DocumentTableCellMerge:
+      description: Positional table cell merge range. The anchor and spans are resolved against the current sorted record order and visible column order. The current document model applies only non-overlapping horizontal or vertical merges of adjacent Text or Number body cells; unsupported ranges are removed during normalization.
+      type: object
+      properties:
+        anchor:
+          type: object
+          description: Cell at the top-left of the merged range
+          properties:
+            record:
+              type: string
+              description: ID of the anchor record
+            column:
+              type: string
+              description: ID of the anchor column
+          required:
+          - record
+          - column
+        rowSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+        colSpan:
+          $ref: '#/components/schemas/DocumentTableCellSpan'
+      required:
+      - anchor
+      - rowSpan
+      - colSpan
+    ChangeRequestLinkInput:
+      type: object
+      description: External link associated with a change request.
+      properties:
+        id:
+          type: string
+          description: The ID of an existing link, as served on the change request. Pass it back to update that link, or omit it to add a new one.
+        ref:
+          $ref: '#/components/schemas/ContentRefURL'
+        title:
+          $ref: '#/components/schemas/ChangeRequestLinkTitle'
+      required:
+      - ref
+    DocumentBlockListUnordered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-unordered
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        data:
+          type: object
+          additionalProperties: false
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+    ContextConnection:
+      allOf:
+      - type: object
+        properties:
+          object:
+            type: string
+            enum:
+            - context-connection
+          id:
+            type: string
+            description: The ID of the connection
+          createdAt:
+            $ref: '#/components/schemas/Timestamp'
+          syncedAt:
+            $ref: '#/components/schemas/Timestamp'
+          label:
+            $ref: '#/components/schemas/ContextConnectionLabel'
+          filter:
+            $ref: '#/components/schemas/ContextConnectionFilter'
+          status:
+            $ref: '#/components/schemas/ContextConnectionStatus'
+          records:
+            type: integer
+            description: Number of records ingested from this connection
+          failureMessage:
+            type: string
+            description: Failure message when synchronization fails
+          failureReason:
+            $ref: '#/components/schemas/ContextConnectionFailureReason'
+          skipReason:
+            $ref: '#/components/schemas/AISkipReason'
+          email:
+            type: object
+            description: Parameters associated with the connection when it is an email connection
+            properties:
+              ingestionAddress:
+                type: string
+                description: Inbound email address for the connection
+                format: email
+          usageSettings:
+            $ref: '#/components/schemas/ContextUsageSettings'
+          urls:
+            type: object
+            description: URLs associated with the connection
+            properties:
+              location:
+                type: string
+                description: URL of the connection in the API
+                format: uri
+            required:
+            - location
+        required:
+        - object
+        - id
+        - createdAt
+        - status
+        - records
+        - usageSettings
+        - urls
+      - $ref: '#/components/schemas/ContextConnectorSetup'
+    DocumentBlockHeading:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - heading-1
+          - heading-2
+          - heading-3
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentInline'
+            - $ref: '#/components/schemas/DocumentText'
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              pattern: ^[-a-z0-9.+_]+$
+            align:
+              $ref: '#/components/schemas/TextAlignment'
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    OpenAPIOperationPointer:
+      type: object
+      description: Pointer to an operation in the OpenAPI spec.
+      properties:
+        path:
+          type: string
+          description: Path of the operation in the OpenAPI spec.
+        method:
+          type: string
+          description: HTTP method of the operation in the OpenAPI spec.
+      required:
+      - path
+      - method
+    SiteFindingType:
+      type: string
+      description: "Classification of a site finding:\n  - Outdated content: The content was correct but is no longer up to date with external context and may be misleading or incorrect.\n  - Incorrect content: The content is factually wrong or misleading, leading users astray regardless of whether it was ever correct.\n  - Content gap: The content is missing important information that should be present to answer user questions effectively.\n  - Broken link: A URL on the site returns a 404, and can be resolved by creating a redirect or a new page.\n  - Outbound link error: An external URL used by the site's content fails to resolve, and can be fixed by replacing or removing the link.\n  - Other: Any other type of finding not covered by the above categories."
+      enum:
+      - content-outdated
+      - content-incorrect
+      - content-gap
+      - broken-link
+      - outbound-link-error
+      - other
+    ContextRecordInput:
+      type: object
+      description: Input to ingest a new context record
+      properties:
+        id:
+          type: string
+          description: Unique local identifier for the record
+        type:
+          $ref: '#/components/schemas/ContextRecordType'
+        title:
+          $ref: '#/components/schemas/ContextRecordTitle'
+        description:
+          $ref: '#/components/schemas/ContextRecordDescription'
+        body:
+          type: string
+          description: Body content of the record as markdown
+        url:
+          type: string
+          description: URL of the record
+          format: uri
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+          description: Date of the record creation in the original source
+        metadata:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: string
+            - type: number
+      required:
+      - id
+      - title
+      - body
+      - type
+    SiteFindingOrderBy:
+      type: string
+      enum:
+      - updatedAt
+      - severity
+      - sources
+      - suggestedFix
+      default: updatedAt
+      description: 'The field to sort site findings by. `updatedAt` returns the most recently updated findings first. `severity` returns the most severe findings first. `sources` returns the findings with the most linked sources (questions plus records) first. `suggestedFix` is for link findings: those that come with a fix (a suggested redirect, or an outbound link to correct) come before broken URLs the audit found no page for, most severe first within each group. Other finding types sort with the second group. Defaults to ''updatedAt''.'
+    DocumentInlineMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteQuestionStatsAnswered:
+      type: object
+      description: Aggregated answered assessment for answers linked to a site question.
+      properties:
+        'yes':
+          type: number
+          description: Count of answers assessed as fully answered.
+        partially:
+          type: number
+          description: Count of answers assessed as partially answered.
+        'no':
+          type: number
+          description: Count of answers assessed as not answered.
+      required:
+      - 'yes'
+      - partially
+      - 'no'
+    SiteScanFindings:
+      type: object
+      description: Number of findings created by the scan, grouped by severity.
+      properties:
+        low:
+          type: number
+        medium:
+          type: number
+        high:
+          type: number
+      required:
+      - low
+      - medium
+      - high
+    DocumentBlockOpenAPISchemas:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-schemas
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPISchemasPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+            required:
+            - ref
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    PlainObject:
+      properties: {}
+      additionalProperties:
+        oneOf:
+        - $ref: '#/components/schemas/PlainObject'
+        - type: string
+        - type: boolean
+        - type: number
+        - type: array
+          items:
+            oneOf:
+            - type: string
+            - type: boolean
+            - type: number
+            - $ref: '#/components/schemas/PlainObject'
+    DocumentTableDefinitionRating:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - rating
+          max:
+            type: number
+        required:
+        - type
+        - max
+    DocumentTextLeaf:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - leaf
+        text:
+          type: string
+        marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentTextMark'
+      required:
+      - object
+      - text
+      - marks
+    DocumentMarkStrikethrough:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - strikethrough
+      required:
+      - object
+      - type
+    ChangeRequestLinkExpanded:
+      description: External ticket data resolved for this link by a configured connector.
+      oneOf:
+      - type: object
+        description: An external ticket linked to the change request.
+        properties:
+          kind:
+            type: string
+            enum:
+            - external-ticket
+          provider:
+            type: string
+            enum:
+            - jira
+            - linear
+          state:
+            type: string
+            enum:
+            - connected
+          key:
+            type: string
+            description: The ticket's provider-specific key.
+          url:
+            type: string
+            format: uri
+            description: URL to open the ticket.
+          status:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required:
+            - id
+            - name
+          summary:
+            type: string
+            description: The ticket's summary.
+        required:
+        - kind
+        - provider
+        - state
+        - key
+        - url
+        - status
+        - summary
+      - type: object
+        description: An external ticket whose current data could not be loaded.
+        properties:
+          kind:
+            type: string
+            enum:
+            - external-ticket
+          provider:
+            type: string
+            enum:
+            - jira
+            - linear
+          state:
+            type: string
+            enum:
+            - error
+        required:
+        - kind
+        - provider
+        - state
+    DocumentBlockPrompt:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - prompt
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            description:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            openInAIProviders:
+              type: boolean
+            defaultExpanded:
+              type: string
+              default: hidden
+              description: Controls how much of the prompt content is visible by default.
+              enum:
+              - hidden
+              - partial
+              - full
+          required:
+          - description
+          additionalProperties: false
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockCode'
+          minItems: 1
+          maxItems: 1
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    SiteFindingPage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-finding-page
+        spaceId:
+          type: string
+          description: The space ID containing the linked page.
+        page:
+          $ref: '#/components/schemas/ChangedRevisionPage'
+      required:
+      - object
+      - spaceId
+      - page
+    DocumentBlockExpandable:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - expandable
+        key:
+          type: string
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        data:
+          type: object
+          properties:
+            defaultExpanded:
+              type: boolean
+          additionalProperties: false
+        fragments:
+          type: array
+          items:
+            oneOf:
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-title
+                  type:
+                    type: string
+                    enum:
+                    - expandable-title
+                  nodes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentBlockParagraph'
+                    minItems: 1
+                    maxItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+            - allOf:
+              - $ref: '#/components/schemas/DocumentFragment'
+              - type: object
+                properties:
+                  fragment:
+                    type: string
+                    enum:
+                    - expandable-body
+                  type:
+                    type: string
+                    enum:
+                    - expandable-body
+                  nodes:
+                    type: array
+                    items:
+                      oneOf:
+                      - $ref: '#/components/schemas/DocumentBlocksEssentials'
+                      - $ref: '#/components/schemas/DocumentBlockEmbed'
+                      - $ref: '#/components/schemas/DocumentBlockFile'
+                      - $ref: '#/components/schemas/DocumentBlockImages'
+                      - $ref: '#/components/schemas/DocumentBlockCode'
+                      - $ref: '#/components/schemas/DocumentBlockTable'
+                      - $ref: '#/components/schemas/DocumentBlockHint'
+                      - $ref: '#/components/schemas/DocumentBlockPrompt'
+                      - $ref: '#/components/schemas/DocumentBlockQuote'
+                      - $ref: '#/components/schemas/DocumentBlockIf'
+                      - $ref: '#/components/schemas/DocumentBlockReusableContent'
+                      - $ref: '#/components/schemas/DocumentBlockIntegration'
+                      - $ref: '#/components/schemas/DocumentBlockStepper'
+                    minItems: 1
+                required:
+                - nodes
+                - fragment
+                - type
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - isVoid
+      - fragments
+      - data
+    Icon:
+      type: string
+      maxLength: 50
+      format: icon
+      description: Name of the icon
+      example: gear
+    DocumentTableDefinition:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionText'
+      - $ref: '#/components/schemas/DocumentTableDefinitionNumber'
+      - $ref: '#/components/schemas/DocumentTableDefinitionCheckbox'
+      - $ref: '#/components/schemas/DocumentTableDefinitionFiles'
+      - $ref: '#/components/schemas/DocumentTableDefinitionUsers'
+      - $ref: '#/components/schemas/DocumentTableDefinitionRating'
+      - $ref: '#/components/schemas/DocumentTableDefinitionSelect'
+      - $ref: '#/components/schemas/DocumentTableDefinitionContentRef'
+      - $ref: '#/components/schemas/DocumentTableDefinitionImage'
+    ContentRefUser:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - user
+        user:
+          type: string
+      required:
+      - kind
+      - user
+    ContextConnectionLabel:
+      type: string
+      description: Optional label for the connection
+      minLength: 0
+      maxLength: 128
+    DocumentBlockOpenAPIWebhook:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-webhook
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIWebhookPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    SiteFindingStats:
+      type: object
+      description: Aggregated stats for the findings identified on a site.
+      properties:
+        total:
+          type: number
+          description: Total count of findings included in the aggregation.
+        statuses:
+          $ref: '#/components/schemas/SiteFindingStatsStatuses'
+        severities:
+          $ref: '#/components/schemas/SiteFindingStatsSeverities'
+        connectors:
+          $ref: '#/components/schemas/SiteFindingStatsConnectors'
+        brokenLinks:
+          $ref: '#/components/schemas/SiteFindingStatsBrokenLinks'
+        questions:
+          type: number
+          description: Count of findings with at least one piece of evidence coming from a site question.
+        mergedChangeRequests:
+          type: number
+          description: Count of change requests created to fix a finding that have been merged.
+      required:
+      - total
+      - statuses
+      - severities
+      - connectors
+      - brokenLinks
+      - questions
+      - mergedChangeRequests
+    DocumentInlineMention:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - mention
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentMarkSuperscript:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - superscript
+      required:
+      - object
+      - type
+    SiteFindingAutoResolution:
+      type: string
+      description: "What GitBook did on its own to resolve a finding.\n  - `drafted` drafted a fix that waits for approval.\n  - `applied` has its fix live, applied on its own or approved from a draft, resolving the finding.\n  - `undone` had its fix undone or rejected, so GitBook won't try again.\n"
+      enum:
+      - drafted
+      - applied
+      - undone
+    DocumentBlockUpdates:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - updates
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockUpdate'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            format:
+              type: string
+              enum:
+              - numeric
+              - full
+              - short
+              default: full
+          required:
+          - format
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentKitDefaultAction:
+      oneOf:
+      - type: object
+        description: Action to open an overlay modal defined by "componentId".
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.open'
+          componentId:
+            type: string
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - componentId
+        - props
+      - type: object
+        description: Action when a modal overlay is closed, with a return value to the higher level component in the stack. This action will be triggered on the parent component instance.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.modal.close'
+          returnValue:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - returnValue
+      - type: object
+        description: Action to open an url.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@ui.url.open'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action when a link is being unfurled into a block.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@link.unfurl'
+          url:
+            type: string
+        required:
+        - action
+        - url
+      - type: object
+        description: Action to update the properties stored in the related node.
+        properties:
+          action:
+            type: string
+            enum:
+            - '@editor.node.updateProps'
+          props:
+            $ref: '#/components/schemas/PlainObject'
+        required:
+        - action
+        - props
+    ContextRecordTitle:
+      type: string
+      description: Title for the context record
+      minLength: 1
+      maxLength: 256
+    DocumentBlockCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            syntax:
+              type: string
+            title:
+              type: string
+            overflow:
+              type: string
+              default: scroll
+              enum:
+              - scroll
+              - wrap
+            lineNumbers:
+              type: boolean
+            fullWidth:
+              type: boolean
+            expandable:
+              type: boolean
+            collapsedLineCount:
+              type: integer
+              description: Number of lines rendered in a code block when it is collapsed
+              minimum: 1
+              default: 10
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockCodeLine'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    DocumentInlineImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - inline-image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            caption:
+              type: string
+            alt:
+              type: string
+            size:
+              type: string
+              enum:
+              - original
+              - line
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentTableDefinitionNumber:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - number
+        required:
+        - type
+    ContentRefAnchor:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - anchor
+        anchor:
+          type: string
+        space:
+          description: ID of the space the page is in. The page is considered as in the current space if none is provided.
+          type: string
+        page:
+          description: ID of the page the anchor is in. The anchor is considered as in the current page if none is provided.
+          type: string
+      required:
+      - kind
+      - anchor
+    Timestamp:
+      type: string
+      format: date-time
+    SiteQuestionStatsRelevance:
+      type: object
+      properties:
+        relevant:
+          type: number
+        spam:
+          type: number
+        off-topic:
+          type: number
+        unclear:
+          type: number
+      required:
+      - relevant
+      - spam
+      - off-topic
+      - unclear
+    DocumentTableDefinitionText:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - text
+          textAlignment:
+            type: string
+            enum:
+            - center
+            - right
+            - left
+          verticalAlignment:
+            $ref: '#/components/schemas/VerticalAlignment'
+        required:
+        - type
+        - textAlignment
+    ContextRecordType:
+      type: string
+      enum:
+      - ticket
+      - document
+    statusMapping:
+      type: object
+      description: 'Jira status to move the linked issue to when the change request reaches a given status, e.g. `{ "merged": "Done" }`. A status left out is not synced.'
+      propertyNames:
+        $ref: '#/components/schemas/ChangeRequestStatus'
+      additionalProperties:
+        type: string
+        minLength: 1
+        maxLength: 255
+    DocumentBlockCodeLine:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - code-line
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineAnnotation'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+        data:
+          type: object
+          properties:
+            highlighted:
+              type: boolean
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    SiteFindingSeverity:
+      type: string
+      description: Estimated end-user severity of a site finding.
+      enum:
+      - low
+      - medium
+      - high
+    ChangeRequestStatus:
+      type: string
+      enum:
+      - draft
+      - open
+      - archived
+      - merged
+    ContentKitAction:
+      anyOf:
+      - type: object
+        description: Custom action to re-render the block.
+        properties:
+          action:
+            type: string
+        additionalProperties: true
+        required:
+        - action
+      - $ref: '#/components/schemas/ContentKitDefaultAction'
+    JSONDocument:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - document
+        data:
+          type: object
+          properties:
+            schemaVersion:
+              description: The schema version of the document. If undefined, the document is considered to be of the latest schema version.
+              type: integer
+          additionalProperties: true
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlocksTopLevels'
+        meta:
+          type: object
+          properties:
+            token:
+              description: A content token that can be used to fetch the content referenced in this document from the API.
+              type: string
+      required:
+      - object
+      - data
+      - nodes
+      example:
+        object: document
+        data: {}
+        nodes:
+        - object: block
+          type: paragraph
+          data: {}
+          nodes:
+          - object: text
+            leaves:
+            - object: leaf
+              text: Hello world
+              marks: []
+    DocumentBlockUpdate:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - update
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            date:
+              type: string
+              description: Date of the update. Accepts a YYYY-MM-DD date or a timestamp. Timestamps are normalized to their UTC calendar date; responses use YYYY-MM-DD.
+              oneOf:
+              - type: string
+                format: date
+              - $ref: '#/components/schemas/Timestamp'
+            tags:
+              type: array
+              description: Array of tags. Each tag is id'ed by its slug.
+              items:
+                $ref: '#/components/schemas/ContentRefTag'
+          required:
+          - date
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    SiteFindingStatsConnectors:
+      type: object
+      description: Count of findings by the connector their evidence came from, keyed by connector (e.g. `builtin:intercom`). A finding is counted once per connector that contributed at least one piece of evidence to it, so the counts can add up to more than the total.
+      additionalProperties:
+        type: number
+    DocumentBlockImages:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - images
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            align:
+              type: string
+              enum:
+              - center
+              - left
+              - right
+            fullWidth:
+              type: boolean
+            withFrame:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockImage'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    TextAlignment:
+      type: string
+      enum:
+      - start
+      - center
+      - end
+    ContentRefFile:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - file
+        file:
+          type: string
+        space:
+          description: ID of the space the file is in. The file is considered as in the current space if none is provided.
+          type: string
+      required:
+      - kind
+      - file
+    SiteFindingState:
+      type: string
+      description: "Where a link finding stands, from its status and what GitBook did with it.\n  - `open` needs a fix.\n  - `awaiting-approval` has a redirect GitBook drafted at its path, waiting to be approved or rejected.\n  - `resolved` was fixed or closed: `servingRedirect` says whether a live redirect serves its path.\n  - `ignored` was dismissed.\n"
+      enum:
+      - open
+      - awaiting-approval
+      - resolved
+      - ignored
+    DocumentBlockListTasks:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-tasks
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties: {}
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+    List:
+      type: object
+      properties:
+        next:
+          type: object
+          properties:
+            page:
+              type: string
+              description: Unique identifier to query the next results page
+          required:
+          - page
+        count:
+          type: number
+          description: Total count of objects in the list
+    OpenAPISchemasPointer:
+      type: object
+      description: Pointer to schemas in the OpenAPI spec.
+      properties:
+        grouped:
+          type: boolean
+          description: Whether the schemas are grouped or not.
+          default: true
+        schemas:
+          type: array
+          description: List of schemas name from the OpenAPI spec.
+          items:
+            type: string
+        title:
+          type: string
+          description: Custom title for the schemas block. When not provided, defaults to "The <SchemaName> object".
+      required:
+      - schemas
+    SiteQuestion:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-question
+        id:
+          type: string
+          description: The ID of the site question.
+        question:
+          type: string
+          description: Canonical text for the unique site question.
+        type:
+          $ref: '#/components/schemas/SiteQuestionType'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        askedAt:
+          $ref: '#/components/schemas/Timestamp'
+        stats:
+          $ref: '#/components/schemas/SiteQuestionStats'
+        urls:
+          type: object
+          description: URLs associated with the site question.
+          properties:
+            location:
+              type: string
+              format: uri
+              description: URL of the site question in the API.
+          required:
+          - location
+      required:
+      - object
+      - id
+      - question
+      - type
+      - createdAt
+      - askedAt
+      - stats
+      - urls
+    DocumentBlockColumns:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - columns
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            fullWidth:
+              type: boolean
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentBlockColumn'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+      - isVoid
+    SiteTriageFilterConnections:
+      type: string
+      description: 'Findings source filter matching evidence coming from a given connection,
+
+        encoded as `connection:<connectionId>`.
+
+        '
+      pattern: ^connection:.+$
+    DocumentMarkCode:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - code
+      required:
+      - object
+      - type
+    SiteScanStatus:
+      type: string
+      description: Status of a persisted site scan.
+      enum:
+      - pending
+      - running
+      - done
+      - failed
+    VerticalAlignment:
+      type: string
+      enum:
+      - top
+      - middle
+      - bottom
+    DocumentTableImageRecord:
+      description: A table record value for image columns, supporting both direct ContentRefs and the additional format with record-level settings.
+      oneOf:
+      - $ref: '#/components/schemas/ContentRefFile'
+      - $ref: '#/components/schemas/ContentRefURL'
+      - type: object
+        properties:
+          ref:
+            oneOf:
+            - $ref: '#/components/schemas/ContentRefFile'
+            - $ref: '#/components/schemas/ContentRefURL'
+          objectFit:
+            $ref: '#/components/schemas/CardsImageObjectFit'
+          alt:
+            type: string
+            description: Alternative text for the cover image
+        required:
+        - ref
+    DocumentBlockStepperStep:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - stepper-step
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+        data:
+          type: object
+          properties:
+            icon:
+              type: string
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockImage:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - image
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            refDark:
+              oneOf:
+              - $ref: '#/components/schemas/ContentRefURL'
+              - $ref: '#/components/schemas/ContentRefFile'
+            width:
+              $ref: '#/components/schemas/Length'
+            height:
+              $ref: '#/components/schemas/Length'
+            alt:
+              type: string
+          required:
+          - ref
+        fragments:
+          type: array
+          items:
+            allOf:
+            - $ref: '#/components/schemas/DocumentFragment'
+            - type: object
+              properties:
+                fragment:
+                  type: string
+                  enum:
+                  - caption
+                nodes:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DocumentBlockParagraph'
+              required:
+              - nodes
+              - fragment
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - fragments
+      - isVoid
+    SiteQuestionStatsChannelTypes:
+      type: object
+      description: Count of answers by site channel type, including core channels.
+      additionalProperties:
+        type: number
+    DocumentTableViewCards:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - cards
+        cardSize:
+          type: string
+          description: Size of the cards. It indicates how many columns will be used
+          enum:
+          - medium
+          - large
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        targetDefinition:
+          type: string
+          description: Definition ID to use as a target link for the card
+        coverDefinition:
+          type: string
+          description: Definition ID to use as a cover image
+        coverDefinitionDark:
+          type: string
+          description: Definition ID to use as a dark mode cover image
+        hideColumnTitle:
+          type: boolean
+          description: Should we display the column title or not
+        wrap:
+          type: boolean
+          description: Whether the cards wrap onto multiple rows (true, the default) or are laid out in a single horizontally-scrolling carousel row (false).
+      required:
+      - type
+      - columns
+      - cardSize
+    ChangeRequestSubject:
+      type: string
+      description: Subject of the change request
+      minLength: 0
+      maxLength: 100
+    SiteFindingStatsStatuses:
+      type: object
+      description: Count of findings by status. Candidate findings are never counted.
+      properties:
+        open:
+          type: number
+          description: Count of findings surfaced to users and still under investigation.
+        done:
+          type: number
+          description: Count of findings that have been resolved.
+        canceled:
+          type: number
+          description: Count of findings that have been canceled.
+      required:
+      - open
+      - done
+      - canceled
+    SiteFinding:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - site-finding
+        id:
+          type: string
+          description: The ID of the finding
+        scan:
+          type: string
+          description: The site scan ID associated with the finding
+        topic:
+          type:
+          - string
+          - 'null'
+          description: The site topic ID associated with the finding. It is null for findings that are not associated with a current topic in the site.
+        title:
+          $ref: '#/components/schemas/SiteFindingTitle'
+        changeRequests:
+          type: number
+          description: Number of change requests linked to the finding
+        pages:
+          type: number
+          description: Number of pages linked to the finding
+        records:
+          type: number
+          description: Number of records linked to the finding
+        questions:
+          type: number
+          description: Number of questions linked to the finding
+        status:
+          $ref: '#/components/schemas/SiteFindingStatus'
+        type:
+          $ref: '#/components/schemas/SiteFindingType'
+        severity:
+          $ref: '#/components/schemas/SiteFindingSeverity'
+        description:
+          $ref: '#/components/schemas/JSONDocument'
+        autoFixable:
+          type: boolean
+          description: Whether an AI agent should be able to fix this finding directly
+        autoResolution:
+          description: What GitBook did on its own to resolve the finding. Null when it never acted on the finding.
+          oneOf:
+          - $ref: '#/components/schemas/SiteFindingAutoResolution'
+          - type: 'null'
+        state:
+          $ref: '#/components/schemas/SiteFindingState'
+        servingRedirect:
+          $ref: '#/components/schemas/SiteFindingServingRedirect'
+        actions:
+          type: array
+          description: Actions a `broken-link` finding allows now, applied with `applySiteFindingAction`.
+          items:
+            $ref: '#/components/schemas/SiteFindingAvailableAction'
+        brokenLinkAction:
+          $ref: '#/components/schemas/SiteFindingBrokenLinkAction'
+        outboundLink:
+          $ref: '#/components/schemas/SiteFindingOutboundLink'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        urls:
+          type: object
+          description: URLs associated with the finding
+          properties:
+            location:
+              type: string
+              description: URL of the finding list endpoint in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - scan
+      - topic
+      - title
+      - changeRequests
+      - pages
+      - records
+      - questions
+      - status
+      - type
+      - severity
+      - description
+      - autoFixable
+      - autoResolution
+      - createdAt
+      - updatedAt
+      - urls
+    ContentRefOpenAPI:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - openapi
+        spec:
+          type: string
+          description: Slug of the OpenAPI specification
+      required:
+      - kind
+      - spec
+    ChangedRevisionPage:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/RevisionPageType'
+        title:
+          type: string
+        path:
+          type: string
+      required:
+      - id
+      - type
+      - title
+    ContentRefSpace:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - space
+        space:
+          type: string
+      required:
+      - kind
+      - space
+    SiteFindingAction:
+      type: string
+      description: "An action that moves a `broken-link` finding to another state. A finding's `actions` lists the ones it allows.\n  - `approve` makes the redirect GitBook drafted live, which resolves the finding.\n  - `reject` deletes the redirect GitBook drafted; the finding stays open and GitBook won't draft a fix for it again.\n  - `create-redirect` creates a redirect for its path with `createSiteRedirect`, prefilled with the suggestion; it resolves the finding.\n  - `mark-resolved` resolves it without a redirect: visitors still get a 404.\n  - `reopen` reopens it, deleting the live redirect at its path. For a fix GitBook applied, this undoes the fix and GitBook won't fix the link again.\n  - `ignore` dismisses it.\n  - `restore` reopens a dismissed finding.\n"
+      enum:
+      - approve
+      - reject
+      - create-redirect
+      - mark-resolved
+      - reopen
+      - ignore
+      - restore
+    ContentRefReusableContent:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - reusable-content
+        reusableContent:
+          type: string
+        space:
+          type: string
+          description: The space in which the reusable content is defined. If undefined, the reusable content is assumed to be in the same space as the content reference.
+      required:
+      - kind
+      - reusableContent
+    DocumentTableDefinitionBase:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          description: Title for the column
+      required:
+      - id
+      - title
+    ChangeRequestLinkTitle:
+      type: string
+      description: Optional title to display for the link.
+      maxLength: 128
+    YoutubeChannelId:
+      type: string
+      description: A YouTube channel ID starting with "UC".
+      pattern: ^UC[A-Za-z0-9_-]{22}$
+    DocumentBlockTabsItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - tabs-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+            - $ref: '#/components/schemas/DocumentBlockReusableContent'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockTabs'
+        data:
+          type: object
+          properties:
+            title:
+              type: string
+            icon:
+              $ref: '#/components/schemas/Icon'
+            slug:
+              description: Stable identifier for this tab's selection, shared with every tab and button targeting the same slug. It is slugified before matching, so casing and spacing need not be exact. Omit it — or send an empty value, which counts as omitted — to derive one from the title, which is what makes same-named tabs across a site select together. A value that slugifies to nothing, such as emoji alone, also falls back to the title.
+              type: string
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentBlockColumn:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - column
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockPrompt'
+            - $ref: '#/components/schemas/DocumentBlockContentRef'
+            - $ref: '#/components/schemas/DocumentBlockDrawing'
+            - $ref: '#/components/schemas/DocumentBlockEmbed'
+            - $ref: '#/components/schemas/DocumentBlockFile'
+            - $ref: '#/components/schemas/DocumentBlockIntegration'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockExpandable'
+            - $ref: '#/components/schemas/DocumentBlockStepper'
+            - $ref: '#/components/schemas/DocumentBlockIf'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            width:
+              $ref: '#/components/schemas/Length'
+            verticalAlignment:
+              $ref: '#/components/schemas/VerticalAlignment'
+          additionalProperties: false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    ContentImportRun:
+      type: object
+      properties:
+        object:
+          description: Type of Object, always equals to "import-run"
+          type: string
+          enum:
+          - import-run
+        id:
+          description: Unique ID of the import
+          type: string
+        startedAt:
+          description: Date when the import has started
+          $ref: '#/components/schemas/Timestamp'
+        completedAt:
+          description: Filled when the imported is in status "completed"
+          $ref: '#/components/schemas/Timestamp'
+        createdAt:
+          description: Date when the import was requested
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          description: Date when the import was last updated
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          description: Status of the import
+          type: string
+          enum:
+          - pending
+          - in-progress
+          - completed
+          - failed
+          - cancelled
+        reason:
+          description: Reason for the import failure when `status` is `failed`.
+          type: string
+        source:
+          description: Where the content is imported from.
+          $ref: '#/components/schemas/ContentImportSource'
+        target:
+          description: Where the content is imported into.
+          $ref: '#/components/schemas/ContentImportTarget'
+        site:
+          description: ID of the site the target space belongs to, when it belongs to exactly one.
+          type: string
+        createdBy:
+          description: ID of the user who started the import.
+          type: string
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              description: URL of the import run in the API
+              type: string
+              format: uri
+          required:
+          - location
+        pages:
+          description: Pages included in the import
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: ID of page
+                type: string
+              sourceURL:
+                description: Source URL where the page has been imported from
+                type: string
+              type:
+                description: Type of page
+                type: string
+                enum:
+                - page
+                - folder
+              status:
+                description: Status of the page
+                type: string
+                enum:
+                - complete
+                - pending
+            required:
+            - id
+            - type
+            - status
+      required:
+      - id
+      - status
+    DocumentTextMark:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentMarkBold'
+      - $ref: '#/components/schemas/DocumentMarkItalic'
+      - $ref: '#/components/schemas/DocumentMarkCode'
+      - $ref: '#/components/schemas/DocumentMarkKeyboard'
+      - $ref: '#/components/schemas/DocumentMarkStrikethrough'
+      - $ref: '#/components/schemas/DocumentMarkColor'
+      - $ref: '#/components/schemas/DocumentMarkSuperscript'
+      - $ref: '#/components/schemas/DocumentMarkSubscript'
+    DocumentTableViewGrid:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - grid
+        columns:
+          type: array
+          description: Ordered list of the definition IDs to display
+          items:
+            type: string
+        columnWidths:
+          type: object
+          description: Percent width of each column
+          additionalProperties:
+            type: number
+        hideHeader:
+          type: boolean
+          description: Should we display the header with column titles
+        stickyHeader:
+          type: boolean
+          description: Should we keep the table header sticky while the page scrolls
+        stickyFirstColumn:
+          type: boolean
+          description: Should we keep the first visible table column sticky while horizontally scrolling
+        useNewSizing:
+          type: boolean
+          description: 'Tables in GitBook originally used a scaled width approach i.e. the width defined
+
+            in columnWidths would be scaled to ensure a 100% width table.
+
+
+            We later changed this to treat the widths in columnWidths as exact values - they are
+
+            never scaled. A columnWidth of 50 is rendered as 50px.
+
+
+            In order to maintain backwards compatibility, we track whether or not we
+
+            use the new system here.
+
+
+            All new tables should have this value set to true, older tables will have it set
+
+            to undefined.
+
+            '
+      required:
+      - type
+      - columns
+      - hideHeader
+    SiteQuestionAnswerResolution:
+      type: string
+      description: Whether the response answered the question.
+      enum:
+      - 'no'
+      - partially
+      - 'yes'
+    SiteFindingBrokenLinkAction:
+      type: object
+      description: 'Suggested fix for a broken-link finding, shaped as the input for `createSiteRedirect` so it can be applied directly. Absent when the finding has no directly applicable redirect (for example, a suggestion to create a new page). The destination is absent when the audit judged the URL and found no page to redirect to: a redirect can still be created from the source with a destination of your choosing.'
+      properties:
+        source:
+          $ref: '#/components/schemas/SiteRedirectSourcePath'
+        captureWildcard:
+          type: boolean
+          description: Whether the redirect appends the wildcard-matched suffix of the source path to the destination.
+        destination:
+          $ref: '#/components/schemas/SiteRedirectInputDestinationPath'
+      required:
+      - source
+    DocumentMarkColor:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - color
+        data:
+          type: object
+          properties:
+            text:
+              $ref: '#/components/schemas/DocumentTextColor'
+            background:
+              $ref: '#/components/schemas/DocumentTextColor'
+          required:
+          - text
+          - background
+      required:
+      - object
+      - type
+      - data
+    DocumentTableRecord:
+      type: object
+      properties:
+        orderIndex:
+          type: string
+        values:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: number
+            - type:
+              - string
+              - 'null'
+            - type: boolean
+            - type: array
+              items:
+                type: string
+            - $ref: '#/components/schemas/ContentRef'
+            - $ref: '#/components/schemas/DocumentTableImageRecord'
+      required:
+      - orderIndex
+      - values
+    DocumentBlockOpenAPIOperation:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - openapi-operation
+        key:
+          type: string
+        data:
+          allOf:
+          - $ref: '#/components/schemas/OpenAPIOperationPointer'
+          - type: object
+            properties:
+              ref:
+                $ref: '#/components/schemas/ContentRefOpenAPI'
+              headless:
+                type: boolean
+                x-internal: true
+                description: When true, the block omits its own title and description; the page renders them instead. Set by the computed one-operation-per-page layout; not intended to be set manually.
+            required:
+            - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+        meta:
+          type: object
+          properties:
+            id:
+              description: Unique ID to be used in an URL for the block.
+              type: string
+          required:
+          - id
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    EntityId:
+      type: string
+      pattern: ^[a-zA-Z0-9_-]+$
+      description: A unique entity identifier
+    apiEmail:
+      type: string
+      format: email
+      minLength: 1
+      maxLength: 254
+      description: Email of the Atlassian account whose API token is used.
+    DocumentInline:
+      oneOf:
+      - $ref: '#/components/schemas/DocumentInlineLink'
+      - $ref: '#/components/schemas/DocumentInlineEmoji'
+      - $ref: '#/components/schemas/DocumentInlineIcon'
+      - $ref: '#/components/schemas/DocumentInlineExpression'
+      - $ref: '#/components/schemas/DocumentInlineMath'
+      - $ref: '#/components/schemas/DocumentInlineImage'
+      - $ref: '#/components/schemas/DocumentInlineAnnotation'
+      - $ref: '#/components/schemas/DocumentInlineMention'
+      - $ref: '#/components/schemas/DocumentInlineButton'
+    DocumentBlockMath:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - math
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            formula:
+              type: string
+          required:
+          - formula
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    ChangeRequest:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "change-request"
+          enum:
+          - change-request
+        id:
+          type: string
+          description: Unique identifier for the change request
+        number:
+          type: number
+          description: Incremental identifier of the change request
+        status:
+          $ref: '#/components/schemas/ChangeRequestStatus'
+        subject:
+          $ref: '#/components/schemas/ChangeRequestSubject'
+        description:
+          $ref: '#/components/schemas/JSONDocument'
+        createdBy:
+          $ref: '#/components/schemas/User'
+        createdAt:
+          $ref: '#/components/schemas/Timestamp'
+        updatedAt:
+          $ref: '#/components/schemas/Timestamp'
+        mergedBy:
+          $ref: '#/components/schemas/User'
+          description: User who merged the change request. Only present when the change request has been merged.
+        mergedAt:
+          $ref: '#/components/schemas/Timestamp'
+          description: Date at which the change request was merged. Only present when the change request has been merged.
+        space:
+          type: string
+          description: ID of the space in which the change request was created.
+        revision:
+          type: string
+          description: ID of the active revision in the change request.
+        revisionInitial:
+          type: string
+          description: ID of the initial revision in the space from which the change request was created.
+        revisionMergedAncestor:
+          type: string
+          description: ID of the latest revision when updating from main space content.
+        revisionMerged:
+          type: string
+          description: When merged, ID of the revision resulting from the merge.
+        comments:
+          type: number
+          description: Count of opened comments on the change request.
+        changeCounts:
+          description: Change counts computed when the change request gets a new revision, for its current head and base revisions. Merged change requests keep their last computed counts. Absent until computed.
+          $ref: '#/components/schemas/ChangeRequestChangeCounts'
+        siteTopic:
+          type: object
+          description: Site topic the change request was created from, when it came from one.
+          properties:
+            site:
+              type: string
+              description: ID of the site associated with the change request.
+            topic:
+              type: string
+              description: ID of the site topic associated with the change request.
+            finding:
+              type: string
+              deprecated: true
+              description: 'ID of the site finding the change request fixes. Use `siteFindings` instead: a change request can fix a finding without belonging to a topic, and this field is absent in that case.'
+          required:
+          - site
+          - topic
+        siteFinding:
+          deprecated: true
+          type: object
+          description: First linked site finding. Use `siteFindings` to read all linked findings.
+          properties:
+            site:
+              type: string
+              description: ID of the site the finding belongs to.
+            finding:
+              type: string
+              description: ID of the site finding the change request fixes.
+          required:
+          - site
+          - finding
+        siteFindings:
+          type: array
+          description: Site findings linked to the change request, in link order. Absent when none are linked. Merging resolves findings once every linked change request is merged, except outbound broken links, which are resolved by the outbound checker.
+          items:
+            type: object
+            properties:
+              site:
+                type: string
+                description: ID of the site the finding belongs to.
+              finding:
+                type: string
+                description: ID of the site finding the change request fixes.
+            required:
+            - site
+            - finding
+        styleguide:
+          type: object
+          description: 'Style guide check that opened the change request, when it came from one. A check can be run again on the change request already open on a space, rather than opening a second one, so several checks can share a change request.
+
+            '
+          properties:
+            site:
+              type: string
+              description: ID of the site the style guide belongs to.
+            run:
+              type: string
+              description: ID of the style guide check run that opened the change request.
+            changedPages:
+              type: number
+              description: 'Number of pages the check changed, recorded when it finished. Absent while it is still running, or when it never completed.
+
+                '
+            checkedAt:
+              $ref: '#/components/schemas/Timestamp'
+              description: 'When the most recent style guide check on the change request finished. Later edits from anyone else do not move it. Absent while the first one is still running.
+
+                '
+          required:
+          - site
+          - run
+        outdated:
+          type: boolean
+          description: If true, the change request is not up-to-date with latest changes in the main content.
+        imports:
+          description: 'Import runs targeting this change request, still running or ended recently, most recent first. Only returned when fetching a single change request.
+
+            '
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentImportRun'
+        links:
+          $ref: '#/components/schemas/ChangeRequestLinks'
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            app:
+              type: string
+              description: URL of the space in the application
+              format: uri
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - app
+          - location
+      required:
+      - object
+      - id
+      - number
+      - status
+      - subject
+      - createdBy
+      - createdAt
+      - updatedAt
+      - space
+      - revision
+      - revisionInitial
+      - comments
+      - outdated
+      - urls
+    YoutubeChannelName:
+      type: string
+      description: A YouTube channel handle starting with "@".
+      pattern: ^@[A-Za-z0-9._-]{3,100}$
+    DocumentMarkItalic:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - mark
+        type:
+          type: string
+          enum:
+          - italic
+      required:
+      - object
+      - type
+    DocumentBlockContentRef:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - content-ref
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+    DocumentBlockListItem:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-item
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlocksEssentials'
+            - $ref: '#/components/schemas/DocumentBlockCode'
+            - $ref: '#/components/schemas/DocumentBlockHint'
+            - $ref: '#/components/schemas/DocumentBlockQuote'
+            - $ref: '#/components/schemas/DocumentBlockMath'
+            - $ref: '#/components/schemas/DocumentBlockTable'
+            - $ref: '#/components/schemas/DocumentBlockImages'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+        data:
+          type: object
+          properties:
+            checked:
+              type: boolean
+      required:
+      - object
+      - type
+      - nodes
+    DocumentTableDefinitionImage:
+      allOf:
+      - $ref: '#/components/schemas/DocumentTableDefinitionBase'
+      - type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - image
+        required:
+        - type
+    Length:
+      oneOf:
+      - type: number
+      - type: object
+        properties:
+          unit:
+            type: string
+          value:
+            type: number
+        required:
+        - unit
+        - value
+    User:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Type of Object, always equals to "user"
+          enum:
+          - user
+        id:
+          type: string
+          description: Unique identifier for the user
+        displayName:
+          type: string
+          description: Full name for the user
+        email:
+          type: string
+          description: Email address of the user
+        photoURL:
+          type: string
+          description: URL of the user's profile picture
+        urls:
+          type: object
+          description: URLs associated with the object
+          properties:
+            location:
+              type: string
+              description: URL of the user in the API
+              format: uri
+          required:
+          - location
+      required:
+      - object
+      - id
+      - displayName
+      - urls
+    YoutubeChannelPattern:
+      description: A YouTube channel identifier, either a channel ID or a channel handle.
+      oneOf:
+      - $ref: '#/components/schemas/YoutubeChannelId'
+      - $ref: '#/components/schemas/YoutubeChannelName'
+    DocumentTextColor:
+      type: string
+      description: 'Allowed color tokens for color marks (text and background; background reuses this enum). Named colors are fixed palette keys. `$*` tokens are semantic: resolved from the published sites customization when rendering; authors may still persist them in content when valid.
+
+        '
+      enum:
+      - default
+      - green
+      - blue
+      - red
+      - orange
+      - yellow
+      - purple
+      - pink
+      - violet
+      - cyan
+      - $primary
+      - $info
+      - $success
+      - $warning
+      - $danger
+      - $tint
+    ChangeRequestLink:
+      allOf:
+      - $ref: '#/components/schemas/ChangeRequestLinkInput'
+      - type: object
+        properties:
+          id:
+            type: string
+            description: The ID of the link.
+          isSyncing:
+            type: boolean
+            readOnly: true
+            description: Whether this link owns synchronization with the external issue. Other links are references only.
+          expanded:
+            $ref: '#/components/schemas/ChangeRequestLinkExpanded'
+            readOnly: true
+        required:
+        - id
+        - isSyncing
+    DocumentBlockListOrdered:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - block
+        type:
+          type: string
+          enum:
+          - list-ordered
+        key:
+          type: string
+        data:
+          type: object
+          properties:
+            start:
+              type: number
+              description: An integer to start counting from for the list items.
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentBlockListItem'
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - data
+      - nodes
+    baseUrl:
+      type: string
+      format: uri
+      minLength: 1
+      maxLength: 2048
+      description: Base URL of the Jira Cloud site, e.g. https://your-team.atlassian.net.
+    ContextConnectionFilter:
+      type: string
+      description: 'Optional filter used to restrict which items are ingested from the source. Its meaning depends on the connector: it can be a tag, label, or an expression. When empty or omitted, all resolved items are ingested.'
+      minLength: 0
+      maxLength: 1024
+    DocumentInlineLink:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - link
+        key:
+          type: string
+        nodes:
+          type: array
+          items:
+            oneOf:
+            - $ref: '#/components/schemas/DocumentText'
+            - $ref: '#/components/schemas/DocumentInlineImage'
+            - $ref: '#/components/schemas/DocumentInlineMath'
+            - $ref: '#/components/schemas/DocumentInlineExpression'
+            - $ref: '#/components/schemas/DocumentInlineMention'
+        data:
+          type: object
+          properties:
+            ref:
+              $ref: '#/components/schemas/ContentRef'
+          required:
+          - ref
+        isVoid:
+          type: boolean
+          enum:
+          - false
+      required:
+      - object
+      - type
+      - nodes
+      - data
+    DocumentInlineButton:
+      type: object
+      properties:
+        object:
+          type: string
+          enum:
+          - inline
+        type:
+          type: string
+          enum:
+          - button
+        key:
+          type: string
+        data:
+          allOf:
+          - type: object
+            properties:
+              label:
+                type: string
+              kind:
+                type: string
+                enum:
+                - primary
+                - secondary
+              size:
+                type: string
+                enum:
+                - small
+                - medium
+                - large
+              icon:
+                $ref: '#/components/schemas/Icon'
+            required:
+            - label
+            - kind
+          - oneOf:
+            - type: object
+              properties:
+                ref:
+                  $ref: '#/components/schemas/ContentRef'
+              required:
+              - ref
+            - type: object
+              properties:
+                action:
+                  $ref: '#/components/schemas/DocumentAction'
+              required:
+              - action
+        isVoid:
+          type: boolean
+          enum:
+          - true
+      required:
+      - object
+      - type
+      - data
+      - isVoid
+  parameters:
+    listPage:
+      name: page
+      in: query
+      description: Identifier of the page results to fetch.
+      schema:
+        type: string
+    siteContextConnectionId:
+      name: siteContextConnectionId
+      in: path
+      required: true
+      description: The unique id of the context connection
+      schema:
+        type: string
+    organizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: The unique id of the organization
+      schema:
+        $ref: '#/components/schemas/EntityId'
+    siteId:
+      name: siteId
+      in: path
+      required: true
+      description: The unique id of the site
+      schema:
+        type: string
+    siteTopicId:
+      name: siteTopicId
+      in: path
+      required: true
+      description: The unique id of the topic
+      schema:
+        type: string
+    listLimit:
+      name: limit
+      in: query
+      description: The number of results per page
+      schema:
+        type: number
+        minimum: 0
+        maximum: 1000
+    siteFindingId:
+      name: siteFindingId
+      in: path
+      required: true
+      description: The unique id of the site finding
+      schema:
+        type: string
+    siteScanId:
+      name: siteScanId
+      in: path
+      required: true
+      description: The unique id of the site scan
+      schema:
+        type: string
+    siteContextRecordId:
+      name: siteContextRecordId
+      in: path
+      required: true
+      description: The unique id of the context record
+      schema:
+        type: string
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+            - error
+            properties:
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    format: int32
+                    enum:
+                    - 400
+                  message:
+                    type: string
+                required:
+                - code
+                - message
+  securitySchemes:
+    user:
+      type: http
+      scheme: bearer
+    user-internal:
+      type: http
+      scheme: bearer
+    user-staff:
+      type: http
+      scheme: bearer
+    integration:
+      type: http
+      scheme: bearer
+    integration-installation:
+      type: http
+      scheme: bearer
+    oauth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://oauth.gitbook.com/authorize
+          tokenUrl: https://oauth.gitbook.com/token
+          scopes:
+            user:read: Read your GitBook user profile.
+            organization:read: Read the organizations you belong to, their settings and metadata, and their AI agent conversations.
+            organization:write: Create organizations, and update organization settings and AI agent conversations.
+            organization:members:read: Read organization members, teams, invites and link invites.
+            organization:members:write: Manage organization members, teams, invites and link invites.
+            organization:ask: Ask AI questions across an organization's content.
+            organization:search: Search across an organization's content.
+            space:read: Read spaces and their content, including pages, change requests and their reviews, comments, files and revision history.
+            space:write: Create, update and delete spaces and their content, including change requests (create, edit, review), comments, and content imports and exports. Merging a change request also requires change-request:merge.
+            space:permissions:read: Read the users and teams who have access to spaces and collections.
+            space:permissions:write: Manage who has access to spaces and collections, including inviting users and teams.
+            change-request:merge: Merge change requests, publishing their changes to the space. Creating, editing and reviewing change requests only requires space:write.
+            site:read: Read sites and their settings, including navigation structure, linked spaces, customization, redirects, topics, AI configuration and documentation issues.
+            site:write: Create, update and delete sites and their settings, including navigation structure (sections, linked spaces, external links), customization, redirects, topics and AI configuration.
+            site:publish: Publish and unpublish sites, controlling their public exposure.
+            site:permissions:read: Read the users and teams who have access to sites.
+            site:permissions:write: Manage who has access to sites, including inviting users and teams.
+            site:auth:read: Read how visitors authenticate on a site and its security configuration, including private share links.
+            site:auth:write: Manage how visitors authenticate on a site and its security configuration, including private share links.
+            site:insights:read: Read site analytics and insights, including the questions visitors asked Ask AI and the answers they received.
+            site:ask: Ask AI questions across a site's content.
+            site:search: Search across a site's content.
+            integration:read: Read integrations, their status and where they are installed.
+            integration:installations:read: Read integration installations and their configuration, which can include credentials for third-party services.
+            integration:installations:write: Install and configure integrations on an organization, its spaces and its sites.
+            integration:publish: Publish integrations, which can request their own permissions on your content, and route their events to a development tunnel.
+            integration:delete: Unpublish integrations, permanently deleting them and every installation of them.
+            openapi:read: Read OpenAPI specifications.
+            openapi:write: Create, update and delete OpenAPI specifications.
