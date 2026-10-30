@@ -1,4 +1,4 @@
-# GitBook (gitbook)
+# GitBook
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,72 +66,238 @@
 
 GitBook is a documentation and knowledge platform, positioned as "the knowledge layer for AI", that connects a company's docs, product and users, answers user questions with AI, and identifies gaps in its knowledge. Teams write and publish product and API documentation with docs-as-code support and AI insights built in.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/gitbook/refs/heads/main/apis.yml)
+**Areas:** Content · Documentation · Experience · Integration · Platform · SDK · API Documentation · Developer Portal
 
-## Scope
+## GitBook on APIs.io
 
-- **Type:** Index
-- **Position:** Consumer
-- **Access:** 3rd-Party
+Everything profiled for GitBook is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/gitbook/](https://apis.io/providers/gitbook/)** — or go straight to one of the APIs or properties below.
 
-## Tags
+### APIs (19)
 
-- Content
-- Documentation
-- Experience
-- Integrations
-- Platform
-- SDKs
+- [GitBook Change Request Content API](https://apis.io/apis/gitbook/gitbook-change-request-content-api/) — Manage content within a change request.
+- [GitBook Change Request Reviewers API](https://apis.io/apis/gitbook/gitbook-change-request-reviewers-api/) — Manage reviewers for change requests.
+- [GitBook Change Requests API](https://apis.io/apis/gitbook/gitbook-change-requests-api/) — Create, list, review, merge, and update change requests for collaborative editing.
+- [GitBook Collections API](https://apis.io/apis/gitbook/gitbook-collections-api/) — Organize and manage grouped sets of spaces.
+- [GitBook Custom Hostnames API](https://apis.io/apis/gitbook/gitbook-custom-hostnames-api/) — Configure custom hostnames for docs sites.
+- [GitBook Docs Sites API](https://apis.io/apis/gitbook/gitbook-docs-sites-api/) — Manage published documentation sites.
+- [GitBook Imports API](https://apis.io/apis/gitbook/gitbook-imports-api/) — Import content into spaces.
+- [GitBook Integrations API](https://apis.io/apis/gitbook/gitbook-integrations-api/) — Install and manage third-party integrations.
+- [GitBook OpenAPI Specs API](https://apis.io/apis/gitbook/gitbook-openapi-specs-api/) — Upload and manage OpenAPI specifications.
+- [GitBook Organization Members API](https://apis.io/apis/gitbook/gitbook-organization-members-api/) — Manage members and their roles within an organization.
+- [GitBook Organization Teams API](https://apis.io/apis/gitbook/gitbook-organization-teams-api/) — Manage teams within an organization.
+- [GitBook Organizations API](https://apis.io/apis/gitbook/gitbook-organizations-api/) — Create and configure organizations to group users, spaces, and collections.
+- [GitBook Search API](https://apis.io/apis/gitbook/gitbook-search-api/) — Search content across an organization.
+- [GitBook Site Spaces API](https://apis.io/apis/gitbook/gitbook-site-spaces-api/) — Manage spaces within a docs site.
+- [GitBook Space Content API](https://apis.io/apis/gitbook/gitbook-space-content-api/) — Manage pages and content within a space.
+- [GitBook Space Users API](https://apis.io/apis/gitbook/gitbook-space-users-api/) — Manage user permissions within a space.
+- [GitBook Spaces API](https://apis.io/apis/gitbook/gitbook-spaces-api/) — Manage spaces which are containers for documentation or knowledge base content.
+- [GitBook URLs API](https://apis.io/apis/gitbook/gitbook-urls-api/) — Resolve and manage content URLs.
+- [GitBook Users API](https://apis.io/apis/gitbook/gitbook-users-api/) — Manage user accounts and profiles.
 
-## Timestamps
+### Published properties
 
-- **Created:** 2025-01-08
-- **Modified:** 2026-05-19
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-## APIs
+#### AsyncAPI (2)
 
-### GitBook
+Event-driven and webhook contracts.
 
-GitBook is a modern documentation platform that helps teams create, collaborate on, and publish product and engineering knowledge. It combines an intuitive editor with docs-as-code workflows, letting you write in rich text or Markdown, review changes, and version content like code. GitBook can host public docs and private knowledge bases with granular access control, SSO, custom domains, and analytics.
+- [GitBook Webhook Events](https://apis.io/asyncapis/gitbook/gitbook-gitbook-api-asyncapi/)
+- [Gitbook Webhooks](https://apis.io/asyncapis/gitbook/gitbook-webhooks/)
 
-- **Human URL:** [https://docs.gitbook.com/developers](https://docs.gitbook.com/developers)
+#### Event channels (19)
 
-#### Tags
+Individual events and webhooks the provider emits.
 
-- Content
-- Documentation
-- Experience
-- Integrations
-- Platform
-- SDKs
+- [changeRequest.closed](https://apis.io/channels/gitbook/changerequest-closed/)
+- [changeRequest.created](https://apis.io/channels/gitbook/changerequest-created/)
+- [changeRequest.merged](https://apis.io/channels/gitbook/changerequest-merged/)
+- [collection.created](https://apis.io/channels/gitbook/collection-created/)
+- [collection.deleted](https://apis.io/channels/gitbook/collection-deleted/)
+- [collection.updated](https://apis.io/channels/gitbook/collection-updated/)
+- [docsSite.created](https://apis.io/channels/gitbook/docssite-created/)
+- [docsSite.deleted](https://apis.io/channels/gitbook/docssite-deleted/)
+- [docsSite.updated](https://apis.io/channels/gitbook/docssite-updated/)
+- [organization.memberAdded](https://apis.io/channels/gitbook/organization-memberadded/)
+- [organization.memberRemoved](https://apis.io/channels/gitbook/organization-memberremoved/)
+- [organization.updated](https://apis.io/channels/gitbook/organization-updated/)
+- [page.created](https://apis.io/channels/gitbook/page-created/)
+- [page.deleted](https://apis.io/channels/gitbook/page-deleted/)
+- [page.updated](https://apis.io/channels/gitbook/page-updated/)
+- [space.created](https://apis.io/channels/gitbook/space-created/)
+- [space.deleted](https://apis.io/channels/gitbook/space-deleted/)
+- [space.updated](https://apis.io/channels/gitbook/space-updated/)
+- [user.updated](https://apis.io/channels/gitbook/user-updated/)
 
-#### Properties
+#### MCP servers (1)
 
-- [Documentation](https://docs.gitbook.com/developers)
-- [OpenAPI](openapi/gitbook-gitbook-api-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/gitbook-gitbook-api.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/gitbook-gitbook-api.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-- [AsyncAPI](asyncapi/gitbook-gitbook-api-asyncapi.yml) — [AsyncAPI Specification](https://www.asyncapi.com/docs/reference/specification/latest)
-- [JSON Schema](json-schema/organization.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/space.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/page.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/user.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/change-request.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/docs-site.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON Schema](json-schema/collection.json) — [JSON Schema](https://json-schema.org/specification)
-- [JSON-LD](json-ld/gitbook-context.jsonld) — [JSON-LD](https://www.w3.org/TR/json-ld11/)
+Model Context Protocol servers that expose the API to agents.
 
-## Common Properties
+- [gitbook](https://apis.io/servers/gitbook/gitbook/)
 
-- [GitHub Organization](https://github.com/gitbookio)
-- [LinkedIn](https://www.linkedin.com/company/gitbook)
+#### Agentic access (1)
+
+Which operations an agent can call, which act, and which need a human in the loop.
+
+- [Gitbook Agentic Access](https://apis.io/agentic-access/gitbook/gitbook-agentic-access/)
+
+#### JSON Schema (7)
+
+The data models the API reads and writes.
+
+- [GitBook Change Request](https://apis.io/schemas/gitbook/change-request/)
+- [GitBook Collection](https://apis.io/schemas/gitbook/collection/)
+- [GitBook Docs Site](https://apis.io/schemas/gitbook/docs-site/)
+- [GitBook Organization](https://apis.io/schemas/gitbook/organization/)
+- [GitBook Page](https://apis.io/schemas/gitbook/page/)
+- [GitBook Space](https://apis.io/schemas/gitbook/space/)
+- [GitBook User](https://apis.io/schemas/gitbook/user/)
+
+#### JSON-LD (1)
+
+Linked-data contexts for the provider's vocabulary.
+
+- [Gitbook Context](https://apis.io/jsonld/gitbook/gitbook-context/)
+
+#### Collections (19)
+
+Postman and Open Collection request collections.
+
+- [GitBook Change Request Content API](https://apis.io/collections/gitbook/open-gitbook-change-request-content-api/)
+- [GitBook Change Request Content Change Requests API](https://apis.io/collections/gitbook/open-gitbook-change-requests-api/)
+- [GitBook Change Request Content Collections API](https://apis.io/collections/gitbook/open-gitbook-collections-api/)
+- [GitBook Change Request Content Custom Hostnames API](https://apis.io/collections/gitbook/open-gitbook-custom-hostnames-api/)
+- [GitBook Change Request Content Docs Sites API](https://apis.io/collections/gitbook/open-gitbook-docs-sites-api/)
+- [GitBook API](https://apis.io/collections/gitbook/open-gitbook-gitbook-api/)
+- [GitBook Change Request Content Imports API](https://apis.io/collections/gitbook/open-gitbook-imports-api/)
+- [GitBook Change Request Content Integrations API](https://apis.io/collections/gitbook/open-gitbook-integrations-api/)
+- [GitBook Change Request Content OpenAPI Specs API](https://apis.io/collections/gitbook/open-gitbook-openapi-specs-api/)
+- [GitBook Change Request Content Organization Members API](https://apis.io/collections/gitbook/open-gitbook-organization-members-api/)
+- [GitBook Change Request Content Organization Teams API](https://apis.io/collections/gitbook/open-gitbook-organization-teams-api/)
+- [GitBook Change Request Content Organizations API](https://apis.io/collections/gitbook/open-gitbook-organizations-api/)
+- [GitBook Change Request Content Search API](https://apis.io/collections/gitbook/open-gitbook-search-api/)
+- [GitBook Change Request Content Site Spaces API](https://apis.io/collections/gitbook/open-gitbook-site-spaces-api/)
+- [GitBook Change Request Content Space Content API](https://apis.io/collections/gitbook/open-gitbook-space-content-api/)
+- [GitBook Change Request Content Space Users API](https://apis.io/collections/gitbook/open-gitbook-space-users-api/)
+- [GitBook Change Request Content Spaces API](https://apis.io/collections/gitbook/open-gitbook-spaces-api/)
+- [GitBook Change Request Content URLs API](https://apis.io/collections/gitbook/open-gitbook-urls-api/)
+- [GitBook Change Request Content Users API](https://apis.io/collections/gitbook/open-gitbook-users-api/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Gitbook Openapi Overlay](https://apis.io/overlays/gitbook/gitbook-openapi-overlay/)
+
+#### Governance rules (3)
+
+Spectral rulesets for the provider's contracts.
+
+- [GitBook — asyncapi rules](https://apis.io/rules/gitbook/gitbook-asyncapi-spectral-rules/)
+- [GitBook — jsonschema rules](https://apis.io/rules/gitbook/gitbook-jsonschema-spectral-rules/)
+- [GitBook API Rules](https://apis.io/rules/gitbook/gitbook-rules/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Gitbook Authentication](https://apis.io/security/gitbook/gitbook-authentication/)
+- [Gitbook Domain Security](https://apis.io/security/gitbook/gitbook-domain-security/)
+
+#### OAuth scopes (1)
+
+The permissions the API asks for.
+
+- [Gitbook Scopes](https://apis.io/scopes/gitbook/gitbook-scopes/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Gitbook Plans Pricing](https://apis.io/plans/gitbook/gitbook-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Gitbook Rate Limits](https://apis.io/rate-limits/gitbook/gitbook-rate-limits/)
+
+#### FinOps (1)
+
+What the API costs to run, by operation.
+
+- [Gitbook Finops](https://apis.io/finops/gitbook/gitbook-finops/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
 - [Website](https://www.gitbook.com/)
+- [Documentation](https://developer.gitbook.com/)
+- [Getting started](https://gitbook.com/docs)
+- [API reference](https://gitbook.com/docs/developers)
 - [Pricing](https://www.gitbook.com/pricing)
+- [Sign up](https://app.gitbook.com/join)
+- [Support](https://www.gitbook.com/solutions/help-center)
+- [Changelog](https://gitbook.com/docs/changelog)
 - [Blog](https://www.gitbook.com/blog)
-- [Guide](https://gitbook.com/docs/guides)
-- [Integrations](https://www.gitbook.com/integrations)
+- [Security](https://www.gitbook.com/industries/security)
+- [Terms of service](https://gitbook.com/docs/policies/terms)
+- [Privacy policy](https://gitbook.com/docs/policies/privacy-and-security/statement)
+- [GitHub](https://github.com/gitbookio)
+- [Status](https://www.gitbookstatus.com/)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** Kin Lane
-**Email:** info@apievangelist.com
+**Kin Score 60.2** — strong · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 66.7 |
+| Contract quality | 64.0 |
+| Contract governance | 35.6 |
+| Operational transparency | 60.5 |
+| Developer ergonomics | 63.7 |
+| Access clarity | 52.6 |
+
+**Agent readiness 52.1** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | documented (partial credit) |
+| MCP Server | verified |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | derived (partial credit) |
+| OpenAPI Examples | partial |
+| Rate Limit Signal | derived (partial credit) |
+| Event Surface Described | yes |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | — |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 34.3** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/gitbook/](https://apis.io/providers/gitbook/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for GitBook: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/gitbook/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
